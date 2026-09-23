@@ -9,8 +9,8 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 /* ─────────────────────────────────────────────────────────
  * VOICE JOURNAL RECORDER — simulated take
  *
- *    0ms   recording starts, transcript empty, beam idles
- *  400ms   words arrive one by one (wordMs each); level
+ *    0ms   record pressed, transcript empty, beam listens
+ *  +delay  words arrive one by one (startDelayMs, then wordMs each); level
  *          pulses per syllable while "speaking"
  *          overflow rule decides how old words leave:
  *            fade-scroll    lines scroll up under a top fade
@@ -19,12 +19,26 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
  *  +hold   take finished, voice falls silent
  *  +clear  transcript fades out; loops when `loop` is on
  *
- *  STOP    transcript fades out (fadeOutMs)
- *  +gap    processing label shimmers, beam sweeps left ↔ right (durationMs)
+ *  STOP    bottom controls leave, staggered (exit.*); transcript fades (fadeOutMs)
+ *  +gap    after the slower of the two: label shimmers, beam sweeps (durationMs)
  *  done    saved; record button returns
  * ───────────────────────────────────────────────────────── */
 
-const LEAD_IN = 400;
+/* Exit choreography order: which bottom control leaves first. */
+const EXIT_ORDERS = [
+  { value: 'from-record', label: 'Outward from record' },
+  { value: 'into-record', label: 'Record leaves last' },
+  { value: 'together', label: 'All together' },
+];
+const EXIT_CURVES = {
+  anticipate: 'cubic-bezier(0.36, 0, 0.66, -0.56)',
+  'ease-in': 'cubic-bezier(0.55, 0, 1, 0.45)',
+  'ease-in-out': 'cubic-bezier(0.65, 0, 0.35, 1)',
+  'ease-out': 'cubic-bezier(0.22, 1, 0.36, 1)',
+  linear: 'linear',
+};
+/* Pill, restart, pause, record — the controls on screen when stop is pressed. */
+const EXIT_COUNT = 4;
 
 const DEFAULT_TEXT =
   "Today felt slower in a good way. I finally took the long walk by the river and noticed how quiet my head got after the first twenty minutes. I want to remember that feeling, and protect one unscheduled hour every morning this week. Tomorrow I'll call Mom, water the plants, and start the chapter I keep putting off.";
@@ -149,7 +163,16 @@ const CONTROLS = {
     dotColor: '#ff453a',
     morphMs: [320, 0, 1200, 10],
   },
-  /* Stop → transcript fades out → processing → saved (back to record). */
+  /* Stop → bottom controls leave (and the transcript fades) → processing → saved. */
+  exit: {
+    order: { type: 'select', options: EXIT_ORDERS, default: 'from-record' },
+    curve: { type: 'select', options: Object.keys(EXIT_CURVES), default: 'anticipate' },
+    durationMs: [320, 0, 1500, 10],
+    staggerMs: [45, 0, 400, 5],
+    toScale: [0.8, 0, 1.2, 0.01],
+    offsetY: [14, -60, 60, 1],
+    blur: [4, 0, 20, 0.5],
+  },
   processing: {
     fadeOutMs: [500, 0, 2000, 10],
     gapMs: [0, 0, 1500, 10],
@@ -176,6 +199,7 @@ const CONTROLS = {
 const TRANSCRIPT = {
   text: { type: 'text', default: DEFAULT_TEXT, placeholder: 'What the recorder hears…' },
   timing: {
+    startDelayMs: [400, 0, 3000, 10],
     wordMs: [290, 60, 800, 10],
     holdMs: [1900, 0, 6000, 50],
     clearMs: [600, 100, 2000, 50],
@@ -242,8 +266,8 @@ function useRecorder(s, t, ctl) {
       const { s: sp, t: tp, ctl: cp } = params.current;
       if (cache.current.text !== tp.text) cache.current = { text: tp.text, words: splitWords(tp.text) };
       const n = cache.current.words.length;
-      const { wordMs, holdMs, clearMs } = tp.timing;
-      const speakEnd = LEAD_IN + n * wordMs;
+      const { startDelayMs, wordMs, holdMs, clearMs } = tp.timing;
+      const speakEnd = startDelayMs + n * wordMs;
       const total = speakEnd + holdMs + clearMs;
       const recording = statusRef.current === 'recording';
       const processing = statusRef.current === 'processing';
@@ -264,9 +288,11 @@ function useRecorder(s, t, ctl) {
         }
       }
 
-      // Processing starts once the transcript has faded out (plus an optional gap).
       const pp = cp.processing;
-      const thinkStart = pp.fadeOutMs + pp.gapMs;
+      // Processing waits for the slower of the transcript fade and the controls' exit.
+      const ex = cp.exit;
+      const exitTotal = ex.durationMs + (ex.order === 'together' ? 0 : ex.staggerMs * (EXIT_COUNT - 1));
+      const thinkStart = Math.max(pp.fadeOutMs, exitTotal) + pp.gapMs;
       let isThinking = false;
       if (processing) {
         c.proc += dt;
@@ -278,8 +304,8 @@ function useRecorder(s, t, ctl) {
       }
 
       let target = 0;
-      if (recording && c.t >= LEAD_IN && c.t < speakEnd) {
-        const w = (c.t - LEAD_IN) / wordMs;
+      if (recording && c.t >= startDelayMs && c.t < speakEnd) {
+        const w = (c.t - startDelayMs) / wordMs;
         const i = Math.floor(w);
         const syllable = Math.pow(Math.sin(Math.PI * (w - i)), 0.7);
         const wobble = 1 - sp.simulation.jitter * (0.5 + 0.5 * Math.sin(i * 12.9898 + now / 170));
@@ -288,7 +314,7 @@ function useRecorder(s, t, ctl) {
       level.current += (target - level.current) * 0.35;
 
       // State only changes when a word lands, the take clears, a phase flips, or a second passes.
-      setVisible(Math.max(0, Math.min(n, Math.ceil((c.t - LEAD_IN) / wordMs))));
+      setVisible(Math.max(0, Math.min(n, Math.ceil((c.t - startDelayMs) / wordMs))));
       setClearing(c.t > speakEnd + holdMs);
       setSeconds(Math.floor(c.rec / 1000));
       setThinking(isThinking);
@@ -334,6 +360,7 @@ function Reveal({ shown, order, dir, children }) {
   return (
     <span
       className="reveal"
+      data-exit
       data-shown={shown || undefined}
       inert={!shown}
       style={{ '--i': order, '--dir': dir }}
@@ -354,7 +381,7 @@ function Back() {
 
 function ModePill({ label }) {
   return (
-    <button type="button" className="mode-pill">
+    <button type="button" className="mode-pill" data-exit>
       {label}
       <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 5 6 7.5 8.5 5" /></svg>
     </button>
@@ -400,6 +427,8 @@ function RecordButton({ rec, size, withLabel }) {
     <button
       type="button"
       className={`ctl stop ${size || ''} ${withLabel ? 'labeled' : ''}`}
+      data-exit
+      data-record
       aria-label={rec.live ? 'Stop and save entry' : 'Start recording'}
       disabled={rec.status === 'processing'}
       onClick={rec.live ? rec.stop : rec.record}
@@ -604,6 +633,28 @@ function App() {
   const deviceW = framed ? FRAME.w * FRAME_K : 390;
   const deviceH = framed ? FRAME.h * FRAME_K : screenH;
 
+  const screenRef = useRef(null);
+  /* Rank the bottom controls by distance from the record button so the exit
+     stagger reads the same in every layout. Runs before paint, so the delays
+     are in place when stop flips the screen into processing. */
+  useLayoutEffect(() => {
+    const root = screenRef.current;
+    if (!root || !rec.live) return;
+    const centre = (el) => {
+      const r = el.getBoundingClientRect();
+      return [r.left + r.width / 2, r.top + r.height / 2];
+    };
+    const record = root.querySelector('[data-record]');
+    if (!record) return;
+    const [rx, ry] = centre(record);
+    const items = [...root.querySelectorAll('[data-exit]')].map((el) => {
+      const [x, y] = centre(el);
+      return { el, d: Math.hypot(x - rx, y - ry) };
+    });
+    items.sort((a, b) => (c.exit.order === 'into-record' ? b.d - a.d : a.d - b.d));
+    items.forEach(({ el }, i) => el.style.setProperty('--exit-i', c.exit.order === 'together' ? 0 : i));
+  }, [rec.live, s.layout, c.exit.order]);
+
   return (
     <main className="stage" style={{ background: s.pageColor }}>
       <div
@@ -680,6 +731,7 @@ function App() {
             }}
           >
             <section
+              ref={screenRef}
               className="voice-screen"
               data-layout={s.layout}
               data-status={rec.status}
@@ -706,6 +758,12 @@ function App() {
                 '--square-color': c.record.squareColor,
                 '--text-fade-ms': `${rec.status === 'processing' ? c.processing.fadeOutMs : 450}ms`,
                 '--morph-ms': `${c.record.morphMs}ms`,
+                '--exit-ms': `${c.exit.durationMs}ms`,
+                '--exit-stagger': `${c.exit.staggerMs}ms`,
+                '--exit-ease': EXIT_CURVES[c.exit.curve],
+                '--exit-scale': c.exit.toScale,
+                '--exit-y': `${c.exit.offsetY}px`,
+                '--exit-blur': `${c.exit.blur}px`,
               }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}

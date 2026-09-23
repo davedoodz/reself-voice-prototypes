@@ -158,19 +158,24 @@ button { font: inherit; color: inherit; }
 .ctl.stop { border-color: transparent; background: var(--button-color, #1c1c1e); color: #fff; box-shadow: 0 6px 18px rgba(0, 40, 70, 0.18); }
 .ctl.stop:not(.lg, .xl, .labeled) { width: var(--record-size, 46px); height: var(--record-size, 46px); }
 
-/* While processing, the mode pill and record button step aside for the sweep;
-   visibility waits for the fade so they drop out of the tab order afterward. */
+/* Stop → the bottom controls leave one by one before processing starts.
+   --exit-i is each control's rank (set in JS by distance from the record
+   button); visibility flips after its fade so it drops out of the tab order. */
 .mode-pill,
 .ctl.stop {
-  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease, visibility 0s linear 0s;
+  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease, background-color 0.2s ease, visibility 0s linear 0s;
 }
-.voice-screen[data-status='processing'] .mode-pill,
-.voice-screen[data-status='processing'] .ctl.stop {
+.voice-screen[data-status='processing'] [data-exit] {
+  --exit-delay: calc(var(--exit-i, 0) * var(--exit-stagger, 45ms));
   opacity: 0;
-  transform: scale(0.9);
+  transform: translateY(var(--exit-y, 14px)) scale(var(--exit-scale, 0.8));
+  filter: blur(var(--exit-blur, 4px));
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+  transition-property: opacity, transform, filter, visibility;
+  transition-duration: var(--exit-ms, 320ms), var(--exit-ms, 320ms), var(--exit-ms, 320ms), 0s;
+  transition-timing-function: var(--exit-ease, ease-in);
+  transition-delay: var(--exit-delay), var(--exit-delay), var(--exit-delay), calc(var(--exit-delay) + var(--exit-ms, 320ms));
 }
 
 /* Record ↔ stop: a red dot morphs into a white rounded square. */
