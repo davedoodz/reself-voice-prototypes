@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap');
+
+:root {
+  color: #112636;
+  background: #eef9ff;
+  font-family: Manrope, ui-sans-serif, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+button { color: inherit; font: inherit; }
+
+.page-shell {
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 52px 24px 40px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 68%, rgba(115, 220, 255, .28), transparent 28rem),
+    radial-gradient(circle at 15% 8%, rgba(255, 255, 255, .92), transparent 22rem),
+    linear-gradient(135deg, #f8fdff 0%, #eaf8ff 47%, #e2f4fb 100%);
+}
+
+.intro { max-width: 550px; margin: 0 auto 36px; }
+
+.kicker {
+  margin: 0 0 14px;
+  color: #4a7a91;
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+
+h1 { margin: 0; font-size: clamp(33px, 5vw, 52px); letter-spacing: -.055em; line-height: .98; }
+
+.description { margin: 17px auto 0; color: #567283; font-size: 15px; line-height: 1.6; }
+code { color: #17678c; font-family: 'DM Mono', monospace; font-size: .9em; }
+
+.device-wrap { display: grid; place-items: center; }
+
+.device {
+  position: relative;
+  width: min(100%, 400px);
+  padding: 10px;
+  border-radius: 72px;
+  background: linear-gradient(145deg, #345165, #102431 52%, #3d5d6f);
+  box-shadow: 0 28px 60px rgba(32, 81, 105, .26), 0 8px 18px rgba(14, 50, 68, .2), inset 0 1px rgba(255, 255, 255, .38);
+}
+
+.dynamic-island {
+  position: absolute;
+  z-index: 10;
+  top: 21px;
+  left: 50%;
+  width: 104px;
+  height: 30px;
+  transform: translateX(-50%);
+  border-radius: 20px;
+  background: #102431;
+}
+
+.voice-screen { height: 660px; border-radius: 62px; background: #f9fdff; overflow: hidden; }
+
+.phone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 104px;
+  padding: 28px 20px 4px;
+  border-bottom: 1px solid rgba(38, 121, 159, .1);
+}
+
+.back-button, .more-button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.back-button { font-size: 38px; font-weight: 300; line-height: 1; }
+.more-button { font-size: 17px; letter-spacing: 2px; }
+
+.identity { display: flex; align-items: center; gap: 10px; text-align: left; }
+.avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 13px; color: #075b81; background: linear-gradient(135deg, #b7f0ff, #daf9ff); font-size: 15px; font-weight: 700; }
+.eyebrow, .status { margin: 0; }
+.eyebrow { font-size: 13px; font-weight: 700; }
+.status { margin-top: 1px; color: #7993a1; font-size: 10px; }
+
+.conversation { display: flex; flex-direction: column; align-items: flex-start; height: calc(100% - 104px); padding: 28px 22px 0; }
+.time { align-self: center; margin: 0 0 24px; color: #91a6b0; font-family: 'DM Mono', monospace; font-size: 10px; }
+.message { max-width: 78%; padding: 13px 15px; border-radius: 19px; font-size: 13px; line-height: 1.45; text-align: left; }
+.incoming { border-bottom-left-radius: 5px; background: #e7f4f9; color: #294a5c; }
+.outgoing { align-self: flex-end; margin-top: 13px; border-bottom-right-radius: 5px; color: white; background: #197ba4; }
+
+.composer {
+  position: absolute;
+  right: 22px;
+  bottom: 24px;
+  left: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 70px;
+  padding: 0 23px;
+  border: 1px solid rgba(24, 115, 151, .16);
+  border-radius: 30px;
+  background: rgba(250, 254, 255, .83);
+  box-shadow: 0 8px 24px rgba(29, 107, 140, .08);
+  color: #678896;
+  font-size: 14px;
+}
+
+.pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #23bce6; box-shadow: 0 0 0 6px rgba(39, 192, 233, .13); }
+.note { max-width: 480px; margin: 28px auto 0; color: #628394; font-size: 12px; line-height: 1.5; }
+
+@media (max-width: 480px) {
+  .page-shell { padding-top: 34px; }
+  .intro { margin-bottom: 26px; }
+  .device { width: min(100%, 370px); padding: 8px; border-radius: 66px; }
+  .voice-screen { height: min(660px, calc(100vh - 240px)); min-height: 540px; border-radius: 58px; }
+  .dynamic-island { top: 17px; }
+}
