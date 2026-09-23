@@ -682,6 +682,7 @@ function App() {
             <section
               className="voice-screen"
               data-layout={s.layout}
+              data-status={rec.status}
               aria-label="Voice journal recorder"
               style={{
                 height: screenH,
