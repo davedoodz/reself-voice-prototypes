@@ -10,7 +10,6 @@ button { font: inherit; color: inherit; }
 
 .stage {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
@@ -27,105 +26,124 @@ button { font: inherit; color: inherit; }
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+/* ── Transcript ── */
 .transcript {
   position: absolute;
-  left: 44px;
-  right: 44px;
-  margin: 0;
-  color: #3b3b3b;
-  font-weight: 450;
-  line-height: 1.38;
-  letter-spacing: -0.005em;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
   transition: opacity 0.45s ease, filter 0.45s ease;
 }
 
+.transcript p { margin: 0; letter-spacing: -0.005em; will-change: transform; }
 .transcript[data-clearing] { opacity: 0; filter: blur(6px); }
 
 .word {
-  display: inline;
-  animation: word-in 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: opacity 0.6s ease;
+  animation: word-in var(--word-in, 620ms) cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @keyframes word-in {
-  0% { opacity: 0; filter: blur(8px); color: #b9b9b9; }
-  45% { opacity: 1; filter: blur(0); color: #9a9a9a; }
-  100% { opacity: 1; filter: blur(0); color: #3b3b3b; }
+  from { opacity: 0; filter: blur(var(--word-blur, 8px)); color: var(--new-color); }
+  45% { filter: blur(0); color: var(--new-color); }
 }
 
-.controls {
-  position: absolute;
-  right: 28px;
-  bottom: 44px;
-  left: 28px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ── Slots ── */
+.slot { position: absolute; z-index: 6; display: flex; align-items: center; }
+.top-left { top: 30px; left: 26px; }
+.top-center { top: 38px; left: 50%; transform: translateX(-50%); }
+.top-row { top: 30px; right: 26px; left: 26px; justify-content: space-between; }
+.bottom-row { right: 28px; bottom: 44px; left: 28px; justify-content: space-between; }
+.bottom-center { bottom: 44px; left: 50%; transform: translateX(-50%); }
+.bottom-center.column { flex-direction: column; gap: 18px; }
+.bottom-left { bottom: 44px; left: 28px; }
+.bottom-right { right: 24px; bottom: 44px; }
+.rail { flex-direction: column; gap: 12px; }
+.above-controls { bottom: 126px; left: 50%; transform: translateX(-50%); }
+.row { display: flex; align-items: center; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+
+/* ── Glass material shared by the pill and the buttons ── */
+.mode-pill,
+.ctl,
+.capsule {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
-.agent-pill {
+.mode-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 44px;
-  padding: 0 19px 0 21px;
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  gap: 8px;
+  height: 46px;
+  padding: 0 19px 0 22px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
-  color: #222;
+  color: #1f1f1f;
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
 }
 
-.agent-pill svg { width: 12px; height: 12px; fill: none; stroke: #666; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.mode-pill svg { width: 12px; height: 12px; fill: none; stroke: #666; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 
-.actions { display: flex; gap: 14px; }
-
-.icon-button {
-  display: grid;
+.ctl {
+  display: inline-grid;
   place-items: center;
-  width: 45px;
-  height: 45px;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
   padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  cursor: pointer;
-}
-
-.icon-button svg { width: 20px; height: 20px; fill: none; stroke: #1f1f1f; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.icon-button[aria-pressed='true'] { background: #1f1f1f; }
-.icon-button[aria-pressed='true'] svg { stroke: #fff; }
-
-.agent-pill:focus-visible, .icon-button:focus-visible, .pause:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
-
-.progress {
-  width: 120px;
-  height: 2px;
-  margin-top: 56px;
-  overflow: hidden;
-  border-radius: 2px;
-  background: #dcdcdc;
-}
-
-.progress span { display: block; height: 100%; background: #6b6b6b; transform: scaleX(0); transform-origin: 0 50%; }
-
-.pause {
-  margin-top: 14px;
-  padding: 6px 13px;
-  border: 0;
   border-radius: 999px;
-  background: #ececec;
   color: #1f1f1f;
-  font-size: 15px;
+  text-decoration: none;
   cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s ease, background 0.2s ease;
 }
 
-.pause:hover { background: #e3e3e3; }
+.ctl:active:not(:disabled) { transform: scale(0.94); }
+.ctl:disabled { opacity: 0.4; cursor: default; }
+.ctl svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ctl svg .fill { fill: currentColor; stroke: none; }
+
+.ctl.lg { width: 58px; height: 58px; }
+.ctl.xl { width: 74px; height: 74px; }
+.ctl.xl svg { width: 26px; height: 26px; }
+
+.ctl.labeled { display: inline-flex; gap: 8px; width: auto; padding: 0 18px 0 15px; font-size: 15px; font-weight: 500; }
+.ctl.labeled svg { width: 18px; height: 18px; }
+.ctl.wide { height: 54px; padding: 0 28px 0 22px; }
+
+.ctl.stop { border-color: transparent; background: #1c1c1e; color: #fff; box-shadow: 0 6px 18px rgba(0, 40, 70, 0.18); }
+
+.capsule { display: flex; gap: 4px; padding: 5px; border-radius: 999px; }
+.capsule .ctl:not(.stop) { border-color: transparent; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+.ctl:focus-visible, .mode-pill:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+
+/* ── Timer ── */
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #3b3b3b;
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff453a; animation: rec-pulse 1.6s ease-in-out infinite; }
+.timer[data-status='paused'] .dot { background: #b0b0b0; animation: none; }
+.timer[data-status='stopped'] .dot { background: #34c759; animation: none; }
+
+@keyframes rec-pulse { 50% { opacity: 0.35; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .word { animation: none; }
+  .word, .timer .dot { animation: none; }
   .transcript { transition: none; }
 }
