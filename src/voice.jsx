@@ -20,7 +20,7 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
  *  +clear  transcript fades out; loops when `loop` is on
  *
  *  STOP    transcript fades out (fadeOutMs)
- *  +gap    processing label shimmers, beam breathes (durationMs)
+ *  +gap    processing label shimmers, beam sweeps left ↔ right (durationMs)
  *  done    saved; record button returns
  * ───────────────────────────────────────────────────────── */
 
@@ -159,8 +159,17 @@ const CONTROLS = {
     textColor: '#8a9aa0',
     shimmerColor: '#1f2a2e',
     shimmerMs: [1600, 300, 5000, 50],
-    beamPulse: [0.55, 0, 1, 0.01],
-    pulseMs: [1400, 300, 5000, 50],
+    /* VoiceBeam's own processing sweep: the glow gathers into one beam that
+       travels left ↔ right along the bottom edge. With scale 3 the library's
+       travel unit is ~500px, so 0.4 runs corner to corner on a 390px screen. */
+    beam: {
+      passSeconds: [1.05, 0.2, 4, 0.05],
+      level: [1, 0, 1, 0.01],
+      easeSeconds: [0.6, 0, 2, 0.05],
+      travel: [0.4, 0, 2, 0.01],
+      curve: [2.1, 1, 6, 0.05],
+      cornerFollow: [0.4, 0, 1, 0.01],
+    },
   },
 };
 
@@ -275,9 +284,6 @@ function useRecorder(s, t, ctl) {
         const syllable = Math.pow(Math.sin(Math.PI * (w - i)), 0.7);
         const wobble = 1 - sp.simulation.jitter * (0.5 + 0.5 * Math.sin(i * 12.9898 + now / 170));
         target = sp.simulation.voiceLevel * (0.35 + 0.65 * syllable) * wobble;
-      } else if (isThinking) {
-        const phase = ((c.proc - thinkStart) / pp.pulseMs) * Math.PI * 2;
-        target = pp.beamPulse * (0.5 - 0.5 * Math.cos(phase));
       }
       level.current += (target - level.current) * 0.35;
 
@@ -659,6 +665,13 @@ function App() {
             saturation={b.color.saturation}
             hueRange={b.color.hueRange}
             hueDuration={b.color.hueDuration}
+            processing={rec.thinking}
+            processingDuration={c.processing.beam.passSeconds}
+            processingLevel={c.processing.beam.level}
+            processingEase={c.processing.beam.easeSeconds}
+            processingTravel={c.processing.beam.travel}
+            processingCurve={c.processing.beam.curve}
+            cornerFollow={c.processing.beam.cornerFollow}
             style={{
               '--voice-hue-base': `${b.color.hueBase}deg`,
               '--voice-stroke-opacity': String(b.color.strokeOpacity),
