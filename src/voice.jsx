@@ -18,6 +18,10 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
  *            page-clear     every N words start a fresh page
  *  +hold   take finished, voice falls silent
  *  +clear  transcript fades out; loops when `loop` is on
+ *
+ *  STOP    transcript fades out (fadeOutMs)
+ *  +gap    processing label shimmers, beam breathes (durationMs)
+ *  done    saved; record button returns
  * ───────────────────────────────────────────────────────── */
 
 const LEAD_IN = 400;
@@ -137,11 +141,26 @@ const CONTROLS = {
     glass: [0.42, 0, 1, 0.01],
   },
   record: {
+    buttonColor: '#1c1c1e',
+    squareColor: '#ffffff',
     dotSize: [18, 6, 36, 0.5],
     squareSize: [11, 4, 28, 0.5],
     squareRadius: [2.5, 0, 14, 0.5],
     dotColor: '#ff453a',
     morphMs: [320, 0, 1200, 10],
+  },
+  /* Stop → transcript fades out → processing → saved (back to record). */
+  processing: {
+    fadeOutMs: [500, 0, 2000, 10],
+    gapMs: [0, 0, 1500, 10],
+    durationMs: [2600, 300, 8000, 50],
+    label: 'Processing your entry',
+    textSize: [17, 11, 28, 0.5],
+    textColor: '#8a9aa0',
+    shimmerColor: '#1f2a2e',
+    shimmerMs: [1600, 300, 5000, 50],
+    beamPulse: [0.55, 0, 1, 0.01],
+    pulseMs: [1400, 300, 5000, 50],
   },
 };
 
@@ -183,19 +202,26 @@ function splitWords(text) {
 }
 
 /* The simulated take: a clock that only runs while recording, a level
-   getter for VoiceBeam, and the handful of values React renders. */
-function useRecorder(s, t) {
+   getter for VoiceBeam, and the handful of values React renders.
+   status: idle → recording ⇄ paused → processing → stopped */
+function useRecorder(s, t, ctl) {
   const [status, setStatus] = useState('idle');
   const [visible, setVisible] = useState(0);
   const [clearing, setClearing] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [thinking, setThinking] = useState(false);
   const level = useRef(0);
-  const clock = useRef({ t: 0, rec: 0, last: 0 });
+  const clock = useRef({ t: 0, rec: 0, proc: 0, last: 0 });
   const statusRef = useRef(status);
   statusRef.current = status;
-  const params = useRef({ s, t });
-  params.current = { s, t };
+  const params = useRef({ s, t, ctl });
+  params.current = { s, t, ctl };
   const cache = useRef({ text: null, words: [] });
+
+  const beginProcessing = useCallback(() => {
+    clock.current.proc = 0;
+    setStatus('processing');
+  }, []);
 
   useEffect(() => {
     let raf;
@@ -204,13 +230,14 @@ function useRecorder(s, t) {
       const c = clock.current;
       const dt = c.last ? Math.min(64, now - c.last) : 0;
       c.last = now;
-      const { s: sp, t: tp } = params.current;
+      const { s: sp, t: tp, ctl: cp } = params.current;
       if (cache.current.text !== tp.text) cache.current = { text: tp.text, words: splitWords(tp.text) };
       const n = cache.current.words.length;
       const { wordMs, holdMs, clearMs } = tp.timing;
       const speakEnd = LEAD_IN + n * wordMs;
       const total = speakEnd + holdMs + clearMs;
       const recording = statusRef.current === 'recording';
+      const processing = statusRef.current === 'processing';
 
       if (recording) {
         c.t += dt;
@@ -221,8 +248,23 @@ function useRecorder(s, t) {
             c.rec = 0;
           } else {
             c.t = speakEnd + holdMs;
-            setStatus('stopped');
+            c.proc = 0;
+            statusRef.current = 'processing';
+            setStatus('processing');
           }
+        }
+      }
+
+      // Processing starts once the transcript has faded out (plus an optional gap).
+      const pp = cp.processing;
+      const thinkStart = pp.fadeOutMs + pp.gapMs;
+      let isThinking = false;
+      if (processing) {
+        c.proc += dt;
+        isThinking = c.proc >= thinkStart;
+        if (c.proc >= thinkStart + pp.durationMs) {
+          isThinking = false;
+          setStatus('stopped');
         }
       }
 
@@ -233,13 +275,17 @@ function useRecorder(s, t) {
         const syllable = Math.pow(Math.sin(Math.PI * (w - i)), 0.7);
         const wobble = 1 - sp.simulation.jitter * (0.5 + 0.5 * Math.sin(i * 12.9898 + now / 170));
         target = sp.simulation.voiceLevel * (0.35 + 0.65 * syllable) * wobble;
+      } else if (isThinking) {
+        const phase = ((c.proc - thinkStart) / pp.pulseMs) * Math.PI * 2;
+        target = pp.beamPulse * (0.5 - 0.5 * Math.cos(phase));
       }
       level.current += (target - level.current) * 0.35;
 
-      // State only changes when a word lands, the take clears, or a second passes.
+      // State only changes when a word lands, the take clears, a phase flips, or a second passes.
       setVisible(Math.max(0, Math.min(n, Math.ceil((c.t - LEAD_IN) / wordMs))));
       setClearing(c.t > speakEnd + holdMs);
       setSeconds(Math.floor(c.rec / 1000));
+      setThinking(isThinking);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -255,11 +301,15 @@ function useRecorder(s, t) {
     () => setStatus((st) => (st === 'recording' ? 'paused' : st === 'paused' ? 'recording' : st)),
     [],
   );
-  const stop = useCallback(() => setStatus('stopped'), []);
   const getLevel = useCallback(() => level.current, []);
   const live = status === 'recording' || status === 'paused';
+  // Once stopped, the take's text stays hidden until the next recording.
+  const hideText = clearing || status === 'processing' || status === 'stopped';
 
-  return { status, live, visible, clearing, seconds, record, togglePause, stop, getLevel };
+  return {
+    status, live, visible, hideText, thinking, seconds,
+    record, togglePause, stop: beginProcessing, getLevel,
+  };
 }
 
 /* ── Icons ─────────────────────────────────────────────── */
@@ -345,6 +395,7 @@ function RecordButton({ rec, size, withLabel }) {
       type="button"
       className={`ctl stop ${size || ''} ${withLabel ? 'labeled' : ''}`}
       aria-label={rec.live ? 'Stop and save entry' : 'Start recording'}
+      disabled={rec.status === 'processing'}
       onClick={rec.live ? rec.stop : rec.record}
     >
       <span className="rec-glyph" data-mode={rec.live ? 'stop' : 'record'} aria-hidden="true" />
@@ -359,7 +410,27 @@ function Timer({ rec }) {
   return (
     <div className="timer" data-status={rec.status}>
       <span className="dot" aria-hidden="true" />
-      <span>{rec.status === 'stopped' ? 'Saved' : `${mm}:${ss}`}</span>
+      <span>{rec.status === 'stopped' ? 'Saved' : rec.status === 'processing' ? 'Processing' : `${mm}:${ss}`}</span>
+    </div>
+  );
+}
+
+/* Shown after the transcript fades out on stop; the label shimmers while the beam breathes. */
+function Processing({ rec, p, bottom }) {
+  return (
+    <div
+      className="processing"
+      data-shown={rec.thinking || undefined}
+      role="status"
+      style={{
+        bottom,
+        fontSize: p.textSize,
+        '--proc-color': p.textColor,
+        '--proc-shimmer': p.shimmerColor,
+        '--proc-shimmer-ms': `${p.shimmerMs}ms`,
+      }}
+    >
+      {rec.thinking ? p.label : ''}
     </div>
   );
 }
@@ -473,7 +544,7 @@ function Transcript({ words, rec, t, rightInset }) {
   return (
     <div
       className="transcript"
-      data-clearing={rec.clearing || undefined}
+      data-clearing={rec.hideText || undefined}
       style={{
         left: ty.sidePadding,
         right: ty.sidePadding + rightInset,
@@ -520,7 +591,7 @@ function App() {
   const c = useDialKit('Controls', CONTROLS, { id: 'voice-controls' });
   const t = useDialKit('Transcript', TRANSCRIPT, { id: 'voice-transcript' });
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
-  const rec = useRecorder(s, t);
+  const rec = useRecorder(s, t, c);
   const words = splitWords(t.text);
   const framed = s.deviceFrame;
   const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
@@ -617,11 +688,15 @@ function App() {
                 '--square-size': `${c.record.squareSize}px`,
                 '--square-radius': `${c.record.squareRadius}px`,
                 '--dot-color': c.record.dotColor,
+                '--button-color': c.record.buttonColor,
+                '--square-color': c.record.squareColor,
+                '--text-fade-ms': `${rec.status === 'processing' ? c.processing.fadeOutMs : 450}ms`,
                 '--morph-ms': `${c.record.morphMs}ms`,
               }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}
               <Transcript words={words} rec={rec} t={t} rightInset={s.layout === 'rail' ? 40 : 0} />
+              <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>

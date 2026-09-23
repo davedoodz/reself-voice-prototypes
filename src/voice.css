@@ -40,8 +40,37 @@ button { font: inherit; color: inherit; }
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-  transition: opacity 0.45s ease, filter 0.45s ease;
+  transition: opacity var(--text-fade-ms, 450ms) ease, filter var(--text-fade-ms, 450ms) ease;
 }
+
+/* ── Processing ── */
+.processing {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 5;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-align: center;
+  color: transparent;
+  background: linear-gradient(
+      100deg,
+      var(--proc-color) 0%,
+      var(--proc-color) 40%,
+      var(--proc-shimmer) 50%,
+      var(--proc-color) 60%,
+      var(--proc-color) 100%
+    ) 100% 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  opacity: 0;
+  filter: blur(4px);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+  animation: proc-shimmer var(--proc-shimmer-ms, 1600ms) linear infinite;
+}
+.processing[data-shown] { opacity: 1; filter: blur(0); }
+
+@keyframes proc-shimmer { to { background-position: -150% 0; } }
 
 .transcript p { margin: 0; letter-spacing: -0.005em; will-change: transform; }
 .transcript[data-clearing] { opacity: 0; filter: blur(6px); }
@@ -126,8 +155,9 @@ button { font: inherit; color: inherit; }
 .ctl.labeled svg { width: 18px; height: 18px; }
 .ctl.wide { height: 54px; padding: 0 28px 0 22px; }
 
-.ctl.stop { border-color: transparent; background: #1c1c1e; color: #fff; box-shadow: 0 6px 18px rgba(0, 40, 70, 0.18); }
+.ctl.stop { border-color: transparent; background: var(--button-color, #1c1c1e); color: #fff; box-shadow: 0 6px 18px rgba(0, 40, 70, 0.18); }
 .ctl.stop:not(.lg, .xl, .labeled) { width: var(--record-size, 46px); height: var(--record-size, 46px); }
+.ctl.stop:disabled { opacity: 0.75; }
 
 /* Record ↔ stop: a red dot morphs into a white rounded square. */
 .rec-glyph {
@@ -137,7 +167,7 @@ button { font: inherit; color: inherit; }
   width: calc(var(--square-size, 11px) * var(--g));
   height: calc(var(--square-size, 11px) * var(--g));
   border-radius: var(--square-radius, 2.5px);
-  background: #fff;
+  background: var(--square-color, #fff);
   transition-property: width, height, border-radius, background-color;
   transition-duration: var(--morph-ms, 320ms);
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
@@ -198,6 +228,6 @@ button { font: inherit; color: inherit; }
 @keyframes rec-pulse { 50% { opacity: 0.35; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .word, .timer .dot { animation: none; }
+  .word, .timer .dot, .processing { animation: none; }
   .transcript { transition: none; }
 }
