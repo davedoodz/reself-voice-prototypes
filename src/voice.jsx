@@ -45,15 +45,15 @@ const BEAM = {
   },
   shape: {
     type: { type: 'select', options: ['mobile', 'default', 'pill'], default: 'mobile' },
-    borderRadius: [62, 0, 120, 1],
+    borderRadius: [38, 0, 120, 1],
     scale: [3, 0.1, 5, 0.05],
-    glowSize: [0.25, 0, 3, 0.01],
+    glowSize: [3, 0, 5, 0.01],
     reach: [0.85, 0, 5, 0.01],
     spread: [0.8, 0, 3, 0.01],
-    flow: [-68, -200, 200, 1],
+    flow: [48, -200, 200, 1],
     bend: [3, 0, 150, 1],
-    rangeWidth: [1.6, 0.1, 4, 0.01],
-    softness: [1.35, 0.2, 3, 0.01],
+    rangeWidth: [0.59, 0.1, 4, 0.01],
+    softness: [3, 0.2, 4, 0.01],
     distortion: [1, 0, 1, 0.01],
     distortionDetail: [3, 0.1, 6, 0.05],
   },
@@ -81,7 +81,7 @@ const BEAM = {
       default: 'ice',
     },
     theme: { type: 'select', options: ['light', 'dark'], default: 'light' },
-    brightness: [1.45, 0, 3, 0.01],
+    brightness: [3, 0, 4, 0.01],
     saturation: [2.2, 0, 4, 0.01],
     hueRange: [0, 0, 180, 1],
     hueDuration: [2, 0.5, 30, 0.1],
@@ -105,42 +105,68 @@ const FRAMED_SAFE_TOP = 34;
 const SCREEN = {
   layout: { type: 'select', options: LAYOUTS, default: 'dock' },
   modeLabel: 'Freeform',
-  showTimer: true,
+  showTimer: false,
   deviceFrame: true,
   previewScale: [0.7, 0.4, 1.2, 0.01],
   screenHeight: [780, 500, 900, 1],
   screenColor: '#fafafa',
-  pageColor: '#f7f7f7',
+  pageColor: '#f5f5f5',
   simulation: {
     _collapsed: true,
     loop: true,
-    voiceLevel: [0.85, 0, 1, 0.01],
-    jitter: [0.35, 0, 1, 0.01],
+    voiceLevel: [1, 0, 1, 0.01],
+    jitter: [0.7, 0, 1, 0.01],
+  },
+};
+
+/* The record → recording reveal: pause and restart only exist during a take. */
+const CONTROLS = {
+  reveal: {
+    durationMs: [460, 0, 1500, 10],
+    staggerMs: [70, 0, 400, 5],
+    offsetX: [28, -120, 120, 1],
+    offsetY: [0, -60, 60, 1],
+    fromScale: [0.6, 0, 1, 0.01],
+    fromBlur: [6, 0, 24, 0.5],
+    overshoot: [1.45, 1, 2.4, 0.01],
+  },
+  buttons: {
+    size: [46, 32, 72, 1],
+    recordSize: [46, 32, 80, 1],
+    gap: [12, 0, 40, 1],
+    glass: [0.42, 0, 1, 0.01],
+  },
+  record: {
+    dotSize: [18, 6, 36, 0.5],
+    squareSize: [11, 4, 28, 0.5],
+    squareRadius: [2.5, 0, 14, 0.5],
+    dotColor: '#ff453a',
+    morphMs: [320, 0, 1200, 10],
   },
 };
 
 const TRANSCRIPT = {
   text: { type: 'text', default: DEFAULT_TEXT, placeholder: 'What the recorder hears…' },
   timing: {
-    wordMs: [230, 60, 800, 10],
-    holdMs: [2200, 0, 6000, 50],
+    wordMs: [290, 60, 800, 10],
+    holdMs: [1900, 0, 6000, 50],
     clearMs: [600, 100, 2000, 50],
   },
   overflow: {
     mode: { type: 'select', options: ['fade-scroll', 'rolling-window', 'page-clear'], default: 'fade-scroll' },
     maxLines: [4, 1, 10, 1],
-    fadeEdge: [0.55, 0, 1, 0.01],
-    scrollEaseMs: [480, 0, 1500, 10],
-    rollingWords: [22, 4, 80, 1],
-    pageWords: [24, 4, 80, 1],
-    ageFade: [0.025, 0, 0.2, 0.005],
-    minOpacity: [0.3, 0, 1, 0.01],
+    fadeEdge: [1, 0, 1, 0.01],
+    scrollEaseMs: [860, 0, 1500, 10],
+    rollingWords: [49, 4, 80, 1],
+    pageWords: [66, 4, 80, 1],
+    ageFade: [0.11, 0, 0.2, 0.005],
+    minOpacity: [1, 0, 1, 0.01],
   },
   words: {
     wordInMs: [620, 80, 2000, 10],
-    wordBlur: [8, 0, 24, 0.5],
-    newColor: '#9a9a9a',
-    textColor: '#3b3b3b',
+    wordBlur: [16.5, 0, 24, 0.5],
+    newColor: '#7dbec0',
+    textColor: '#a1acb0',
   },
   type: {
     align: { type: 'select', options: ['center', 'left'], default: 'center' },
@@ -159,7 +185,7 @@ function splitWords(text) {
 /* The simulated take: a clock that only runs while recording, a level
    getter for VoiceBeam, and the handful of values React renders. */
 function useRecorder(s, t) {
-  const [status, setStatus] = useState('recording');
+  const [status, setStatus] = useState('idle');
   const [visible, setVisible] = useState(0);
   const [clearing, setClearing] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -219,7 +245,8 @@ function useRecorder(s, t) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const restart = useCallback(() => {
+  /* Record and restart both begin a fresh take. */
+  const record = useCallback(() => {
     clock.current.t = 0;
     clock.current.rec = 0;
     setStatus('recording');
@@ -230,8 +257,9 @@ function useRecorder(s, t) {
   );
   const stop = useCallback(() => setStatus('stopped'), []);
   const getLevel = useCallback(() => level.current, []);
+  const live = status === 'recording' || status === 'paused';
 
-  return { status, visible, clearing, seconds, restart, togglePause, stop, getLevel };
+  return { status, live, visible, clearing, seconds, record, togglePause, stop, getLevel };
 }
 
 /* ── Icons ─────────────────────────────────────────────── */
@@ -242,7 +270,22 @@ const BackIcon = () => icon(<path d="M15 5l-7 7 7 7" />);
 const PauseIcon = () => icon(<><path d="M9 6v12" /><path d="M15 6v12" /></>);
 const PlayIcon = () => icon(<path className="fill" d="M8 5.5v13l10.5-6.5z" />);
 const RestartIcon = () => icon(<><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v4h4" /></>);
-const StopIcon = () => icon(<rect className="fill" x="7" y="7" width="10" height="10" rx="2.5" />);
+
+/* Only interactive while a take is live. `order` staggers outward from the record
+   button; `dir` is 1 when the record button sits after this one, −1 when before,
+   so each button grows out of it. */
+function Reveal({ shown, order, dir, children }) {
+  return (
+    <span
+      className="reveal"
+      data-shown={shown || undefined}
+      inert={!shown}
+      style={{ '--i': order, '--dir': dir }}
+    >
+      {children}
+    </span>
+  );
+}
 
 /* ── Controls ──────────────────────────────────────────── */
 function Back() {
@@ -262,47 +305,50 @@ function ModePill({ label }) {
   );
 }
 
-function PauseButton({ rec, size, withLabel }) {
+function PauseButton({ rec, size, withLabel, order = 0, dir = 1 }) {
   const paused = rec.status === 'paused';
   return (
-    <button
-      type="button"
-      className={`ctl ${size || ''} ${withLabel ? 'labeled' : ''}`}
-      aria-label={paused ? 'Resume recording' : 'Pause recording'}
-      disabled={rec.status === 'stopped'}
-      onClick={rec.togglePause}
-    >
-      {paused ? <PlayIcon /> : <PauseIcon />}
-      {withLabel && <span>{paused ? 'Resume' : 'Pause'}</span>}
-    </button>
+    <Reveal shown={rec.live} order={order} dir={dir}>
+      <button
+        type="button"
+        className={`ctl ${size || ''} ${withLabel ? 'labeled' : ''}`}
+        aria-label={paused ? 'Resume recording' : 'Pause recording'}
+        onClick={rec.togglePause}
+      >
+        {paused ? <PlayIcon /> : <PauseIcon />}
+        {withLabel && <span>{paused ? 'Resume' : 'Pause'}</span>}
+      </button>
+    </Reveal>
   );
 }
 
-function RestartButton({ rec, size, withLabel }) {
+function RestartButton({ rec, size, withLabel, order = 1, dir = 1 }) {
   return (
-    <button
-      type="button"
-      className={`ctl ${size || ''} ${withLabel ? 'labeled' : ''}`}
-      aria-label="Restart recording"
-      onClick={rec.restart}
-    >
-      <RestartIcon />
-      {withLabel && <span>Restart</span>}
-    </button>
+    <Reveal shown={rec.live} order={order} dir={dir}>
+      <button
+        type="button"
+        className={`ctl ${size || ''} ${withLabel ? 'labeled' : ''}`}
+        aria-label="Restart recording"
+        onClick={rec.record}
+      >
+        <RestartIcon />
+        {withLabel && <span>Restart</span>}
+      </button>
+    </Reveal>
   );
 }
 
-function StopButton({ rec, size, withLabel }) {
+/* Record before and after a take; stop during one. The glyph morphs dot ↔ square. */
+function RecordButton({ rec, size, withLabel }) {
   return (
     <button
       type="button"
       className={`ctl stop ${size || ''} ${withLabel ? 'labeled' : ''}`}
-      aria-label="Stop and save entry"
-      disabled={rec.status === 'stopped'}
-      onClick={rec.stop}
+      aria-label={rec.live ? 'Stop and save entry' : 'Start recording'}
+      onClick={rec.live ? rec.stop : rec.record}
     >
-      <StopIcon />
-      {withLabel && <span>{rec.status === 'stopped' ? 'Saved' : 'Stop'}</span>}
+      <span className="rec-glyph" data-mode={rec.live ? 'stop' : 'record'} aria-hidden="true" />
+      {withLabel && <span>{rec.live ? 'Stop' : 'Record'}</span>}
     </button>
   );
 }
@@ -331,9 +377,9 @@ function Layout({ layout, rec, s }) {
           <div className="slot bottom-center column">
             {timer}
             <div className="row gap-24">
-              <RestartButton rec={rec} />
-              <StopButton rec={rec} size="xl" />
-              <PauseButton rec={rec} />
+              <RestartButton rec={rec} order={0} />
+              <RecordButton rec={rec} size="xl" />
+              <PauseButton rec={rec} order={0} dir={-1} />
             </div>
           </div>
         </>
@@ -344,9 +390,9 @@ function Layout({ layout, rec, s }) {
           <div className="slot top-row"><Back />{timer}{mode}</div>
           <div className="slot bottom-center">
             <div className="capsule">
-              <PauseButton rec={rec} withLabel />
-              <StopButton rec={rec} withLabel />
-              <RestartButton rec={rec} withLabel />
+              <PauseButton rec={rec} withLabel order={1} />
+              <RecordButton rec={rec} withLabel />
+              <RestartButton rec={rec} withLabel order={0} dir={-1} />
             </div>
           </div>
         </>
@@ -357,9 +403,9 @@ function Layout({ layout, rec, s }) {
           <div className="slot top-row"><Back />{timer}</div>
           <div className="slot bottom-left">{mode}</div>
           <div className="slot bottom-right rail">
-            <PauseButton rec={rec} />
-            <RestartButton rec={rec} />
-            <StopButton rec={rec} size="lg" />
+            <PauseButton rec={rec} order={1} />
+            <RestartButton rec={rec} order={0} />
+            <RecordButton rec={rec} size="lg" />
           </div>
         </>
       );
@@ -370,9 +416,9 @@ function Layout({ layout, rec, s }) {
           <div className="slot top-center">{timer}</div>
           <div className="slot above-controls">{mode}</div>
           <div className="slot bottom-center row gap-16">
-            <PauseButton rec={rec} />
-            <StopButton rec={rec} size="wide" withLabel />
-            <RestartButton rec={rec} />
+            <PauseButton rec={rec} order={0} />
+            <RecordButton rec={rec} size="wide" withLabel />
+            <RestartButton rec={rec} order={0} dir={-1} />
           </div>
         </>
       );
@@ -385,9 +431,9 @@ function Layout({ layout, rec, s }) {
           <div className="slot bottom-row">
             {mode}
             <div className="row gap-12">
-              <RestartButton rec={rec} />
-              <PauseButton rec={rec} />
-              <StopButton rec={rec} />
+              <RestartButton rec={rec} order={1} />
+              <PauseButton rec={rec} order={0} />
+              <RecordButton rec={rec} />
             </div>
           </div>
         </>
@@ -471,6 +517,7 @@ function Transcript({ words, rec, t, rightInset }) {
 
 function App() {
   const s = useDialKit('Screen', SCREEN, { id: 'voice-screen' });
+  const c = useDialKit('Controls', CONTROLS, { id: 'voice-controls' });
   const t = useDialKit('Transcript', TRANSCRIPT, { id: 'voice-transcript' });
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
   const rec = useRecorder(s, t);
@@ -552,7 +599,26 @@ function App() {
               className="voice-screen"
               data-layout={s.layout}
               aria-label="Voice journal recorder"
-              style={{ height: screenH, background: s.screenColor }}
+              style={{
+                height: screenH,
+                background: s.screenColor,
+                '--reveal-ms': `${c.reveal.durationMs}ms`,
+                '--reveal-stagger': `${c.reveal.staggerMs}ms`,
+                '--reveal-x': `${c.reveal.offsetX}px`,
+                '--reveal-y': `${c.reveal.offsetY}px`,
+                '--reveal-scale': c.reveal.fromScale,
+                '--reveal-blur': `${c.reveal.fromBlur}px`,
+                '--reveal-ease': `cubic-bezier(0.34, ${c.reveal.overshoot}, 0.64, 1)`,
+                '--ctl-size': `${c.buttons.size}px`,
+                '--record-size': `${c.buttons.recordSize}px`,
+                '--cluster-gap': `${c.buttons.gap}px`,
+                '--glass': c.buttons.glass,
+                '--dot-size': `${c.record.dotSize}px`,
+                '--square-size': `${c.record.squareSize}px`,
+                '--square-radius': `${c.record.squareRadius}px`,
+                '--dot-color': c.record.dotColor,
+                '--morph-ms': `${c.record.morphMs}ms`,
+              }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}
               <Transcript words={words} rec={rec} t={t} rightInset={s.layout === 'rail' ? 40 : 0} />

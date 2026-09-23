@@ -69,7 +69,7 @@ button { font: inherit; color: inherit; }
 .rail { flex-direction: column; gap: 12px; }
 .above-controls { bottom: 126px; left: 50%; transform: translateX(-50%); }
 .row { display: flex; align-items: center; }
-.gap-12 { gap: 12px; }
+.gap-12 { gap: var(--cluster-gap, 12px); }
 .gap-16 { gap: 16px; }
 .gap-24 { gap: 24px; }
 
@@ -78,7 +78,7 @@ button { font: inherit; color: inherit; }
 .ctl,
 .capsule {
   border: 1px solid rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, var(--glass, 0.42));
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -103,8 +103,8 @@ button { font: inherit; color: inherit; }
   display: inline-grid;
   place-items: center;
   flex-shrink: 0;
-  width: 46px;
-  height: 46px;
+  width: var(--ctl-size, 46px);
+  height: var(--ctl-size, 46px);
   padding: 0;
   border-radius: 999px;
   color: #1f1f1f;
@@ -127,6 +127,52 @@ button { font: inherit; color: inherit; }
 .ctl.wide { height: 54px; padding: 0 28px 0 22px; }
 
 .ctl.stop { border-color: transparent; background: #1c1c1e; color: #fff; box-shadow: 0 6px 18px rgba(0, 40, 70, 0.18); }
+.ctl.stop:not(.lg, .xl, .labeled) { width: var(--record-size, 46px); height: var(--record-size, 46px); }
+
+/* Record ↔ stop: a red dot morphs into a white rounded square. */
+.rec-glyph {
+  --g: 1;
+  display: block;
+  flex-shrink: 0;
+  width: calc(var(--square-size, 11px) * var(--g));
+  height: calc(var(--square-size, 11px) * var(--g));
+  border-radius: var(--square-radius, 2.5px);
+  background: #fff;
+  transition-property: width, height, border-radius, background-color;
+  transition-duration: var(--morph-ms, 320ms);
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rec-glyph[data-mode='record'] {
+  width: calc(var(--dot-size, 18px) * var(--g));
+  height: calc(var(--dot-size, 18px) * var(--g));
+  border-radius: 50%;
+  background: var(--dot-color, #ff453a);
+}
+.ctl.lg .rec-glyph { --g: 1.2; }
+.ctl.xl .rec-glyph { --g: 1.45; }
+.ctl.labeled .rec-glyph { --g: 0.8; }
+
+/* Pause and restart appear only during a take, growing out of the record button. */
+.reveal {
+  display: inline-flex;
+  transition-property: opacity, transform, filter, max-width;
+  transition-duration: var(--reveal-ms, 460ms);
+  transition-timing-function: var(--reveal-ease, ease);
+  transition-delay: calc(var(--i, 0) * var(--reveal-stagger, 70ms));
+}
+.reveal:not([data-shown]) {
+  opacity: 0;
+  transform: translate(calc(var(--reveal-x, 28px) * var(--dir, 1)), var(--reveal-y, 0px)) scale(var(--reveal-scale, 0.6));
+  filter: blur(var(--reveal-blur, 6px));
+  pointer-events: none;
+}
+/* The rail stacks vertically, so the slide runs down toward the record button. */
+.rail .reveal:not([data-shown]) {
+  transform: translate(var(--reveal-y, 0px), calc(var(--reveal-x, 28px) * var(--dir, 1))) scale(var(--reveal-scale, 0.6));
+}
+/* Inside the capsule the hidden buttons give their width back. */
+.capsule .reveal { max-width: 160px; overflow: hidden; }
+.capsule .reveal:not([data-shown]) { max-width: 0; }
 
 .capsule { display: flex; gap: 4px; padding: 5px; border-radius: 999px; }
 .capsule .ctl:not(.stop) { border-color: transparent; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -145,7 +191,8 @@ button { font: inherit; color: inherit; }
 }
 
 .timer .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff453a; animation: rec-pulse 1.6s ease-in-out infinite; }
-.timer[data-status='paused'] .dot { background: #b0b0b0; animation: none; }
+.timer[data-status='paused'] .dot,
+.timer[data-status='idle'] .dot { background: #b0b0b0; animation: none; }
 .timer[data-status='stopped'] .dot { background: #34c759; animation: none; }
 
 @keyframes rec-pulse { 50% { opacity: 0.35; } }
