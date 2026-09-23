@@ -90,13 +90,18 @@ button { font: inherit; color: inherit; }
 .top-left { top: calc(30px + var(--safe-top, 0px)); left: 26px; }
 .top-center { top: calc(38px + var(--safe-top, 0px)); left: 50%; transform: translateX(-50%); }
 .top-row { top: calc(30px + var(--safe-top, 0px)); right: 26px; left: 26px; justify-content: space-between; }
-.bottom-row { right: 28px; bottom: 44px; left: 28px; justify-content: space-between; }
-.bottom-center { bottom: 44px; left: 50%; transform: translateX(-50%); }
+.bottom-row { right: 28px; bottom: var(--bottom-inset, 44px); left: 28px; justify-content: space-between; }
+.bottom-center { bottom: var(--bottom-inset, 44px); left: 50%; transform: translateX(-50%); }
 .bottom-center.column { flex-direction: column; gap: 18px; }
-.bottom-left { bottom: 44px; left: 28px; }
-.bottom-right { right: 24px; bottom: 44px; }
+.bottom-left { bottom: var(--bottom-inset, 44px); left: 28px; }
+.bottom-right { right: 24px; bottom: var(--bottom-inset, 44px); }
 .rail { flex-direction: column; gap: 12px; }
-.above-controls { bottom: 126px; left: 50%; transform: translateX(-50%); }
+.above-controls { bottom: calc(var(--bottom-inset, 44px) + 82px); left: 50%; transform: translateX(-50%); }
+/* Independent nudges; `top` keeps transforms free for the reveal/exit motion. */
+:is(.bottom-row, .bottom-left, .above-controls) .mode-pill { position: relative; top: var(--pill-shift, 0px); }
+:is(.bottom-row, .bottom-center, .bottom-right) .ctl { position: relative; top: var(--buttons-shift, 0px); }
+.capsule .ctl { top: 0; }
+.bottom-center .capsule { position: relative; top: var(--buttons-shift, 0px); }
 .row { display: flex; align-items: center; }
 .gap-12 { gap: var(--cluster-gap, 12px); }
 .gap-16 { gap: 16px; }

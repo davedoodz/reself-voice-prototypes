@@ -153,6 +153,11 @@ const CONTROLS = {
     recordSize: [46, 32, 80, 1],
     gap: [12, 0, 40, 1],
     glass: [0.42, 0, 1, 0.01],
+    /* Distance from the screen's bottom edge; lower = further down. */
+    bottomInset: [44, 0, 140, 1],
+    /* Nudge the pill or the button cluster on its own; positive = down. */
+    pillShiftY: [0, -40, 40, 1],
+    buttonsShiftY: [0, -40, 40, 1],
   },
   record: {
     buttonColor: '#1c1c1e',
@@ -749,6 +754,9 @@ function App() {
                 '--ctl-size': `${c.buttons.size}px`,
                 '--record-size': `${c.buttons.recordSize}px`,
                 '--cluster-gap': `${c.buttons.gap}px`,
+                '--bottom-inset': `${c.buttons.bottomInset}px`,
+                '--pill-shift': `${c.buttons.pillShiftY}px`,
+                '--buttons-shift': `${c.buttons.buttonsShiftY}px`,
                 '--glass': c.buttons.glass,
                 '--dot-size': `${c.record.dotSize}px`,
                 '--square-size': `${c.record.squareSize}px`,
