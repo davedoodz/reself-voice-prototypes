@@ -4,6 +4,7 @@ import { VoiceBeam } from 'voice-glow';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import './voice.css';
+import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 
 /* ─────────────────────────────────────────────────────────
  * VOICE JOURNAL RECORDER — simulated take
@@ -91,10 +92,21 @@ const BEAM = {
   },
 };
 
+/* iphone_asset/iPhone - Silver.png: 874×1780, transparent screen cut-out at
+   x 46–830, y 39–1741 (784×1702, ~113px corners). The frame is scaled so the
+   cut-out is exactly the 390px screen. */
+const FRAME = { w: 874, h: 1780, x: 46, y: 39, screenW: 784, screenH: 1702, radius: 113 };
+const FRAME_K = 390 / FRAME.screenW;
+const FRAMED_SCREEN_H = FRAME.screenH * FRAME_K;
+const FRAMED_RADIUS = FRAME.radius * FRAME_K;
+/* Clearance under the Dynamic Island for the top controls. */
+const FRAMED_SAFE_TOP = 34;
+
 const SCREEN = {
   layout: { type: 'select', options: LAYOUTS, default: 'dock' },
   modeLabel: 'Freeform',
   showTimer: true,
+  deviceFrame: true,
   previewScale: [0.7, 0.4, 1.2, 0.01],
   screenHeight: [780, 500, 900, 1],
   screenColor: '#fafafa',
@@ -463,15 +475,33 @@ function App() {
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
   const rec = useRecorder(s, t);
   const words = splitWords(t.text);
+  const framed = s.deviceFrame;
+  const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
+  const deviceW = framed ? FRAME.w * FRAME_K : 390;
+  const deviceH = framed ? FRAME.h * FRAME_K : screenH;
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
       <div
         className="device"
-        style={{ width: 390 * s.previewScale, height: s.screenHeight * s.previewScale }}
+        style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}
       >
-        <div className="device-scaler" style={{ transform: `scale(${s.previewScale})` }}>
+        <div
+          className="device-scaler"
+          data-framed={framed || undefined}
+          style={{
+            width: deviceW,
+            height: deviceH,
+            transform: `scale(${s.previewScale})`,
+            '--screen-x': framed ? `${FRAME.x * FRAME_K}px` : '0px',
+            '--screen-y': framed ? `${FRAME.y * FRAME_K}px` : '0px',
+            '--screen-radius': framed ? `${FRAMED_RADIUS}px` : '62px',
+            '--safe-top': framed ? `${FRAMED_SAFE_TOP}px` : '0px',
+          }}
+        >
+          {framed && <div className="screen-fill" style={{ height: screenH, background: s.screenColor }} />}
           <VoiceBeam
+            className="beam-host"
             level={rec.getLevel}
             active={rec.status !== 'stopped'}
             type={b.shape.type}
@@ -522,13 +552,14 @@ function App() {
               className="voice-screen"
               data-layout={s.layout}
               aria-label="Voice journal recorder"
-              style={{ height: s.screenHeight, background: s.screenColor }}
+              style={{ height: screenH, background: s.screenColor }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}
               <Transcript words={words} rec={rec} t={t} rightInset={s.layout === 'rail' ? 40 : 0} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>
+          {framed && <img className="iphone-frame" src={iphoneFrameUrl} alt="" draggable={false} />}
         </div>
       </div>
 

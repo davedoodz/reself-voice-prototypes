@@ -17,14 +17,21 @@ button { font: inherit; color: inherit; }
 }
 
 .device { position: relative; flex-shrink: 0; }
-.device-scaler { width: 390px; transform-origin: 0 0; }
+.device-scaler { position: relative; transform-origin: 0 0; }
+
+/* The beam and screen sit in the frame's cut-out; outside a frame both offsets are 0. */
+.beam-host { position: absolute !important; top: var(--screen-y); left: var(--screen-x); width: 390px; }
+.screen-fill { position: absolute; top: var(--screen-y); left: var(--screen-x); width: 390px; border-radius: var(--screen-radius); }
+.iphone-frame { position: absolute; inset: 0; z-index: 20; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 
 .voice-screen {
   position: relative;
   width: 390px;
-  border-radius: 62px;
+  border-radius: var(--screen-radius, 62px);
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
+
+.device-scaler[data-framed] .voice-screen { border-color: transparent; }
 
 /* ── Transcript ── */
 .transcript {
@@ -51,9 +58,9 @@ button { font: inherit; color: inherit; }
 
 /* ── Slots ── */
 .slot { position: absolute; z-index: 6; display: flex; align-items: center; }
-.top-left { top: 30px; left: 26px; }
-.top-center { top: 38px; left: 50%; transform: translateX(-50%); }
-.top-row { top: 30px; right: 26px; left: 26px; justify-content: space-between; }
+.top-left { top: calc(30px + var(--safe-top, 0px)); left: 26px; }
+.top-center { top: calc(38px + var(--safe-top, 0px)); left: 50%; transform: translateX(-50%); }
+.top-row { top: calc(30px + var(--safe-top, 0px)); right: 26px; left: 26px; justify-content: space-between; }
 .bottom-row { right: 28px; bottom: 44px; left: 28px; justify-content: space-between; }
 .bottom-center { bottom: 44px; left: 50%; transform: translateX(-50%); }
 .bottom-center.column { flex-direction: column; gap: 18px; }
