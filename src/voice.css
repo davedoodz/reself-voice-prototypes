@@ -143,8 +143,8 @@ button { font: inherit; color: inherit; }
   font-weight: 500;
   letter-spacing: 0.02em;
 }
-.prompt-hint svg { width: 12px; height: 12px; }
-.prompt-hint svg .fill { fill: currentColor; }
+.prompt-star { width: var(--star-size, 12px); height: var(--star-size, 12px); flex-shrink: 0; }
+.prompt-star .fill { fill: currentColor; }
 .prompt-question {
   color: var(--prompt-color, #2a3438);
   font-size: var(--prompt-size, 17px);
@@ -152,20 +152,99 @@ button { font: inherit; color: inherit; }
   line-height: 1.3;
   text-wrap: balance;
 }
-/* Counts down the time before an untouched card fades. */
-.prompt-linger {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: var(--prompt-accent, #5fb3b8);
-  opacity: 0.4;
-  animation: prompt-linger var(--prompt-linger, 6000ms) linear forwards;
+/* ── Card timer: counts down the time before an untouched card fades ──
+   Every .linger animation lasts --prompt-linger and pauses with the take. */
+.prompt-card .linger {
+  animation-duration: var(--prompt-linger, 6000ms);
+  animation-timing-function: var(--linger-ease, linear);
+  animation-fill-mode: forwards;
 }
-.prompt-card[data-paused] .prompt-linger { animation-play-state: paused; }
+.prompt-card[data-paused] .linger { animation-play-state: paused; }
 
-@keyframes prompt-linger { to { transform: scaleX(0); } }
+/* 1 · Bar: a line along one edge shrinks toward the chosen side. */
+.linger-bar {
+  position: absolute;
+  right: var(--bar-inset, 0px);
+  bottom: 0;
+  left: var(--bar-inset, 0px);
+  height: var(--bar-h, 2px);
+  border-radius: var(--bar-h, 2px);
+  background: var(--prompt-accent, #5fb3b8);
+  opacity: var(--bar-opacity, 0.4);
+  animation-name: linger-shrink;
+}
+.linger-bar[data-edge='top'] { top: 0; bottom: auto; }
+.linger-bar[data-to='left'] { transform-origin: left; }
+.linger-bar[data-to='right'] { transform-origin: right; }
+@keyframes linger-shrink { to { transform: scaleX(0); } }
+
+/* 2 · Ring: drains clockwise from the top. */
+.linger-ring {
+  width: var(--ring-size, 18px);
+  height: var(--ring-size, 18px);
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+.linger-ring[data-place='corner'] { position: absolute; top: 12px; right: 12px; }
+.linger-ring[data-place='hint'] { width: calc(var(--star-size, 12px) + 2px); height: calc(var(--star-size, 12px) + 2px); margin-left: 2px; }
+.linger-ring circle { fill: none; stroke: var(--prompt-accent, #5fb3b8); stroke-width: var(--ring-stroke, 2); }
+.linger-ring .track { opacity: var(--ring-track, 0.18); }
+.linger-ring .linger {
+  opacity: var(--ring-opacity, 0.7);
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  animation-name: linger-drain;
+}
+@keyframes linger-drain { to { stroke-dashoffset: 1; } }
+
+/* 3 · Border: the card's own outline drains around its edge. */
+.linger-border { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.linger-border rect {
+  x: calc(var(--border-stroke, 1.5px) / 2);
+  y: calc(var(--border-stroke, 1.5px) / 2);
+  width: calc(100% - var(--border-stroke, 1.5px));
+  height: calc(100% - var(--border-stroke, 1.5px));
+  rx: calc(var(--prompt-radius, 22px) - var(--border-stroke, 1.5px) / 2);
+  fill: none;
+  stroke: var(--prompt-accent, #5fb3b8);
+  stroke-width: var(--border-stroke, 1.5px);
+  stroke-dasharray: 1;
+  opacity: var(--border-opacity, 0.6);
+  animation-name: linger-drain;
+}
+.linger-border rect[data-dir='ccw'] { animation-name: linger-drain-back; }
+@keyframes linger-drain-back { to { stroke-dashoffset: -1; } }
+
+/* 4 · Wash: a faint tint behind the text recedes to one side. */
+.linger-wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--prompt-accent, #5fb3b8);
+  opacity: var(--wash-opacity, 0.14);
+  animation-name: linger-shrink;
+  transform-origin: left;
+}
+.linger-wash[data-to='right'] { transform-origin: right; }
+.linger-wash[data-to='bottom'] { transform-origin: bottom; animation-name: linger-sink; }
+@keyframes linger-sink { to { transform: scaleY(0); } }
+.prompt-card[data-timer='wash'] { isolation: isolate; }
+
+/* 5 · Dots: each dot goes out at its share of the countdown, right to left. */
+.linger-dots { display: inline-flex; gap: var(--dot-gap, 6px); margin-top: 4px; }
+.linger-dots .linger {
+  width: var(--dot-size, 5px);
+  height: var(--dot-size, 5px);
+  border-radius: 50%;
+  background: var(--prompt-accent, #5fb3b8);
+  opacity: var(--dot-opacity, 0.6);
+  animation-name: linger-dot;
+  animation-duration: var(--dot-fade, 300ms);
+  animation-timing-function: ease;
+  /* --dot-at: the share of the countdown when this dot is fully out. */
+  animation-delay: calc(var(--prompt-linger, 6000ms) * var(--dot-at) - var(--dot-fade, 300ms));
+}
+@keyframes linger-dot { to { opacity: 0.12; transform: scale(0.6); } }
 
 /* ── Guided screen ──
    Two regions: the head (framework chip, header progress) and the prompt block.
@@ -466,6 +545,6 @@ button { font: inherit; color: inherit; }
 @keyframes rec-pulse { 50% { opacity: 0.35; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .word, .timer .dot, .processing, .prompt-card, .prompt-linger, .guide-step, .guide-menu, .next-glyph { animation: none; }
+  .word, .timer .dot, .processing, .prompt-card, .prompt-card .linger, .guide-step, .guide-menu, .next-glyph { animation: none; }
   .transcript, .prompt-card, .guide-progress span { transition: none; }
 }

@@ -302,6 +302,125 @@ const TRANSCRIPT = {
   },
 };
 
+const select = (options, value) => ({ type: 'select', options, default: value });
+
+/* ── Prompt card: countdown timer and star presets ─────────
+ * Every timer runs on the card's lingerMs countdown and pauses with the take.
+ *   bar     a thin line along one edge shrinks away (the original)
+ *   ring    a small ring drains, in the corner or beside the hint
+ *   border  the card's own outline drains around its edge
+ *   wash    a faint accent tint behind the text recedes to one side
+ *   dots    a row of dots goes out one by one, right to left
+ * The star before the hint:
+ *   spinIn  spins in once as the card arrives, then holds still
+ *   spin    turns slowly and continuously
+ *   tick    a quick partial turn, a rest, repeat (a quarter turn reads as a tick)
+ *   twinkle a quick grow-and-turn, a rest, repeat
+ *   swing   rocks back and forth
+ * ─────────────────────────────────────────────────────── */
+const TIMERS = [
+  { value: 'bar', label: '1 · Bar' },
+  { value: 'ring', label: '2 · Ring' },
+  { value: 'border', label: '3 · Border' },
+  { value: 'wash', label: '4 · Wash' },
+  { value: 'dots', label: '5 · Dots' },
+  { value: 'none', label: 'None' },
+];
+const STAR_MOTIONS = [
+  { value: 'spinIn', label: '1 · Spin in' },
+  { value: 'spin', label: '2 · Spin' },
+  { value: 'tick', label: '3 · Tick' },
+  { value: 'twinkle', label: '4 · Twinkle' },
+  { value: 'swing', label: '5 · Swing' },
+  { value: 'still', label: 'Still' },
+];
+const STAR_EASINGS = [
+  { value: 'spring', label: 'Spring (overshoot)' },
+  { value: 'out', label: 'Ease out' },
+  { value: 'smooth', label: 'Ease in-out' },
+  { value: 'linear', label: 'Linear' },
+];
+const DIRECTIONS = [
+  { value: 'cw', label: 'Clockwise' },
+  { value: 'ccw', label: 'Counter-clockwise' },
+];
+
+const CARD_TIMER = {
+  style: select(TIMERS, 'bar'),
+  pace: select(
+    [
+      { value: 'linear', label: 'Steady' },
+      { value: 'ease-in', label: 'Slow, then fast' },
+      { value: 'ease-out', label: 'Fast, then slow' },
+    ],
+    'linear',
+  ),
+  bar: {
+    height: [2, 1, 8, 0.5],
+    opacity: [0.4, 0.05, 1, 0.01],
+    edge: select(['bottom', 'top'], 'bottom'),
+    shrinkTo: select(['center', 'left', 'right'], 'center'),
+    inset: [0, 0, 60, 1],
+  },
+  ring: {
+    size: [18, 10, 40, 1],
+    stroke: [2, 0.5, 6, 0.5],
+    opacity: [0.7, 0.05, 1, 0.01],
+    track: [0.18, 0, 1, 0.01],
+    place: select(['corner', 'hint'], 'corner'),
+  },
+  border: {
+    stroke: [1.5, 0.5, 4, 0.5],
+    opacity: [0.6, 0.05, 1, 0.01],
+    direction: select(DIRECTIONS, 'cw'),
+  },
+  wash: {
+    opacity: [0.14, 0.02, 0.6, 0.01],
+    recedeTo: select(['left', 'right', 'bottom'], 'left'),
+  },
+  dots: {
+    count: [5, 2, 10, 1],
+    size: [5, 2, 12, 0.5],
+    gap: [6, 2, 16, 1],
+    opacity: [0.6, 0.05, 1, 0.01],
+    fadeMs: [300, 0, 1500, 10],
+  },
+};
+
+const STAR = {
+  motion: select(STAR_MOTIONS, 'spinIn'),
+  size: [12, 8, 24, 0.5],
+  spinIn: {
+    durationMs: [900, 100, 4000, 10],
+    delayMs: [150, 0, 3000, 10],
+    turns: [1, 0.25, 4, 0.25],
+    fromScale: [0.4, 0, 1, 0.01],
+    easing: select(STAR_EASINGS, 'spring'),
+    direction: select(DIRECTIONS, 'cw'),
+  },
+  spin: {
+    secPerTurn: [4, 0.5, 20, 0.1],
+    direction: select(DIRECTIONS, 'cw'),
+  },
+  tick: {
+    turnMs: [600, 100, 3000, 10],
+    restMs: [1800, 0, 8000, 50],
+    turns: [0.25, 0.125, 2, 0.125],
+    easing: select(STAR_EASINGS, 'spring'),
+    direction: select(DIRECTIONS, 'cw'),
+  },
+  twinkle: {
+    twinkleMs: [700, 100, 3000, 10],
+    restMs: [1600, 0, 8000, 50],
+    scale: [1.4, 1, 2.5, 0.01],
+    rotateDeg: [45, 0, 180, 1],
+  },
+  swing: {
+    cycleMs: [1600, 200, 6000, 10],
+    angleDeg: [18, 2, 90, 1],
+  },
+};
+
 /* Dynamic mode: questions offered at the script's [Question | Answer] marks. */
 const PROMPTS = {
   /* The speaker trails off at a mark; the card appears in this silence. */
@@ -319,8 +438,10 @@ const PROMPTS = {
     textSize: [17, 12, 26, 0.5],
     textColor: '#2a3438',
     accent: '#5fb3b8',
-    showLinger: true,
   },
+  /* The countdown before an untouched card fades, and the star's motion. */
+  timer: CARD_TIMER,
+  star: STAR,
   motion: {
     inMs: [620, 0, 2000, 10],
     outMs: [520, 0, 2000, 10],
@@ -532,7 +653,6 @@ const LABEL_FORMATS = {
 };
 
 const move = ({ show = true, x = 0, y = 0 }) => ({ show, x: [x, -200, 200, 1], y: [y, -400, 400, 1] });
-const select = (options, value) => ({ type: 'select', options, default: value });
 
 /* Every text element can use the app's font or Test Family (Klim trial, Regular + Italic). */
 const TEST_FAMILY = "'Unwind Family', 'Test Family', serif";
@@ -936,7 +1056,6 @@ const BackIcon = () => icon(<path d="M15 5l-7 7 7 7" />);
 const PauseIcon = () => icon(<><path d="M9 6v12" /><path d="M15 6v12" /></>);
 const PlayIcon = () => icon(<path className="fill" d="M8 5.5v13l10.5-6.5z" />);
 const RestartIcon = () => icon(<><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v4h4" /></>);
-const SparkIcon = () => icon(<path className="fill" d="M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z" />);
 const NextIcon = () => icon(<><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></>);
 const Chevron = () => (
   <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 5 6 7.5 8.5 5" /></svg>
@@ -1072,18 +1191,161 @@ function Processing({ rec, p, bottom }) {
   );
 }
 
+const STAR_EASE = {
+  spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  out: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  smooth: 'cubic-bezier(0.65, 0, 0.35, 1)',
+  linear: 'linear',
+};
+const SWAY = 'cubic-bezier(0.37, 0, 0.63, 1)';
+
+/* The star's motion preset → [keyframes, options] for element.animate(), or null. */
+function starMotion(s) {
+  const c = s[s.motion];
+  const dir = c?.direction === 'ccw' ? -1 : 1;
+  switch (s.motion) {
+    case 'spinIn':
+      return [
+        [
+          { transform: `rotate(${-dir * c.turns * 360}deg) scale(${c.fromScale})`, opacity: 0 },
+          { opacity: 1, offset: 0.3 },
+          { transform: 'rotate(0deg) scale(1)', opacity: 1 },
+        ],
+        { duration: c.durationMs, delay: c.delayMs, easing: STAR_EASE[c.easing], fill: 'backwards' },
+      ];
+    case 'spin':
+      return [
+        [{ transform: 'rotate(0deg)' }, { transform: `rotate(${dir * 360}deg)` }],
+        { duration: c.secPerTurn * 1000, iterations: Infinity },
+      ];
+    case 'tick': {
+      const cycle = c.turnMs + c.restMs;
+      const to = `rotate(${dir * c.turns * 360}deg)`;
+      return [
+        [
+          { transform: 'rotate(0deg)', easing: STAR_EASE[c.easing] },
+          { transform: to, offset: c.turnMs / cycle },
+          { transform: to },
+        ],
+        { duration: cycle, iterations: Infinity },
+      ];
+    }
+    case 'twinkle': {
+      const cycle = c.twinkleMs + c.restMs;
+      const k = c.twinkleMs / cycle;
+      return [
+        [
+          { transform: 'scale(1) rotate(0deg)', easing: STAR_EASE.out },
+          { transform: `scale(${c.scale}) rotate(${c.rotateDeg}deg)`, offset: k * 0.4, easing: STAR_EASE.smooth },
+          { transform: 'scale(1) rotate(0deg)', offset: k },
+          { transform: 'scale(1) rotate(0deg)' },
+        ],
+        { duration: cycle, iterations: Infinity },
+      ];
+    }
+    case 'swing':
+      return [
+        [
+          { transform: 'rotate(0deg)', easing: SWAY },
+          { transform: `rotate(${c.angleDeg}deg)`, offset: 0.25, easing: SWAY },
+          { transform: `rotate(${-c.angleDeg}deg)`, offset: 0.75, easing: SWAY },
+          { transform: 'rotate(0deg)' },
+        ],
+        { duration: c.cycleMs, iterations: Infinity },
+      ];
+    default:
+      return null;
+  }
+}
+
+/* The star before the hint. Retuning restarts it, so every slider shows live.
+   It holds still while the take is paused, like the timer. */
+function Spark({ s, paused }) {
+  const el = useRef(null);
+  const anim = useRef(null);
+  const sRef = useRef(s);
+  sRef.current = s;
+  /* Restart key only: JSON would turn iterations: Infinity into null. */
+  const spec = JSON.stringify(s);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const m = starMotion(sRef.current);
+    if (!m) return;
+    const a = el.current.animate(...m);
+    anim.current = a;
+    return () => a.cancel();
+  }, [spec]);
+
+  useEffect(() => {
+    const a = anim.current;
+    if (!a || a.playState === 'finished') return;
+    if (paused) a.pause();
+    else a.play();
+  }, [paused, spec]);
+
+  return (
+    <svg ref={el} className="prompt-star" viewBox="0 0 24 24" aria-hidden="true">
+      {/* Nudged down 1 unit so the star's centre is the box's centre: it turns in place. */}
+      <path className="fill" transform="translate(0 1)" d="M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z" />
+    </svg>
+  );
+}
+
+function RingTimer({ r }) {
+  return (
+    <svg className="linger-ring" data-place={r.place} viewBox="0 0 24 24" aria-hidden="true">
+      <circle className="track" cx="12" cy="12" r="9" />
+      <circle className="linger" cx="12" cy="12" r="9" pathLength="1" />
+    </svg>
+  );
+}
+
+/* The countdown before an untouched card fades. Every style is a CSS animation
+   lasting --prompt-linger, so all of them pause with the take. */
+function CardTimer({ t }) {
+  switch (t.style) {
+    case 'bar':
+      return <span className="linger linger-bar" data-edge={t.bar.edge} data-to={t.bar.shrinkTo} aria-hidden="true" />;
+    case 'ring':
+      return t.ring.place === 'corner' ? <RingTimer r={t.ring} /> : null;
+    case 'border':
+      return (
+        <svg className="linger-border" aria-hidden="true">
+          <rect className="linger" data-dir={t.border.direction} pathLength="1" />
+        </svg>
+      );
+    case 'wash':
+      return <span className="linger linger-wash" data-to={t.wash.recedeTo} aria-hidden="true" />;
+    case 'dots':
+      return (
+        <span className="linger-dots" aria-hidden="true">
+          {Array.from({ length: t.dots.count }, (_, i) => (
+            /* Right to left: the last dot goes out first; the first goes out as the card fades. */
+            <span key={i} className="linger" style={{ '--dot-at': (t.dots.count - i) / t.dots.count }} />
+          ))}
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
 /* Dynamic mode's question card. Tapping answers it; left alone it fades after
-   lingerMs, with a thin bar counting down the time it has left. */
+   lingerMs, while the chosen timer counts down the time it has left. */
 function PromptCard({ rec, p, bottom }) {
   const card = rec.prompt;
   if (!card) return null;
   const phase = rec.live ? card.phase : 'faded';
+  const paused = rec.status === 'paused';
+  const t = p.timer;
   return (
     <button
       type="button"
       className="prompt-card"
       data-phase={phase}
-      data-paused={rec.status === 'paused' || undefined}
+      data-paused={paused || undefined}
+      data-timer={t.style}
       inert={phase !== 'offered'}
       aria-label={`Answer: ${card.question}`}
       onClick={() => rec.answer(card.id)}
@@ -1100,11 +1362,31 @@ function PromptCard({ rec, p, bottom }) {
         '--prompt-y': `${p.motion.offsetY}px`,
         '--prompt-blur': `${p.motion.blur}px`,
         '--prompt-linger': `${p.lingerMs}ms`,
+        '--linger-ease': t.pace,
+        '--bar-h': `${t.bar.height}px`,
+        '--bar-opacity': t.bar.opacity,
+        '--bar-inset': `${t.bar.inset}px`,
+        '--ring-size': `${t.ring.size}px`,
+        '--ring-stroke': t.ring.stroke,
+        '--ring-opacity': t.ring.opacity,
+        '--ring-track': t.ring.track,
+        '--border-stroke': `${t.border.stroke}px`,
+        '--border-opacity': t.border.opacity,
+        '--wash-opacity': t.wash.opacity,
+        '--dot-size': `${t.dots.size}px`,
+        '--dot-gap': `${t.dots.gap}px`,
+        '--dot-opacity': t.dots.opacity,
+        '--dot-fade': `${t.dots.fadeMs}ms`,
+        '--star-size': `${p.star.size}px`,
       }}
     >
-      <span className="prompt-hint"><SparkIcon />{p.card.hint}</span>
+      <span className="prompt-hint">
+        <Spark s={p.star} paused={paused} />
+        {p.card.hint}
+        {t.style === 'ring' && t.ring.place === 'hint' && <RingTimer r={t.ring} />}
+      </span>
       <span className="prompt-question">{card.question}</span>
-      {p.card.showLinger && <span className="prompt-linger" aria-hidden="true" />}
+      <CardTimer t={t} />
     </button>
   );
 }
