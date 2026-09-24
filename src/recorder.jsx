@@ -1761,7 +1761,7 @@ function GuideProgress({ fw, rec, done, p, dots }) {
 
 /* "Learn more" for one framework: who made it, when, why, and its steps.
    The arrows step through every framework's card without closing. */
-function FrameworkInfo({ f, index, count, onStep, onClose }) {
+function FrameworkInfo({ f, index, count, selected, locked, onSelect, onStep, onClose }) {
   return (
     <div className="guide-info" role="dialog" aria-label={`About ${f.title}`}>
       <div className="guide-info-nav">
@@ -1783,6 +1783,10 @@ function FrameworkInfo({ f, index, count, onStep, onClose }) {
           <li key={st.label}><strong>{st.label}</strong> {st.question}</li>
         ))}
       </ol>
+      {/* The framework is locked during a take, like the chip. */}
+      <button type="button" className="guide-info-select" disabled={selected || locked} onClick={onSelect}>
+        {selected ? 'Selected' : 'Select this model'}
+      </button>
     </div>
   );
 }
@@ -1934,6 +1938,13 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
             f={info}
             index={frameworks.indexOf(info)}
             count={frameworks.length}
+            selected={info.id === fw.id}
+            locked={rec.live || rec.status === 'processing'}
+            onSelect={() => {
+              onPick(info.id);
+              setInfoId(null);
+              setOpen(false);
+            }}
             onStep={(d) => {
               const i = frameworks.indexOf(info);
               setInfoId(frameworks[(i + d + frameworks.length) % frameworks.length].id);

@@ -720,3 +720,21 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-info-nav button { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.04); color: #4a5a60; cursor: pointer; }
 .guide-info-nav button:active { background: rgba(97, 168, 253, 0.14); color: #61A8FD; }
 .guide-info-nav svg { width: 16px; height: 16px; }
+
+/* Info card: pick the framework being read. */
+.guide-info-select {
+  width: 100%;
+  height: 44px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #292931;
+  color: #fff;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+.guide-info-select:active:not(:disabled) { transform: scale(0.97); }
+.guide-info-select:disabled { background: rgba(97, 168, 253, 0.12); color: #61A8FD; cursor: default; }
