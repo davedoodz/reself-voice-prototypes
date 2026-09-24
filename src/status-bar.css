@@ -1,0 +1,28 @@
+/* Positions from the Paper iPhone frame (392px screen): time 48px from the left,
+   icons 37px from the right, both centred 33px from the top; home indicator
+   140×5, 14px from the bottom. Above the screen content, below the bezel (z 20). */
+.ios-chrome {
+  position: absolute;
+  top: var(--screen-y, 0px);
+  left: var(--screen-x, 0px);
+  z-index: 15;
+  width: 390px;
+  color: #000;
+  pointer-events: none;
+}
+.ios-chrome svg { display: block; fill: currentColor; }
+
+.ios-time { position: absolute; top: 26px; left: 47px; }
+
+.ios-icons { position: absolute; top: 26px; right: 36px; display: flex; gap: 5px; align-items: center; height: 15px; }
+
+.ios-signal { display: flex; gap: 2px; align-items: flex-end; height: 13px; }
+.ios-signal i { width: 4px; border-radius: 1.5px; background: currentColor; }
+
+.ios-battery { position: relative; width: 28px; height: 14px; }
+.ios-battery i { position: absolute; }
+.ios-battery-case { inset: 0 3px 0 0; border: 1px solid currentColor; border-radius: 3.5px; opacity: 0.35; }
+.ios-battery-level { top: 2px; left: 2px; width: 21px; height: 10px; border-radius: 2px; background: currentColor; }
+.ios-battery-cap { position: absolute; top: 5px; right: 0; opacity: 0.35; }
+
+.ios-home { position: absolute; bottom: 14px; left: 50%; width: 140px; height: 5px; border-radius: 100px; background: currentColor; transform: translateX(-50%); }

@@ -5,6 +5,7 @@ import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import './voice.css';
 import { BEAM, PROMPTS, PromptCard, beamProps } from './recorder.jsx';
+import { StatusBar } from './status-bar.jsx';
 
 /* ─────────────────────────────────────────────────────────
  * Dynamic mode's question card, on its own, so every slider can be tuned
@@ -99,6 +100,7 @@ function PromptCardPreview() {
               />
             </section>
           </VoiceBeam>
+          <StatusBar height={SCREEN_H} />
         </div>
       </div>
       <DialRoot position="top-right" productionEnabled theme="light" />

@@ -44,6 +44,7 @@ import './unwind-fonts.css';
 import './entries.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SAFE_TOP, FRAMED_SCREEN_H, beamProps } from './recorder.jsx';
+import { StatusBar } from './status-bar.jsx';
 import { ENTRIES } from './entries-data.js';
 
 /* ─────────────────────────────────────────────────────────
@@ -764,6 +765,7 @@ function Entries() {
               </div>
             </section>
           </VoiceBeam>
+          <StatusBar height={screenH} />
           {framed && <img className="iphone-frame" src={iphoneFrameUrl} alt="" draggable={false} />}
         </div>
       </div>

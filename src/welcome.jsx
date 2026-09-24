@@ -7,6 +7,7 @@ import './voice.css';
 import './welcome.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from './recorder.jsx';
+import { StatusBar } from './status-bar.jsx';
 import { MARK_PATH, MARK_W, MARK_H, UNWIND_DIALS, clamp01, unwindFrame } from './unwind-mark.js';
 
 /* ─────────────────────────────────────────────────────────
@@ -329,6 +330,7 @@ function Welcome() {
               </div>
             </section>
           </VoiceBeam>
+          <StatusBar height={screenH} />
           {framed && <img className="iphone-frame" src={iphoneFrameUrl} alt="" draggable={false} />}
         </div>
       </div>

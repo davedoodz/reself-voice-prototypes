@@ -6,6 +6,7 @@ import 'dialkit/styles.css';
 import './voice.css';
 import './unwind-fonts.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
+import { StatusBar } from './status-bar.jsx';
 
 /* ─────────────────────────────────────────────────────────
  * VOICE JOURNAL RECORDER — simulated take
@@ -2058,6 +2059,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>
+          <StatusBar height={screenH} />
           {framed && <img className="iphone-frame" src={iphoneFrameUrl} alt="" draggable={false} />}
         </div>
       </div>
