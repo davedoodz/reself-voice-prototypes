@@ -242,9 +242,9 @@ const CONTROLS = {
     buttonsShiftY: [12, -40, 40, 1],
   },
   record: {
-    buttonColor: '#1c1c1e',
+    buttonColor: '#292931',
     dotSize: [22, 6, 36, 0.5],
-    squareSize: [11, 4, 28, 0.5],
+    squareSize: [16.5, 4, 28, 0.5],
     morphMs: [320, 0, 1200, 10],
   },
   /* Stop → bottom controls leave (and the transcript fades) → processing → saved. */
