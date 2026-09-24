@@ -328,6 +328,8 @@ function EntryCard({ e, max, onOpen, index }) {
 function List({ months, max, total, onOpen, recordHref }) {
   let index = 0;
   return (
+    <>
+    <div className="j-status" aria-hidden="true" />
     <div className="j-scroll">
       <header className="j-head">
         <p className="j-eyebrow">Your journal</p>
@@ -363,6 +365,7 @@ function List({ months, max, total, onOpen, recordHref }) {
         Record entry
       </a>
     </div>
+    </>
   );
 }
 
@@ -438,7 +441,7 @@ function Prompts({ e, onJump }) {
       <h3 className="j-section-label">
         {guided ? `${e.framework} · ${items.length} steps` : `Prompts offered · ${items.length}`}
       </h3>
-      <ol className="j-prompts">
+      <ol className="j-prompts" data-guided={guided || undefined}>
         {items.map((s, n) => (
           <li key={s.i}>
             <button type="button" onClick={() => onJump(s.i)} data-skipped={s.answered === false || undefined}>
@@ -687,6 +690,7 @@ function Entries() {
     if (ev.clientX - r.left > 28 * (r.width / 390)) return;
     drag.current = { x: ev.clientX, w: r.width, t: performance.now(), p: 0 };
     ev.currentTarget.setPointerCapture(ev.pointerId);
+    ev.preventDefault(); // no text selection or autoscroll while swiping
     setDragging(true);
   }
   function onPointerMove(ev) {

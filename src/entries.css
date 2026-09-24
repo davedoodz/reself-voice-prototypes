@@ -1,0 +1,441 @@
+/* ── Unwind · journal entries ──
+   Ink, muted and accent match the recorder; Test Family carries every title
+   and quote, like the welcome wordmark. */
+.journal {
+  --ink: #1f2a2e;
+  --body: #3b484c;
+  --muted: #7d8d93;
+  --faint: #a9b6ba;
+  --accent: #5fb3b8;
+  --accent-ink: #3a8f95;
+  --guided: #5b6fd1;
+  --line: rgba(20, 40, 48, 0.07);
+  --serif: 'Unwind Family', 'Test Family', Georgia, serif;
+  --top: calc(18px + var(--safe-top, 0px));
+  overflow: clip;
+  color: var(--ink);
+}
+
+/* ── Navigation stack ──
+   One --drag value (0 → 1 while swiping back) drives both layers, so the
+   list's parallax and dim track the finger exactly. */
+/* clip, not hidden: a drag must never scroll the stack itself. */
+.j-stack { position: absolute; inset: 0; overflow: clip; border-radius: var(--screen-radius, 62px); }
+.j-layer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  background: var(--screen-bg, #f9f9f9);
+  transition: transform var(--push-ms, 480ms) var(--push-ease, ease), box-shadow var(--push-ms, 480ms) var(--push-ease, ease);
+  will-change: transform;
+}
+.j-list::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: #0b1418;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--push-ms, 480ms) var(--push-ease, ease);
+}
+.j-detail { z-index: 2; transform: translateX(100%); }
+.j-stack[data-view='detail'] .j-detail {
+  transform: translateX(calc(var(--drag, 0) * 100%));
+  box-shadow: -12px 0 40px rgba(0, 30, 40, var(--push-shadow, 0.14));
+}
+.j-stack[data-view='detail'] .j-list { transform: translateX(calc(var(--parallax, 28%) * -1 * (1 - var(--drag, 0)))); }
+.j-stack[data-view='detail'] .j-list::after { opacity: calc(var(--dim, 0.1) * (1 - var(--drag, 0))); }
+.j-stack[data-dragging] :is(.j-layer, .j-list::after) { transition: none; }
+.j-stack[data-dragging] { cursor: grabbing; user-select: none; }
+
+.j-scroll {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.j-scroll::-webkit-scrollbar { display: none; }
+
+:where(.journal) button { border: 0; background: none; padding: 0; text-align: left; cursor: pointer; }
+.journal :focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.journal svg { flex-shrink: 0; }
+
+/* ── List ── */
+.j-list .j-scroll { padding: 0 16px 150px; }
+
+.j-head { padding: calc(var(--top) + 38px) 6px 6px; }
+.j-eyebrow { margin: 0 0 2px; color: var(--muted); font-size: 13px; font-weight: 500; }
+.j-large-title { margin: 0; font-family: var(--serif); font-size: 40px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.05; }
+.j-stats { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
+
+/* Content scrolls under the status bar. The status band and the stuck month
+   bar overlap and are both opaque, so nothing shows between them; only the
+   bar's short tail fades into the list. */
+.j-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 5;
+  height: calc(var(--top) + 14px);
+  background: var(--screen-bg, #f9f9f9);
+  pointer-events: none;
+}
+
+.j-month-label {
+  position: sticky;
+  top: calc(var(--top) + 10px);
+  z-index: 4;
+  margin: 14px -16px 0;
+  padding: 8px 22px 6px;
+  background: var(--screen-bg, #f9f9f9);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.j-month-label::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: 14px;
+  background: linear-gradient(var(--screen-bg, #f9f9f9), rgba(249, 249, 249, 0));
+  pointer-events: none;
+}
+
+/* Day column sticks beside its cards, so the date never scrolls out of view. */
+.j-day { display: grid; grid-template-columns: 46px 1fr; gap: 10px; padding-bottom: 14px; }
+.j-date {
+  position: sticky;
+  top: calc(var(--top) + 60px);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+}
+.j-dow { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.j-dnum { font-family: var(--serif); font-size: 30px; line-height: 1.05; letter-spacing: -0.02em; }
+.j-rel { margin-top: 3px; color: var(--accent-ink); font-size: 10.5px; font-weight: 600; text-align: center; line-height: 1.2; }
+.j-day-cards { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.j-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 15px 13px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.03), 0 8px 24px -12px rgba(0, 40, 60, 0.12);
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+  animation: j-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(min(var(--i, 0), 6) * 60ms + 80ms);
+}
+.j-card:active { transform: scale(0.985); }
+@keyframes j-rise { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } }
+
+.j-card-top { display: flex; align-items: center; justify-content: space-between; }
+.j-time { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12.5px; font-weight: 500; }
+.j-time svg { width: 14px; height: 14px; stroke-width: 1.9; }
+
+.j-duration { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.j-meter { position: relative; width: 36px; height: 4px; border-radius: 999px; background: #e8eef0; overflow: hidden; }
+.j-meter span { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, #9fdcf0, var(--accent)); }
+
+.j-title { font-family: var(--serif); font-size: 21px; line-height: 1.18; letter-spacing: -0.012em; color: var(--ink); text-wrap: balance; }
+.j-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #5f6d73;
+  font-size: 13.5px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.j-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 1px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(95, 179, 184, 0.45);
+  color: var(--body);
+  font-family: var(--serif);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.38;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.j-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+
+.j-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: #eef1f2;
+  color: #5d6c72;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.j-mode svg { width: 13px; height: 13px; stroke-width: 2.1; }
+.j-mode[data-mode='dynamic'] { background: rgba(95, 179, 184, 0.14); color: var(--accent-ink); }
+.j-mode[data-mode='guided'] { background: rgba(91, 111, 209, 0.1); color: var(--guided); }
+.j-mode[data-large] { height: 30px; padding: 0 12px 0 10px; font-size: 13px; }
+.j-mode[data-large] svg { width: 14px; height: 14px; }
+
+.j-theme-icons { display: inline-flex; gap: 4px; }
+.j-theme-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #f2f6f7; color: #4f6268; }
+.j-theme-icon svg { width: 15px; height: 15px; stroke-width: 1.8; }
+
+.j-end { margin: 18px 0 0; color: var(--faint); font-size: 12.5px; text-align: center; }
+
+/* Record entry floats over the glow; the list scrolls beneath it. */
+.j-record {
+  position: absolute;
+  bottom: 42px;
+  left: 50%;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 26px 0 22px;
+  border-radius: 999px;
+  background: #1c1c1e;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 10px 28px rgba(0, 40, 70, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transform: translateX(-50%);
+  transition: transform 0.15s ease;
+}
+.j-record:active { transform: translateX(-50%) scale(0.97); }
+.j-record-dot { width: 12px; height: 12px; border-radius: 50%; background: #ff453a; box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.22); }
+
+/* ── Detail ── */
+.j-nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: calc(var(--top) + 14px) 18px 16px;
+  background: linear-gradient(var(--screen-bg, #f9f9f9) 72%, rgba(249, 249, 249, 0));
+}
+.j-nav .ctl { width: 42px; height: 42px; }
+.j-nav .ctl svg { width: 22px; height: 22px; stroke-width: 2; }
+.j-nav-title { color: var(--muted); font-size: 13.5px; font-weight: 500; text-align: center; }
+
+.j-detail .j-scroll { padding: calc(var(--top) + 76px) 0 150px; }
+
+.j-player {
+  margin: 0 16px;
+  padding: 18px 18px 14px;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line), 0 12px 32px -16px rgba(0, 40, 60, 0.18);
+}
+.j-wave { position: relative; display: flex; align-items: center; gap: 2px; height: 54px; cursor: pointer; touch-action: none; }
+.j-wave span { flex: 1; min-height: 3px; border-radius: 2px; background: #d9e3e6; transition: background 0.15s ease; }
+.j-wave span[data-on] { background: linear-gradient(#8fd8ef, var(--accent)); }
+.j-playhead { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink); pointer-events: none; }
+.j-times { display: flex; justify-content: space-between; margin-top: 8px; color: var(--muted); font-size: 11.5px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.j-transport { display: grid; grid-template-columns: 44px 1fr auto 1fr 44px; align-items: center; justify-items: center; margin-top: 4px; }
+.j-play { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: #1c1c1e; color: #fff; box-shadow: 0 8px 20px rgba(0, 40, 70, 0.2); transition: transform 0.15s ease; }
+.j-play:active { transform: scale(0.94); }
+.j-play svg { width: 22px; height: 22px; fill: currentColor; stroke: none; }
+.j-play .lucide-play { margin-left: 3px; }
+.j-skip { position: relative; display: grid; place-items: center; width: 44px; height: 44px; color: var(--ink); }
+.j-skip svg { width: 26px; height: 26px; stroke-width: 1.6; }
+.j-skip small { position: absolute; font-size: 8.5px; font-weight: 700; padding-top: 1px; }
+.j-speed { width: 44px; height: 30px; border-radius: 999px; background: #f0f4f5; color: var(--ink); font-size: 12.5px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+
+.j-detail-head { padding: 26px 22px 0; }
+.j-detail-title { margin: 12px 0 14px; font-family: var(--serif); font-size: 31px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; text-wrap: balance; }
+.j-meta { display: flex; flex-direction: column; gap: 7px; margin: 0; }
+.j-meta div { display: flex; align-items: center; gap: 9px; }
+.j-meta dt { display: grid; color: var(--muted); }
+.j-meta dt svg { width: 16px; height: 16px; stroke-width: 1.9; }
+.j-meta dd { margin: 0; color: var(--body); font-size: 14.5px; font-weight: 500; }
+.j-meta-soft { color: var(--muted); font-weight: 400; }
+
+.j-theme-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.j-theme-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line);
+  color: #41545a;
+  font-size: 13px;
+  font-weight: 500;
+}
+.j-theme-chip svg { width: 15px; height: 15px; stroke-width: 1.8; }
+
+.j-section { padding: 28px 22px 0; }
+.j-section-label { margin: 0 0 12px; color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.j-detail-summary { margin: 0; color: var(--body); font-size: 16px; line-height: 1.55; }
+
+.j-prompts { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.j-prompts button {
+  display: grid;
+  grid-template-columns: 26px 1fr 16px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.j-prompt-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(95, 179, 184, 0.14); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
+.j-prompt-mark svg { width: 13px; height: 13px; fill: currentColor; }
+.j-prompt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.j-prompt-text { color: var(--ink); font-size: 14.5px; font-weight: 500; line-height: 1.35; }
+.j-prompt-go { width: 16px; height: 16px; color: var(--faint); }
+.j-skipped { color: var(--faint); font-size: 12px; }
+.j-prompts [data-skipped] .j-prompt-text { color: var(--muted); }
+.j-prompts [data-skipped] .j-prompt-mark { background: #eef1f2; color: var(--faint); }
+.j-step-label { color: var(--accent-ink); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.j-prompts[data-guided] .j-step-label { color: var(--guided); }
+.j-prompts[data-guided] .j-prompt-mark { background: rgba(91, 111, 209, 0.1); color: var(--guided); }
+
+/* Transcript: while playing (or after seeking) the spoken segment stays ink
+   and the rest steps back, like following along with lyrics. */
+.j-transcript { display: flex; flex-direction: column; }
+.j-seg { margin: 0 -10px; padding: 6px 10px; border-radius: 12px; cursor: pointer; transition: background 0.2s ease; }
+.j-seg:hover { background: rgba(20, 40, 48, 0.03); }
+.j-seg p { margin: 0; color: var(--body); font-size: 16.5px; line-height: 1.6; letter-spacing: -0.003em; transition: color 0.35s ease; }
+.j-transcript[data-following] .j-seg.speech p { color: var(--faint); }
+.j-transcript[data-following] .j-seg[data-active] p { color: var(--ink); }
+.j-seg.prompt, .j-seg.step { margin-top: 10px; }
+.j-seg .j-seg-q { display: flex; gap: 7px; align-items: baseline; color: var(--accent-ink); font-size: 15px; font-weight: 600; line-height: 1.4; }
+.j-seg.prompt .j-seg-q svg { width: 13px; height: 13px; fill: currentColor; transform: translateY(1px); }
+.j-seg.prompt[data-skipped] .j-seg-q { color: var(--faint); font-weight: 500; }
+.j-seg.prompt em { font-style: normal; font-weight: 400; font-size: 13px; }
+.j-seg.step .j-seg-q { display: block; margin-top: 3px; color: var(--ink); font-family: var(--serif); font-size: 19px; font-weight: 400; font-style: italic; letter-spacing: -0.01em; }
+.j-seg.step .j-step-label { color: var(--guided); }
+.j-seg[data-active] { background: rgba(95, 179, 184, 0.08); }
+
+.j-detail .j-end { padding: 0 22px; }
+
+/* AI insights: the loudest thing on the page. A dark pill with a slowly
+   turning ice-to-lilac rim, floating over the glow like Record entry. */
+@property --ai-turn { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.j-ai {
+  position: absolute;
+  right: 16px;
+  bottom: 36px;
+  left: 16px;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: 44px 1fr 18px;
+  align-items: center;
+  gap: 12px;
+  height: 68px;
+  padding: 0 18px 0 12px;
+  border-radius: 999px;
+  background:
+    linear-gradient(#141a1c, #141a1c) padding-box,
+    conic-gradient(from var(--ai-turn), #80dcf7, #a8b6ff, #f1b6e4, #ffe0b0, #80dcf7) border-box;
+  border: 2px solid transparent;
+  color: #fff;
+  box-shadow: 0 14px 34px -8px rgba(60, 110, 200, 0.45), 0 0 26px -6px rgba(128, 220, 247, 0.6);
+  animation: ai-turn 6s linear infinite;
+  transition: transform 0.15s ease;
+}
+.j-ai:active { transform: scale(0.98); }
+@keyframes ai-turn { to { --ai-turn: 360deg; } }
+.j-ai-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #80dcf7, #a8b6ff 55%, #f1b6e4);
+  color: #141a1c;
+}
+.j-ai-icon svg { width: 22px; height: 22px; stroke-width: 2; }
+.j-ai-text { display: flex; flex-direction: column; gap: 1px; }
+.j-ai-text strong { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.j-ai-text small { color: #9fb6bc; font-size: 12.5px; }
+.j-ai-go { width: 18px; height: 18px; color: #9fb6bc; }
+
+/* ── Insights sheet ── */
+.j-sheet-host { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+.j-sheet-host[data-open] { pointer-events: auto; }
+.j-scrim { position: absolute; inset: 0; width: 100%; background: rgba(14, 26, 30, 0.28); opacity: 0; transition: opacity 0.35s ease; }
+.j-sheet-host[data-open] .j-scrim { opacity: 1; }
+.j-sheet {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  padding: 10px 20px 30px;
+  border-radius: 40px;
+  background: #fff;
+  box-shadow: 0 -10px 40px rgba(0, 30, 40, 0.16);
+  transform: translateY(calc(100% + 16px));
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.j-sheet-host[data-open] .j-sheet { transform: none; }
+.j-sheet-grab { width: 36px; height: 5px; margin: 0 auto 10px; border-radius: 999px; background: #dfe6e8; }
+.j-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.j-sheet-close { width: 36px; height: 36px; }
+.j-sheet-close svg { width: 18px; height: 18px; }
+.j-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--serif);
+  font-size: 24px;
+  letter-spacing: -0.015em;
+}
+.j-ai-badge svg { width: 22px; height: 22px; color: #6f8de0; stroke-width: 1.8; }
+.j-insights { display: flex; flex-direction: column; gap: 10px; margin: 0 0 22px; padding: 0; list-style: none; }
+.j-insights li {
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(128, 220, 247, 0.16), rgba(168, 182, 255, 0.14) 60%, rgba(241, 182, 228, 0.12));
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.j-links { display: flex; flex-direction: column; gap: 6px; }
+.j-link {
+  display: grid;
+  grid-template-columns: 52px 1fr 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f4f7f8;
+}
+.j-link-date { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.j-link-title { color: var(--ink); font-family: var(--serif); font-size: 17px; line-height: 1.2; }
+.j-link svg { width: 16px; height: 16px; color: var(--faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  .j-card { animation: none; }
+  .j-ai { animation: none; }
+  .j-layer, .j-list::after, .j-sheet { transition-duration: 1ms; }
+}

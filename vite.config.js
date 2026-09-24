@@ -13,6 +13,7 @@ const PAGES = {
   voiceGuided: 'voice-guided.html',
   welcome: 'welcome.html',
   logoMotion: 'logo-motion.html',
+  entries: 'entries.html',
   promptCard: 'prompt-card.html',
 };
 
