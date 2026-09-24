@@ -714,12 +714,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 /* Mobile prototypes: no hover states or tap flash; colour marks only the selection. */
 * { -webkit-tap-highlight-color: transparent; }
 
-/* Info card: step through the frameworks without closing. */
-.guide-info-nav { display: flex; align-items: center; justify-content: space-between; margin: -6px -6px 10px; }
-.guide-info-nav span { color: #8a9aa0; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.guide-info-nav button { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.04); color: #4a5a60; cursor: pointer; }
-.guide-info-nav button:active { background: rgba(97, 168, 253, 0.14); color: #61A8FD; }
-.guide-info-nav svg { width: 16px; height: 16px; }
 
 /* Info card: pick the framework being read. */
 .guide-info-select {
@@ -739,4 +733,13 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-info-select:active:not(:disabled) { transform: scale(0.97); }
 .guide-info-select:disabled { background: rgba(97, 168, 253, 0.12); color: #61A8FD; cursor: default; }
 .guide-info-steppers { display: flex; gap: 8px; align-items: center; }
-.guide-info-nav .guide-info-close { background: rgba(0, 0, 0, 0.04); color: #6b7a80; }
+
+/* Info card: × in the top-right corner; arrows centred under the Select button. */
+.guide-info { position: relative; }
+.guide-info-corner { position: absolute; top: 12px; right: 12px; }
+.guide-info-head { padding-right: 34px; }
+.guide-info > .guide-info-steppers { justify-content: center; gap: 14px; margin-top: 12px; }
+.guide-info > .guide-info-steppers span { color: #8a9aa0; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.guide-info > .guide-info-steppers button { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.04); color: #4a5a60; cursor: pointer; }
+.guide-info > .guide-info-steppers button:active { background: rgba(97, 168, 253, 0.14); color: #61A8FD; }
+.guide-info > .guide-info-steppers svg { width: 16px; height: 16px; }
