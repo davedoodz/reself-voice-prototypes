@@ -60,25 +60,33 @@ const BREATH = {
    VoiceBeam smooths the level (Voice beam › attack / release), so pulses much
    shorter than ~250ms read as one soft swell. */
 const PULSE = {
-  startMs: [30, 0, 3000, 10],
-  count: [2, 1, 6, 1],
-  riseMs: [280, 40, 2000, 10],
-  fallMs: [530, 40, 3000, 10],
+  startMs: [360, 0, 3000, 10],
+  count: [5, 1, 6, 1],
+  riseMs: [230, 40, 2000, 10],
+  fallMs: [240, 40, 3000, 10],
   gapMs: [140, 0, 2000, 10],
   peak: [1, 0, 1, 0.01],
   /* When the logo appears relative to the last intro pulse ending. */
-  wordmarkOffsetMs: [-200, -2000, 2000, 10],
+  wordmarkOffsetMs: [-570, -2000, 2000, 10],
   /* After the intro: keep pulsing, or settle into the slow Breath cycle. */
-  afterIntro: { type: 'select', options: ['pulse', 'breathe'], default: 'pulse' },
+  afterIntro: { type: 'select', options: ['pulse', 'breathe'], default: 'breathe' },
   /* Stillness between repeated trains; the glow rests at Breath › low. */
-  restMs: [2400, 0, 10000, 10],
+  restMs: [1190, 0, 10000, 10],
+};
+
+/* The recorder's beam, retuned for this screen: a slightly faster release and
+   a stronger, wider band. Its own DialKit id keeps the recorder pages untouched. */
+const WELCOME_BEAM = {
+  ...BEAM,
+  response: { ...BEAM.response, release: [0.4, 0, 3, 0.01] },
+  band: { ...BEAM.band, bandStrength: [3.16, 0, 4, 0.01], bandWidth: [0.91, 0, 6, 0.01] },
 };
 
 const INTRO = {
   /* The letters start this far into the logo's opening (0 = with it, 1 = after). */
   lettersAt: [0.16, 0, 1, 0.01],
   letterStaggerMs: [90, 0, 400, 5],
-  letterMs: [580, 100, 3000, 10],
+  letterMs: [960, 100, 3000, 10],
   letterDrift: [-26, -120, 60, 1],
   letterBlur: [10, 0, 30, 0.5],
   /* Both measured from the moment the mark starts drawing. */
@@ -238,7 +246,7 @@ function Welcome() {
     { id: 'welcome-intro', onAction: () => replayIntro() },
   );
   const logo = useDialKit('Logo opening', UNWIND_DIALS, { id: 'welcome-logo' });
-  const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
+  const b = useDialKit('Voice beam', WELCOME_BEAM, { id: 'welcome-beam', defaultCollapsed: true });
 
   const glow = useGlow(br, pulse);
   const markDelay = Math.max(0, pulseEndMs(pulse) + pulse.wordmarkOffsetMs);
