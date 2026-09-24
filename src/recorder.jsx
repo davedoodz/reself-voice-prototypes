@@ -13,6 +13,8 @@ import 'dialkit/styles.css';
 import './voice.css';
 import './unwind-fonts.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
+import sparkBigUrl from './assets/spark-big.png';
+import sparkSmallUrl from './assets/spark-small.png';
 import { StatusBar } from './status-bar.jsx';
 
 /* ─────────────────────────────────────────────────────────
@@ -317,12 +319,14 @@ const select = (options, value) => ({ type: 'select', options, default: value })
  *   border  the card's own outline drains around its edge
  *   wash    a faint accent tint behind the text recedes to one side
  *   dots    a row of dots goes out one by one, right to left
- * The star before the hint:
- *   spinIn  spins in once as the card arrives, then holds still
- *   spin    turns slowly and continuously
- *   tick    a quick partial turn, a rest, repeat (a quarter turn reads as a tick)
- *   twinkle a quick grow-and-turn, a rest, repeat
- *   swing   rocks back and forth
+ * The star before the hint is blue-icons/blue-stars.png, split into two aligned
+ * layers (src/assets/spark-big.png, spark-small.png) so each star moves alone:
+ *   popIn   both stars pop in once as the card arrives (small one a beat later)
+ *   twinkle the big star breathes while the small one blinks, out of phase
+ *   glint   now and then the small star flicks round and flares; the big one nods
+ *   spin    each star turns about its own centre, the small one faster
+ *   float   both bob gently, the small one a little behind
+ *   breathe the whole icon swells and settles
  * ─────────────────────────────────────────────────────── */
 const TIMERS = [
   { value: 'bar', label: '1 · Bar' },
@@ -333,11 +337,12 @@ const TIMERS = [
   { value: 'none', label: 'None' },
 ];
 const STAR_MOTIONS = [
-  { value: 'spinIn', label: '1 · Spin in' },
-  { value: 'spin', label: '2 · Spin' },
-  { value: 'tick', label: '3 · Tick' },
-  { value: 'twinkle', label: '4 · Twinkle' },
-  { value: 'swing', label: '5 · Swing' },
+  { value: 'popIn', label: '1 · Pop in' },
+  { value: 'twinkle', label: '2 · Twinkle' },
+  { value: 'glint', label: '3 · Glint' },
+  { value: 'spin', label: '4 · Spin' },
+  { value: 'float', label: '5 · Float' },
+  { value: 'breathe', label: '6 · Breathe' },
   { value: 'still', label: 'Still' },
 ];
 const STAR_EASINGS = [
@@ -394,36 +399,50 @@ const CARD_TIMER = {
 };
 
 const STAR = {
-  motion: select(STAR_MOTIONS, 'spinIn'),
-  size: [12, 8, 24, 0.5],
-  spinIn: {
-    durationMs: [900, 100, 4000, 10],
+  motion: select(STAR_MOTIONS, 'twinkle'),
+  size: [16, 10, 32, 0.5],
+  popIn: {
+    durationMs: [700, 100, 3000, 10],
     delayMs: [150, 0, 3000, 10],
-    turns: [1, 0.25, 4, 0.25],
-    fromScale: [0.4, 0, 1, 0.01],
+    fromScale: [0, 0, 1, 0.01],
+    turnDeg: [-45, -180, 180, 1],
+    /* The small star arrives this long after the big one. */
+    smallLagMs: [180, 0, 1500, 10],
     easing: select(STAR_EASINGS, 'spring'),
-    direction: select(DIRECTIONS, 'cw'),
-  },
-  spin: {
-    secPerTurn: [4, 0.5, 20, 0.1],
-    direction: select(DIRECTIONS, 'cw'),
-  },
-  tick: {
-    turnMs: [600, 100, 3000, 10],
-    restMs: [1800, 0, 8000, 50],
-    turns: [0.25, 0.125, 2, 0.125],
-    easing: select(STAR_EASINGS, 'spring'),
-    direction: select(DIRECTIONS, 'cw'),
   },
   twinkle: {
-    twinkleMs: [700, 100, 3000, 10],
-    restMs: [1600, 0, 8000, 50],
-    scale: [1.4, 1, 2.5, 0.01],
-    rotateDeg: [45, 0, 180, 1],
+    cycleMs: [2400, 400, 8000, 10],
+    bigScale: [1.08, 1, 1.5, 0.01],
+    /* The small star dips to this size and opacity at the bottom of its blink. */
+    smallScale: [0.45, 0, 1, 0.01],
+    smallOpacity: [0.3, 0, 1, 0.01],
+    /* 0 = both together, 0.5 = small blinks while big is at rest. */
+    phase: [0.5, 0, 1, 0.01],
   },
-  swing: {
-    cycleMs: [1600, 200, 6000, 10],
-    angleDeg: [18, 2, 90, 1],
+  glint: {
+    glintMs: [650, 100, 3000, 10],
+    restMs: [2200, 0, 8000, 50],
+    smallScale: [1.6, 1, 3, 0.01],
+    smallTurnDeg: [90, 0, 360, 5],
+    bigScale: [1.06, 1, 1.3, 0.01],
+    easing: select(STAR_EASINGS, 'spring'),
+  },
+  spin: {
+    bigSecPerTurn: [8, 1, 30, 0.1],
+    smallSecPerTurn: [3, 0.5, 20, 0.1],
+    direction: select(DIRECTIONS, 'cw'),
+    smallCounter: true,
+  },
+  float: {
+    cycleMs: [2800, 400, 8000, 10],
+    bigLiftPx: [1.5, 0, 6, 0.1],
+    smallLiftPx: [2.5, 0, 8, 0.1],
+    /* How far behind the big star the small one moves, as a share of the cycle. */
+    lag: [0.25, 0, 1, 0.01],
+  },
+  breathe: {
+    cycleMs: [3000, 400, 8000, 10],
+    scale: [1.12, 1, 1.5, 0.01],
   },
 };
 
@@ -1272,70 +1291,108 @@ const STAR_EASE = {
 };
 const SWAY = 'cubic-bezier(0.37, 0, 0.63, 1)';
 
-/* The star's motion preset → [keyframes, options] for element.animate(), or null. */
+/* A looping ease-in-out there-and-back: `from` → `to` at the middle → `from`. */
+const sway = (from, to) => [
+  { ...from, easing: SWAY },
+  { ...to, offset: 0.5, easing: SWAY },
+  from,
+];
+
+/* The star's motion preset → a list of { layer, keyframes, options } for
+   element.animate(), one per moving layer ('big', 'small' or 'both'). */
 function starMotion(s) {
   const c = s[s.motion];
-  const dir = c?.direction === 'ccw' ? -1 : 1;
   switch (s.motion) {
-    case 'spinIn':
+    case 'popIn': {
+      const from = { transform: `rotate(${c.turnDeg}deg) scale(${c.fromScale})`, opacity: 0 };
+      const kf = [from, { opacity: 1, offset: 0.35 }, { transform: 'rotate(0deg) scale(1)', opacity: 1 }];
+      const o = { duration: c.durationMs, easing: STAR_EASE[c.easing], fill: 'backwards' };
       return [
-        [
-          { transform: `rotate(${-dir * c.turns * 360}deg) scale(${c.fromScale})`, opacity: 0 },
-          { opacity: 1, offset: 0.3 },
-          { transform: 'rotate(0deg) scale(1)', opacity: 1 },
-        ],
-        { duration: c.durationMs, delay: c.delayMs, easing: STAR_EASE[c.easing], fill: 'backwards' },
-      ];
-    case 'spin':
-      return [
-        [{ transform: 'rotate(0deg)' }, { transform: `rotate(${dir * 360}deg)` }],
-        { duration: c.secPerTurn * 1000, iterations: Infinity },
-      ];
-    case 'tick': {
-      const cycle = c.turnMs + c.restMs;
-      const to = `rotate(${dir * c.turns * 360}deg)`;
-      return [
-        [
-          { transform: 'rotate(0deg)', easing: STAR_EASE[c.easing] },
-          { transform: to, offset: c.turnMs / cycle },
-          { transform: to },
-        ],
-        { duration: cycle, iterations: Infinity },
+        { layer: 'big', keyframes: kf, options: { ...o, delay: c.delayMs } },
+        { layer: 'small', keyframes: kf, options: { ...o, delay: c.delayMs + c.smallLagMs } },
       ];
     }
     case 'twinkle': {
-      const cycle = c.twinkleMs + c.restMs;
-      const k = c.twinkleMs / cycle;
+      const loop = { duration: c.cycleMs, iterations: Infinity };
       return [
-        [
-          { transform: 'scale(1) rotate(0deg)', easing: STAR_EASE.out },
-          { transform: `scale(${c.scale}) rotate(${c.rotateDeg}deg)`, offset: k * 0.4, easing: STAR_EASE.smooth },
-          { transform: 'scale(1) rotate(0deg)', offset: k },
-          { transform: 'scale(1) rotate(0deg)' },
-        ],
-        { duration: cycle, iterations: Infinity },
+        { layer: 'big', keyframes: sway({ transform: 'scale(1)' }, { transform: `scale(${c.bigScale})` }), options: loop },
+        {
+          layer: 'small',
+          keyframes: sway(
+            { transform: 'scale(1)', opacity: 1 },
+            { transform: `scale(${c.smallScale})`, opacity: c.smallOpacity },
+          ),
+          /* A negative delay starts it part-way through: the phase offset. */
+          options: { ...loop, delay: -c.phase * c.cycleMs },
+        },
       ];
     }
-    case 'swing':
+    case 'glint': {
+      const cycle = c.glintMs + c.restMs;
+      const peak = (c.glintMs / cycle) * 0.4;
+      const end = c.glintMs / cycle;
+      const loop = { duration: cycle, iterations: Infinity };
       return [
-        [
-          { transform: 'rotate(0deg)', easing: SWAY },
-          { transform: `rotate(${c.angleDeg}deg)`, offset: 0.25, easing: SWAY },
-          { transform: `rotate(${-c.angleDeg}deg)`, offset: 0.75, easing: SWAY },
-          { transform: 'rotate(0deg)' },
-        ],
-        { duration: c.cycleMs, iterations: Infinity },
+        {
+          layer: 'small',
+          keyframes: [
+            { transform: 'rotate(0deg) scale(1)', easing: STAR_EASE[c.easing] },
+            { transform: `rotate(${c.smallTurnDeg}deg) scale(${c.smallScale})`, offset: peak, easing: STAR_EASE.smooth },
+            { transform: 'rotate(0deg) scale(1)', offset: end },
+            { transform: 'rotate(0deg) scale(1)' },
+          ],
+          options: loop,
+        },
+        {
+          layer: 'big',
+          keyframes: [
+            { transform: 'scale(1)', easing: STAR_EASE.out },
+            { transform: `scale(${c.bigScale})`, offset: peak, easing: STAR_EASE.smooth },
+            { transform: 'scale(1)', offset: end },
+            { transform: 'scale(1)' },
+          ],
+          options: loop,
+        },
+      ];
+    }
+    case 'spin': {
+      const dir = c.direction === 'ccw' ? -1 : 1;
+      const turn = (d) => [{ transform: 'rotate(0deg)' }, { transform: `rotate(${d * 360}deg)` }];
+      return [
+        { layer: 'big', keyframes: turn(dir), options: { duration: c.bigSecPerTurn * 1000, iterations: Infinity } },
+        {
+          layer: 'small',
+          keyframes: turn(c.smallCounter ? -dir : dir),
+          options: { duration: c.smallSecPerTurn * 1000, iterations: Infinity },
+        },
+      ];
+    }
+    case 'float': {
+      const loop = { duration: c.cycleMs, iterations: Infinity };
+      const bob = (px) => sway({ transform: 'translateY(0px)' }, { transform: `translateY(${-px}px)` });
+      return [
+        { layer: 'big', keyframes: bob(c.bigLiftPx), options: loop },
+        { layer: 'small', keyframes: bob(c.smallLiftPx), options: { ...loop, delay: -(1 - c.lag) * c.cycleMs } },
+      ];
+    }
+    case 'breathe':
+      return [
+        {
+          layer: 'both',
+          keyframes: sway({ transform: 'scale(1)' }, { transform: `scale(${c.scale})` }),
+          options: { duration: c.cycleMs, iterations: Infinity },
+        },
       ];
     default:
-      return null;
+      return [];
   }
 }
 
-/* The star before the hint. Retuning restarts it, so every slider shows live.
-   It holds still while the take is paused, like the timer. */
+/* The blue star pair before the hint. Retuning restarts it, so every slider
+   shows live. It holds still while the take is paused, like the timer. */
 function Spark({ s, paused }) {
-  const el = useRef(null);
-  const anim = useRef(null);
+  const layers = { both: useRef(null), big: useRef(null), small: useRef(null) };
+  const anims = useRef([]);
   const sRef = useRef(s);
   sRef.current = s;
   /* Restart key only: JSON would turn iterations: Infinity into null. */
@@ -1343,25 +1400,26 @@ function Spark({ s, paused }) {
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const m = starMotion(sRef.current);
-    if (!m) return;
-    const a = el.current.animate(...m);
-    anim.current = a;
-    return () => a.cancel();
+    const list = starMotion(sRef.current).map(({ layer, keyframes, options }) =>
+      layers[layer].current.animate(keyframes, options),
+    );
+    anims.current = list;
+    return () => list.forEach((a) => a.cancel());
   }, [spec]);
 
   useEffect(() => {
-    const a = anim.current;
-    if (!a || a.playState === 'finished') return;
-    if (paused) a.pause();
-    else a.play();
+    for (const a of anims.current) {
+      if (a.playState === 'finished') continue;
+      if (paused) a.pause();
+      else a.play();
+    }
   }, [paused, spec]);
 
   return (
-    <svg ref={el} className="prompt-star" viewBox="0 0 24 24" aria-hidden="true">
-      {/* Nudged down 1 unit so the star's centre is the box's centre: it turns in place. */}
-      <path className="fill" transform="translate(0 1)" d="M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z" />
-    </svg>
+    <span ref={layers.both} className="prompt-star" aria-hidden="true">
+      <img ref={layers.big} className="big" src={sparkBigUrl} alt="" draggable={false} />
+      <img ref={layers.small} className="small" src={sparkSmallUrl} alt="" draggable={false} />
+    </span>
   );
 }
 

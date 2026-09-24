@@ -143,8 +143,18 @@ button { font: inherit; color: inherit; }
   font-weight: 500;
   letter-spacing: 0.02em;
 }
-.prompt-star { width: var(--star-size, 12px); height: var(--star-size, 12px); flex-shrink: 0; }
-.prompt-star .fill { fill: currentColor; }
+/* The blue star pair: two aligned, full-box layers. Each layer turns and scales
+   about its own star's centre (measured from blue-stars.png). */
+.prompt-star {
+  position: relative;
+  display: inline-block;
+  width: var(--star-size, 16px);
+  height: var(--star-size, 16px);
+  flex-shrink: 0;
+}
+.prompt-star img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
+.prompt-star .big { transform-origin: 49.1% 51.1%; }
+.prompt-star .small { transform-origin: 81.9% 18.7%; }
 .prompt-question {
   color: var(--prompt-color, #2a3438);
   font-size: var(--prompt-size, 17px);
