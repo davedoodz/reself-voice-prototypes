@@ -1746,6 +1746,8 @@ function FrameworkInfo({ f, onClose }) {
 export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
   const [open, setOpen] = useState(false);
   const [infoId, setInfoId] = useState(null);
+  /* Info opened from the picker: closing it goes back to the picker. */
+  const [infoFromMenu, setInfoFromMenu] = useState(false);
   const menuOpen = open && !rec.live;
   const done = rec.status === 'processing';
   const step = fw.steps[rec.step];
@@ -1835,6 +1837,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
               aria-expanded={infoId === fw.id}
               onClick={() => {
                 setOpen(false);
+                setInfoFromMenu(false);
                 setInfoId((id) => (id === fw.id ? null : fw.id));
               }}
             >
@@ -1868,6 +1871,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
                     aria-label={`About ${f.title}`}
                     onClick={() => {
                       setOpen(false);
+                      setInfoFromMenu(true);
                       setInfoId(f.id);
                     }}
                   >
@@ -1878,7 +1882,15 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
             })}
           </div>
         )}
-        {info && <FrameworkInfo f={info} onClose={() => setInfoId(null)} />}
+        {info && (
+          <FrameworkInfo
+            f={info}
+            onClose={() => {
+              setInfoId(null);
+              if (infoFromMenu) setOpen(true);
+            }}
+          />
+        )}
         {at('header')}
         {at('header-row')}
       </div>
