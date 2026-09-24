@@ -489,7 +489,7 @@ const NO_PROMPTS = { pauseMs: 0, lingerMs: 0, answerDelayMs: 0 };
 /* Guided mode: a proven framework, one prompt per step, no AI. The user answers
    each prompt out loud, taps Next, and the last step's stop saves the entry.
    `answer` is only the simulated speaker's reply for this prototype. */
-const FRAMEWORKS = [
+export const FRAMEWORKS = [
   {
     id: 'gross',
     /* Named after the person behind it: the model came from someone. */
@@ -660,7 +660,7 @@ const FRAMEWORKS = [
   },
 ];
 
-const GUIDE = {
+export const GUIDE = {
   /* Demo only: move on by itself once the simulated answer ends. */
   autoAdvance: false,
   advanceAfterMs: [2500, 0, 10000, 100],
@@ -804,7 +804,7 @@ const MUTED = '#8a9aa0';
 const ACCENT = '#61A8FD';
 const NO_PANEL = { show: false, shape: 'card', glass: 0.72, radius: 24, padding: 20 };
 
-const COMPOSITION = {
+export const COMPOSITION = {
   active: select(COMPOSITIONS, 'bubble'),
   stack: compositionConfig({
     align: 'center', sidePadding: 32, headerTop: 100, promptTop: 176,
@@ -1693,7 +1693,7 @@ function FrameworkInfo({ f, onClose }) {
 /* Guided mode's screen: framework picker, step progress, and the current prompt,
    arranged by the active composition. The framework can only change between
    takes; its info card opens any time. During processing the prompt fades out. */
-function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
+export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
   const [open, setOpen] = useState(false);
   const [infoId, setInfoId] = useState(null);
   const menuOpen = open && !rec.live;
