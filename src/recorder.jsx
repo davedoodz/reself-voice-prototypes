@@ -1230,12 +1230,53 @@ function Back() {
   );
 }
 
-function ModePill({ label }) {
+/* The three modes, in menu order; each is its own page. */
+const MODES = [
+  { label: 'Freeform', href: 'voice.html' },
+  { label: 'Guided', href: 'voice-guided.html' },
+  { label: 'Dynamic', href: 'voice-dynamic.html' },
+];
+
+/* Tapping the pill opens the mode menu above it. Locked during a take. */
+function ModePill({ label, locked }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const shown = open && !locked;
+  useEffect(() => {
+    if (!shown) return;
+    const close = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    const esc = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [shown]);
   return (
-    <button type="button" className="mode-pill" data-exit>
-      {label}
-      <Chevron />
-    </button>
+    <span className="mode-wrap" ref={ref}>
+      <button
+        type="button"
+        className="mode-pill"
+        data-exit
+        aria-haspopup="menu"
+        aria-expanded={shown}
+        disabled={locked}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {label}
+        <Chevron />
+      </button>
+      {shown && (
+        <span className="mode-menu" role="menu" aria-label="Mode">
+          {MODES.map((m) => (
+            <a key={m.label} role="menuitemradio" aria-checked={m.label === label} href={m.href}>
+              {m.label}
+            </a>
+          ))}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -1969,7 +2010,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
 
 /* ── Layout presets ────────────────────────────────────── */
 function Layout({ layout, rec, s }) {
-  const mode = <ModePill label={s.modeLabel} />;
+  const mode = <ModePill label={s.modeLabel} locked={rec.live || rec.status === 'processing'} />;
   const timer = s.showTimer ? <Timer rec={rec} /> : null;
 
   switch (layout) {

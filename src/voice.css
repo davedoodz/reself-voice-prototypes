@@ -669,3 +669,41 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 }
 .guide-skip:hover { background: rgba(97, 168, 253, 0.12); color: #61A8FD; }
 .guide-skip:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
+
+/* Mode menu: opens above the pill; the current mode is ticked by colour. */
+.mode-wrap { position: relative; display: inline-flex; }
+:is(.bottom-row, .bottom-left, .above-controls) .mode-wrap { top: var(--pill-shift, 0px); }
+:is(.bottom-row, .bottom-left, .above-controls) .mode-wrap .mode-pill { top: 0; }
+.mode-pill:disabled { cursor: default; }
+.mode-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 16px 40px rgba(0, 40, 60, 0.12);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transform-origin: 24px 100%;
+  animation: mode-menu-in 200ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.above-controls .mode-menu { left: 50%; translate: -50% 0; transform-origin: 50% 100%; }
+.mode-menu a {
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: #1f1f1f;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.mode-menu a:hover { background: rgba(97, 168, 253, 0.1); }
+.mode-menu a[aria-checked='true'] { background: rgba(97, 168, 253, 0.12); color: #61A8FD; }
+.mode-menu a:focus-visible { outline: 2px solid #61A8FD; outline-offset: -2px; }
+@keyframes mode-menu-in { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .mode-menu { animation: none; } }
