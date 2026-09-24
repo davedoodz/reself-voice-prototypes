@@ -139,7 +139,7 @@ button { font: inherit; color: inherit; }
   align-items: center;
   gap: 5px;
   color: var(--prompt-accent, #61A8FD);
-  font-size: 12px;
+  font-size: var(--prompt-hint-size, 12px);
   font-weight: 500;
   letter-spacing: 0.02em;
 }

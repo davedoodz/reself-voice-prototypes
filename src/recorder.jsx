@@ -461,7 +461,9 @@ export const PROMPTS = {
   card: {
     hint: 'Tap to answer',
     width: [277, 200, 360, 1],
-    gap: [28, 0, 240, 1],
+    /* Height above the transcript; raise it to lift the card up the screen. */
+    gap: [28, -200, 560, 1],
+    hintSize: [12, 9, 22, 0.5],
     radius: [22, 0, 40, 1],
     glass: [0.06, 0, 1, 0.01],
     textSize: [18, 12, 26, 0.5],
@@ -1583,6 +1585,7 @@ export function PromptCard({ rec, p, bottom, timerAt = 0, timerFrozen = false })
         '--prompt-radius': `${p.card.radius}px`,
         '--prompt-glass': p.card.glass,
         '--prompt-size': `${p.card.textSize}px`,
+        '--prompt-hint-size': `${p.card.hintSize}px`,
         '--prompt-color': p.card.textColor,
         '--prompt-accent': p.card.accent,
         '--prompt-in': `${p.motion.inMs}ms`,
