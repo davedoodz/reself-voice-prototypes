@@ -69,7 +69,7 @@ const LAYOUTS = [
 ];
 
 /* Libraries.dev Studio values — the DialKit defaults. */
-const BEAM = {
+export const BEAM = {
   response: {
     sensitivity: [4, 0, 10, 0.05],
     threshold: [0.3, 0, 0.95, 0.01],
@@ -127,15 +127,64 @@ const BEAM = {
   },
 };
 
+/* The DialKit 'Voice beam' panel → VoiceBeam props. Shared with the welcome screen. */
+export function beamProps(b) {
+  return {
+    type: b.shape.type,
+    sensitivity: b.response.sensitivity,
+    threshold: b.response.threshold,
+    attack: b.response.attack,
+    release: b.response.release,
+    breatheDuration: b.response.breatheDuration,
+    colorVariant: b.color.colorVariant,
+    theme: b.color.theme,
+    borderRadius: b.shape.borderRadius,
+    scale: b.shape.scale,
+    glowSize: b.shape.glowSize,
+    idle: b.response.idle,
+    reach: b.shape.reach,
+    spread: b.shape.spread,
+    flow: b.shape.flow,
+    bend: b.shape.bend,
+    bandStrength: b.band.bandStrength,
+    bandWidth: b.band.bandWidth,
+    bandPosition: b.band.bandPosition,
+    bandCurve: b.band.bandCurve,
+    bandOffset: b.band.bandOffset,
+    bandTail: b.band.bandTail,
+    bandTailPosition: b.band.bandTailPosition,
+    bandTailCurve: b.band.bandTailCurve,
+    bandTailOverflow: b.band.bandTailOverflow,
+    bandAberration: b.band.bandAberration,
+    distortion: b.shape.distortion,
+    distortionDetail: b.shape.distortionDetail,
+    rangeWidth: b.shape.rangeWidth,
+    softness: b.shape.softness,
+    coreSize: b.core.coreSize,
+    coreLight: b.core.coreLight,
+    strokeScale: b.core.strokeScale,
+    brightness: b.color.brightness,
+    saturation: b.color.saturation,
+    hueRange: b.color.hueRange,
+    hueDuration: b.color.hueDuration,
+    style: {
+      '--voice-hue-base': `${b.color.hueBase}deg`,
+      '--voice-stroke-opacity': String(b.color.strokeOpacity),
+      '--voice-inner-opacity': String(b.color.innerOpacity),
+      '--voice-bloom-opacity': String(b.color.bloomOpacity),
+    },
+  };
+}
+
 /* iphone_asset/iPhone - Silver.png: 874×1780, transparent screen cut-out at
    x 46–830, y 39–1741 (784×1702, ~113px corners). The frame is scaled so the
    cut-out is exactly the 390px screen. */
-const FRAME = { w: 874, h: 1780, x: 46, y: 39, screenW: 784, screenH: 1702, radius: 113 };
-const FRAME_K = 390 / FRAME.screenW;
-const FRAMED_SCREEN_H = FRAME.screenH * FRAME_K;
-const FRAMED_RADIUS = FRAME.radius * FRAME_K;
+export const FRAME = { w: 874, h: 1780, x: 46, y: 39, screenW: 784, screenH: 1702, radius: 113 };
+export const FRAME_K = 390 / FRAME.screenW;
+export const FRAMED_SCREEN_H = FRAME.screenH * FRAME_K;
+export const FRAMED_RADIUS = FRAME.radius * FRAME_K;
 /* Clearance under the Dynamic Island for the top controls. */
-const FRAMED_SAFE_TOP = 34;
+export const FRAMED_SAFE_TOP = 34;
 
 const SCREEN = {
   layout: { type: 'select', options: LAYOUTS, default: 'dock' },
@@ -1194,43 +1243,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
             className="beam-host"
             level={rec.getLevel}
             active={rec.status !== 'stopped'}
-            type={b.shape.type}
-            sensitivity={b.response.sensitivity}
-            threshold={b.response.threshold}
-            attack={b.response.attack}
-            release={b.response.release}
-            breatheDuration={b.response.breatheDuration}
-            colorVariant={b.color.colorVariant}
-            theme={b.color.theme}
-            borderRadius={b.shape.borderRadius}
-            scale={b.shape.scale}
-            glowSize={b.shape.glowSize}
-            idle={b.response.idle}
-            reach={b.shape.reach}
-            spread={b.shape.spread}
-            flow={b.shape.flow}
-            bend={b.shape.bend}
-            bandStrength={b.band.bandStrength}
-            bandWidth={b.band.bandWidth}
-            bandPosition={b.band.bandPosition}
-            bandCurve={b.band.bandCurve}
-            bandOffset={b.band.bandOffset}
-            bandTail={b.band.bandTail}
-            bandTailPosition={b.band.bandTailPosition}
-            bandTailCurve={b.band.bandTailCurve}
-            bandTailOverflow={b.band.bandTailOverflow}
-            bandAberration={b.band.bandAberration}
-            distortion={b.shape.distortion}
-            distortionDetail={b.shape.distortionDetail}
-            rangeWidth={b.shape.rangeWidth}
-            softness={b.shape.softness}
-            coreSize={b.core.coreSize}
-            coreLight={b.core.coreLight}
-            strokeScale={b.core.strokeScale}
-            brightness={b.color.brightness}
-            saturation={b.color.saturation}
-            hueRange={b.color.hueRange}
-            hueDuration={b.color.hueDuration}
+            {...beamProps(b)}
             processing={rec.thinking}
             processingDuration={c.processing.beam.passSeconds}
             processingLevel={c.processing.beam.level}
@@ -1238,12 +1251,6 @@ export function VoiceRecorder({ variant = 'freeform' }) {
             processingTravel={c.processing.beam.travel}
             processingCurve={c.processing.beam.curve}
             cornerFollow={c.processing.beam.cornerFollow}
-            style={{
-              '--voice-hue-base': `${b.color.hueBase}deg`,
-              '--voice-stroke-opacity': String(b.color.strokeOpacity),
-              '--voice-inner-opacity': String(b.color.innerOpacity),
-              '--voice-bloom-opacity': String(b.color.bloomOpacity),
-            }}
           >
             <section
               ref={screenRef}

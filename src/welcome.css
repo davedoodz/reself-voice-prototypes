@@ -1,0 +1,161 @@
+@font-face {
+  font-family: 'Unwind Family';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url('../fonts/TestFamily-Italic.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Unwind Family';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../fonts/TestFamily-Regular.otf') format('opentype');
+}
+
+.welcome { overflow: hidden; }
+
+/* ── Brand block ── */
+.w-brand {
+  position: absolute;
+  top: var(--group-y, 40%);
+  z-index: 6;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: translateY(-50%);
+  transition: opacity 0.9s ease, filter 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.w-logo {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0;
+  color: var(--brand, #80dcf7);
+  font-weight: 400;
+}
+
+/* Paper: the mark is 47×27 beside a 48px word, its base on the baseline. */
+.w-mark {
+  width: calc(var(--word-size, 48px) * 0.97);
+  height: auto;
+  margin-bottom: calc(var(--word-size, 48px) * 0.2);
+  flex-shrink: 0;
+  /* A gust draws it in from the left. */
+  animation: w-mark-in var(--mark-ms, 1100ms) cubic-bezier(0.65, 0, 0.35, 1) var(--mark-delay, 500ms) backwards;
+}
+
+@keyframes w-mark-in {
+  from { clip-path: inset(0 100% 0 0); opacity: 0.4; transform: translateX(-10px); }
+}
+
+.w-word {
+  display: inline-flex;
+  font-family: 'Unwind Family', Georgia, serif;
+  font-size: var(--word-size, 48px);
+  font-style: italic;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+/* Each letter is carried in on the wind: from the left, blurred, settling. */
+.w-letter {
+  display: inline-block;
+  animation: w-letter-in var(--letter-ms, 900ms) cubic-bezier(0.22, 1, 0.36, 1)
+    calc(var(--letter-delay, 1000ms) + var(--i) * var(--letter-stagger, 90ms)) backwards;
+}
+
+@keyframes w-letter-in {
+  from {
+    opacity: 0;
+    filter: blur(var(--letter-blur, 10px));
+    transform: translate(var(--letter-drift, -26px), -4px) skewX(-8deg);
+  }
+}
+
+.w-tagline {
+  margin: 0;
+  color: var(--tagline-color, #6f7f86);
+  font-family: 'Unwind Family', Georgia, serif;
+  font-size: var(--tagline-size, 20px);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  animation: w-rise 1.2s cubic-bezier(0.22, 1, 0.36, 1) var(--tagline-delay, 1900ms) backwards;
+}
+
+@keyframes w-rise {
+  from { opacity: 0; filter: blur(8px); transform: translateY(10px); }
+}
+
+/* ── Actions ── */
+.w-actions {
+  position: absolute;
+  right: 28px;
+  bottom: 44px;
+  left: 28px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  transition: opacity 0.6s ease, filter 0.6s ease, transform 0.6s ease;
+}
+
+.w-actions > * {
+  animation: w-rise 1s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: var(--cta-delay, 2500ms);
+}
+.w-actions > :nth-child(2) { animation-delay: calc(var(--cta-delay, 2500ms) + 90ms); }
+.w-actions > :nth-child(3) { animation-delay: calc(var(--cta-delay, 2500ms) + 180ms); }
+
+.w-btn {
+  height: 54px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.w-btn:active { transform: scale(0.97); }
+.w-btn:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+
+.w-btn.primary {
+  border: 0;
+  background: #1c1c1e;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 40, 70, 0.16);
+}
+
+/* Same glass as the recorder's controls, so it sits on the glow without a box. */
+.w-btn.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.42);
+  color: #1f1f1f;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.w-legal {
+  margin: 8px 12px 0;
+  color: #5f6d73;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+.w-legal a { color: inherit; font-weight: 500; text-underline-offset: 2px; }
+
+/* ── Get started: everything exhales away while the glow takes a deep breath. ── */
+.welcome[data-leaving] .w-actions { opacity: 0; filter: blur(6px); transform: translateY(12px); }
+.welcome[data-leaving] .w-brand { opacity: 0; filter: blur(10px); transform: translate(24px, -50%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .w-mark, .w-letter, .w-tagline, .w-actions > * { animation: none; }
+}

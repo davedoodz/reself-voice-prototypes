@@ -11,6 +11,7 @@ export default defineConfig({
         voice: resolve(import.meta.dirname, 'voice.html'),
         voiceDynamic: resolve(import.meta.dirname, 'voice-dynamic.html'),
         voiceGuided: resolve(import.meta.dirname, 'voice-guided.html'),
+        welcome: resolve(import.meta.dirname, 'welcome.html'),
       },
     },
   },
