@@ -153,11 +153,13 @@ button { font: inherit; color: inherit; }
   text-wrap: balance;
 }
 /* ── Card timer: counts down the time before an untouched card fades ──
-   Every .linger animation lasts --prompt-linger and pauses with the take. */
+   Every .linger animation lasts --prompt-linger and pauses with the take.
+   --linger-at (0–1, default 0) starts it that far in; only the preview page sets it. */
 .prompt-card .linger {
   animation-duration: var(--prompt-linger, 6000ms);
   animation-timing-function: var(--linger-ease, linear);
   animation-fill-mode: forwards;
+  animation-delay: calc(var(--prompt-linger, 6000ms) * var(--linger-at, 0) * -1);
 }
 .prompt-card[data-paused] .linger { animation-play-state: paused; }
 
@@ -242,7 +244,9 @@ button { font: inherit; color: inherit; }
   animation-duration: var(--dot-fade, 300ms);
   animation-timing-function: ease;
   /* --dot-at: the share of the countdown when this dot is fully out. */
-  animation-delay: calc(var(--prompt-linger, 6000ms) * var(--dot-at) - var(--dot-fade, 300ms));
+  animation-delay: calc(
+    var(--prompt-linger, 6000ms) * (var(--dot-at) - var(--linger-at, 0)) - var(--dot-fade, 300ms)
+  );
 }
 @keyframes linger-dot { to { opacity: 0.12; transform: scale(0.6); } }
 
@@ -281,12 +285,13 @@ button { font: inherit; color: inherit; }
 .guide-prompt[data-panel='bubble'] { border-bottom-left-radius: 6px; }
 .guide[data-align='center'] .guide-prompt[data-panel='bubble'] { border-bottom-left-radius: var(--panel-radius, 24px); }
 
+/* Framework chip: icon + creator-named title picks the framework; ⓘ opens its info card. */
 .guide-framework {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  max-width: 100%;
   height: 30px;
-  padding: 0 12px 0 14px;
+  padding: 0 4px 0 0;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
   background: rgba(255, 255, 255, var(--glass, 0.42));
@@ -294,45 +299,85 @@ button { font: inherit; color: inherit; }
   color: #4a5a60;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.3s ease;
 }
-.guide-framework svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-/* Locked for the length of a take. */
-.guide-framework:disabled { cursor: default; opacity: 0.55; }
-.guide-framework:disabled svg { display: none; }
-.guide-framework:focus-visible, .guide-menu button:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.guide-framework button { display: inline-flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.guide-framework-pick { gap: 6px; min-width: 0; height: 100%; padding: 0 4px 0 11px; transition: opacity 0.3s ease; }
+.guide-framework-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guide-framework-icon { flex-shrink: 0; width: 14px; height: 14px; color: var(--guide-bar-on, #5fb3b8); stroke-width: 2; }
+.guide-framework-pick > svg:last-child { flex-shrink: 0; width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.guide-framework-info { justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #8a9aa0; }
+.guide-framework-info:hover, .guide-framework-info[aria-expanded='true'] { background: rgba(95, 179, 184, 0.12); color: var(--guide-bar-on, #5fb3b8); }
+.guide-framework-info svg { width: 15px; height: 15px; }
+/* Locked for the length of a take; the info card stays available. */
+.guide-framework-pick:disabled { cursor: default; opacity: 0.55; }
+.guide-framework-pick:disabled > svg:last-child { display: none; }
+.guide-framework button:focus-visible, .guide-menu button:focus-visible, .guide-info button:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
 
-.guide-menu {
+/* Lucide icon in a soft accent tile, used in the menu and the info card. */
+.guide-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--guide-bar-on, #5fb3b8) 13%, transparent);
+  color: var(--guide-bar-on, #5fb3b8);
+}
+.guide-icon svg { width: 17px; height: 17px; }
+
+.guide-menu,
+.guide-info {
   position: absolute;
   top: 38px;
   z-index: 2;
-  display: flex;
-  flex-direction: column;
   width: 100%;
-  padding: 6px;
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 16px 40px rgba(0, 40, 60, 0.12);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
+  pointer-events: auto;
+  text-align: left;
   animation: guide-in 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
-.guide-menu button {
+.guide-menu { display: flex; flex-direction: column; padding: 6px; }
+.guide-menu-row { display: flex; align-items: center; border-radius: 12px; }
+.guide-menu-row:hover, .guide-menu-row[aria-selected='true'] { background: rgba(95, 179, 184, 0.1); }
+.guide-menu-row > button[role='option'] {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
+  flex: 1;
+  gap: 11px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px 4px 10px 10px;
   border: 0;
-  border-radius: 12px;
   background: transparent;
   text-align: left;
   cursor: pointer;
 }
-.guide-menu button:hover, .guide-menu button[aria-selected='true'] { background: rgba(95, 179, 184, 0.1); }
+.guide-menu-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .guide-menu-name { color: #1f2a2e; font-size: 14px; font-weight: 500; }
-.guide-menu-steps { color: #8a9aa0; font-size: 12px; }
+.guide-menu-summary { color: #8a9aa0; font-size: 12px; line-height: 1.35; }
+.guide-menu-info { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; margin-right: 4px; border: 0; border-radius: 50%; background: none; color: #9aa8ac; cursor: pointer; }
+.guide-menu-info:hover { color: var(--guide-bar-on, #5fb3b8); }
+.guide-menu-info svg { width: 16px; height: 16px; }
+
+.guide-info { padding: 16px 16px 14px; color: #4a5a60; }
+.guide-info-head { display: flex; gap: 11px; align-items: center; margin-bottom: 12px; }
+.guide-info-head > div { flex: 1; min-width: 0; }
+.guide-info-title { margin: 0; color: #1f2a2e; font-size: 15px; font-weight: 600; }
+.guide-info-by { margin: 2px 0 0; color: #8a9aa0; font-size: 12px; }
+.guide-info-close { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.04); color: #6b7a80; cursor: pointer; }
+.guide-info-close svg { width: 14px; height: 14px; }
+.guide-info-about { margin: 0 0 12px; font-size: 13px; line-height: 1.45; }
+.guide-info-steps { display: flex; flex-direction: column; gap: 6px; margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.35; }
+.guide-info-steps strong { color: var(--guide-bar-on, #5fb3b8); font-weight: 600; }
+
+/* After the last step the prompt steps aside; only "Processing" shows. */
+.guide-prompt { transition: opacity 0.45s ease, filter 0.45s ease; }
+.guide-prompt[data-hidden] { opacity: 0; filter: blur(6px); }
 
 /* Progress styles. Done steps are solid, the live step is half-strength, the
    rest are track. --p-size is bar height, dot size, or font size. */
@@ -347,9 +392,10 @@ button { font: inherit; color: inherit; }
 }
 .guide-progress[data-style='bars'] { align-self: stretch; }
 .guide-progress[data-style='bars'] span { flex: 1; height: var(--p-size, 3px); border-radius: 999px; }
-.guide-progress[data-style='dots'] span { width: var(--p-size, 7px); height: var(--p-size, 7px); border-radius: 50%; }
-.guide-progress:is([data-style='bars'], [data-style='dots']) span[data-state] { background: var(--guide-bar-on, #5fb3b8); }
-.guide-progress:is([data-style='bars'], [data-style='dots']) span[data-state='current'] { opacity: 0.45; }
+/* Dots draw as SVG (GooDots) so their transitions can merge like metaballs. */
+.guide-progress[data-style='dots'] svg { display: block; }
+.guide-progress[data-style='bars'] span[data-state] { background: var(--guide-bar-on, #5fb3b8); }
+.guide-progress[data-style='bars'] span[data-state='current'] { opacity: 0.45; }
 
 .guide-progress[data-style='steps'] { flex-wrap: wrap; gap: 4px 0; font-size: var(--p-size, 12px); font-weight: 500; }
 .guide-progress[data-style='steps'] span { color: #b6c3c7; transition: color 0.4s ease; }

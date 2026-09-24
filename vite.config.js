@@ -13,6 +13,7 @@ const PAGES = {
   voiceGuided: 'voice-guided.html',
   welcome: 'welcome.html',
   logoMotion: 'logo-motion.html',
+  promptCard: 'prompt-card.html',
 };
 
 /* When an edit can't hot-swap, Vite reloads every open page (path "*").

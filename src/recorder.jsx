@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { VoiceBeam } from 'voice-glow';
+import { Brain, HeartPulse, Info, RefreshCcw, Target, X } from 'lucide-react';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import './voice.css';
@@ -422,7 +423,7 @@ const STAR = {
 };
 
 /* Dynamic mode: questions offered at the script's [Question | Answer] marks. */
-const PROMPTS = {
+export const PROMPTS = {
   /* The speaker trails off at a mark; the card appears in this silence. */
   pauseMs: [1400, 0, 5000, 50],
   /* An untouched card fades after this, while the speaker carries on. */
@@ -463,8 +464,14 @@ const NO_PROMPTS = { pauseMs: 0, lingerMs: 0, answerDelayMs: 0 };
 const FRAMEWORKS = [
   {
     id: 'gross',
-    name: 'Gross model',
-    domain: 'Emotion regulation',
+    /* Named after the person behind it: the model came from someone. */
+    title: 'Gross’s Emotion Regulation Model',
+    creator: 'James J. Gross',
+    year: '1998',
+    icon: HeartPulse,
+    summary: 'Untangle a strong feeling by slowing down what happened.',
+    about:
+      'Stanford psychologist James Gross showed that an emotion unfolds in stages: a situation, what you notice, how you read it, and how you respond. You can step in at any of them. Walking through the situation, your response, its cause, and another perspective helps you understand a feeling instead of pushing it away.',
     steps: [
       {
         label: 'Situation',
@@ -498,8 +505,13 @@ const FRAMEWORKS = [
   },
   {
     id: 'abcde',
-    name: 'ABCDE',
-    domain: 'Unhelpful thoughts',
+    title: 'Ellis’s ABCDE Model',
+    creator: 'Albert Ellis',
+    year: '1950s',
+    icon: Brain,
+    summary: 'Catch an upsetting thought and check whether it holds up.',
+    about:
+      'Albert Ellis, who founded Rational Emotive Behavior Therapy, noticed that events rarely upset us on their own. Our beliefs about them do. His ABC model, later extended with D (dispute) and E (effective belief), helps you spot the thought in the middle and trade it for one that fits the facts.',
     steps: [
       {
         label: 'Activating event',
@@ -536,8 +548,13 @@ const FRAMEWORKS = [
   },
   {
     id: 'woop',
-    name: 'WOOP',
-    domain: 'Goals and habits',
+    title: 'Oettingen’s WOOP Method',
+    creator: 'Gabriele Oettingen',
+    year: '2014',
+    icon: Target,
+    summary: 'Turn a wish into a plan by facing what gets in the way.',
+    about:
+      'NYU psychologist Gabriele Oettingen found that picturing success alone can drain the energy to pursue it. WOOP pairs the wish with your main inner obstacle and an if-then plan, a combination her research links to better follow-through on goals and habits.',
     steps: [
       {
         label: 'Wish',
@@ -567,8 +584,13 @@ const FRAMEWORKS = [
   },
   {
     id: 'gibbs',
-    name: 'Gibbs cycle',
-    domain: 'Learning from experience',
+    title: 'Gibbs’ Reflective Cycle',
+    creator: 'Graham Gibbs',
+    year: '1988',
+    icon: RefreshCcw,
+    summary: 'Learn from an experience by walking all the way around it.',
+    about:
+      'Educator Graham Gibbs introduced this cycle in Learning by Doing (1988) so students could turn experiences into lessons. It moves from what happened to how you felt, what went well, what it means, and what you would do next time.',
     steps: [
       {
         label: 'Description',
@@ -623,6 +645,31 @@ const GUIDE = {
     inMs: [560, 0, 2000, 10],
     offsetY: [10, -40, 40, 1],
     blur: [8, 0, 24, 0.5],
+  },
+  /* Progress dots: how the fill moves to the next dot. The dots share a goo
+     filter, so neighbours merge like metaballs while they are close. */
+  dots: {
+    preset: select(
+      [
+        { value: 'liquid', label: '1 · Liquid stretch' },
+        { value: 'drip', label: '2 · Drip' },
+        { value: 'bridge', label: '3 · Bridge' },
+        { value: 'swell', label: '4 · Swell' },
+        { value: 'hop', label: '5 · Hop' },
+      ],
+      'liquid',
+    ),
+    durationMs: [760, 100, 3000, 10],
+    gap: [7, 0, 24, 0.5],
+    /* How far the goo reaches, in dot radii; 0 turns merging off. */
+    goo: [0.55, 0, 1.5, 0.01],
+    overshoot: [1.5, 1, 3, 0.01],
+    /* Travelling droplet size (drip, hop) as a share of a dot. */
+    drop: [0.62, 0.2, 1.2, 0.01],
+    /* Hop height, in dot sizes. */
+    hop: [1.3, 0, 4, 0.05],
+    /* Bridge thickness (bridge) as a share of a dot. */
+    bridge: [0.5, 0.1, 1, 0.01],
   },
 };
 
@@ -770,40 +817,38 @@ const COMPOSITION = {
    step. Shared by all five compositions; the simulated answers aren't here. */
 const camel = (s) => s.toLowerCase().replace(/[^a-z0-9]+(.)/g, (_, c) => c.toUpperCase());
 const text = (value) => ({ type: 'text', default: value });
-const COPY = {
-  finished: {
-    _collapsed: true,
-    label: text('All {n} steps'),
-    processing: text('That’s the whole reflection.'),
-    saved: text('Entry saved.'),
-  },
-  ...Object.fromEntries(
-    FRAMEWORKS.map((f, i) => [
-      f.id,
-      {
-        _collapsed: i > 0,
-        domain: text(f.domain),
-        name: text(f.name),
-        ...Object.fromEntries(
-          f.steps.map((st) => [
-            camel(st.label),
-            { _collapsed: true, label: text(st.label), question: text(st.question), hint: text(st.hint) },
-          ]),
-        ),
-      },
-    ]),
-  ),
-};
+const COPY = Object.fromEntries(
+  FRAMEWORKS.map((f, i) => [
+    f.id,
+    {
+      _collapsed: i > 0,
+      title: text(f.title),
+      creator: text(f.creator),
+      year: text(f.year),
+      summary: text(f.summary),
+      about: text(f.about),
+      ...Object.fromEntries(
+        f.steps.map((st) => [
+          camel(st.label),
+          { _collapsed: true, label: text(st.label), question: text(st.question), hint: text(st.hint) },
+        ]),
+      ),
+    },
+  ]),
+);
 
 /* FRAMEWORKS with the Copy panel's edits applied. */
 function withCopy(copy) {
   return FRAMEWORKS.map((f) => {
-    const c = copy[f.id];
+    const { title, creator, year, summary, about, ...steps } = copy[f.id];
     return {
       ...f,
-      domain: c.domain,
-      name: c.name,
-      steps: f.steps.map((st) => ({ ...st, ...c[camel(st.label)] })),
+      title,
+      creator,
+      year,
+      summary,
+      about,
+      steps: f.steps.map((st) => ({ ...st, ...steps[camel(st.label)] })),
     };
   });
 }
@@ -977,7 +1022,14 @@ function useRecorder(s, t, ctl, pr, guide) {
         isThinking = c.proc >= thinkStart;
         if (c.proc >= thinkStart + pp.durationMs) {
           isThinking = false;
-          setStatus('stopped');
+          if (g) {
+            // Guided loops: back to the first prompt, ready to record again.
+            statusRef.current = 'idle';
+            setStatus('idle');
+            goToStep(0);
+          } else {
+            setStatus('stopped');
+          }
         }
       }
 
@@ -998,7 +1050,7 @@ function useRecorder(s, t, ctl, pr, guide) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [resetTake, beginProcessing, next]);
+  }, [resetTake, beginProcessing, next, goToStep]);
 
   /* Record begins a fresh take (Guided: from the first prompt). */
   const record = useCallback(() => {
@@ -1332,8 +1384,10 @@ function CardTimer({ t }) {
 }
 
 /* Dynamic mode's question card. Tapping answers it; left alone it fades after
-   lingerMs, while the chosen timer counts down the time it has left. */
-function PromptCard({ rec, p, bottom }) {
+   lingerMs, while the chosen timer counts down the time it has left.
+   prompt-card.html previews it alone: `timerAt` (0–1) starts the countdown that
+   far in, and `timerFrozen` holds the countdown still while the star keeps moving. */
+export function PromptCard({ rec, p, bottom, timerAt = 0, timerFrozen = false }) {
   const card = rec.prompt;
   if (!card) return null;
   const phase = rec.live ? card.phase : 'faded';
@@ -1344,7 +1398,7 @@ function PromptCard({ rec, p, bottom }) {
       type="button"
       className="prompt-card"
       data-phase={phase}
-      data-paused={paused || undefined}
+      data-paused={paused || timerFrozen || undefined}
       data-timer={t.style}
       inert={phase !== 'offered'}
       aria-label={`Answer: ${card.question}`}
@@ -1378,6 +1432,7 @@ function PromptCard({ rec, p, bottom }) {
         '--dot-opacity': t.dots.opacity,
         '--dot-fade': `${t.dots.fadeMs}ms`,
         '--star-size': `${p.star.size}px`,
+        '--linger-at': timerAt,
       }}
     >
       <span className="prompt-hint">
@@ -1394,9 +1449,124 @@ function PromptCard({ rec, p, bottom }) {
 /* A per-element nudge from its folder's x/y. */
 const nudge = (e) => (e.x || e.y ? { transform: `translate(${e.x}px, ${e.y}px)` } : undefined);
 
-function GuideProgress({ fw, rec, done, p }) {
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+/* Overshoot 1 = plain ease-out; higher springs past the target and settles. */
+const backOut = (t, overshoot) => {
+  const s = (overshoot - 1) * 2.4;
+  return 1 + (s + 1) * (t - 1) ** 3 + s * (t - 1) ** 2;
+};
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Progress dots with metaball transitions. `filled` dots carry the accent; the
+   last one is half-strength while its step is live. A step change animates the
+   fill from the old frontier to the new one with the chosen preset. */
+function GooDots({ n, filled, live, size, d, style }) {
+  const filter = `goo-${useId().replace(/[^a-z0-9]/gi, '')}`;
+  const [anim, setAnim] = useState({ from: filled, to: filled, t: 1 });
+  const prev = useRef(filled);
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = filled;
+    if (filled <= from || d.durationMs === 0 || reducedMotion()) {
+      setAnim({ from: filled, to: filled, t: 1 });
+      return;
+    }
+    let raf;
+    const t0 = performance.now();
+    const frame = (now) => {
+      const t = Math.min(1, (now - t0) / d.durationMs);
+      setAnim({ from, to: filled, t });
+      if (t < 1) raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [filled]);
+
+  const r = size / 2;
+  const pad = Math.max(size, r + d.hop * size) + 2;
+  const x = (i) => pad + r + i * (size + d.gap);
+  const cy = pad + r;
+  const w = 2 * pad + n * size + (n - 1) * d.gap;
+  const h = 2 * pad + size;
+  const on = 'var(--guide-bar-on, #5fb3b8)';
+  const current = 'color-mix(in srgb, var(--guide-bar-on, #5fb3b8) 45%, var(--guide-bar-off, #dde6e8))';
+  const frontier = live ? current : on;
+
+  const { from, to, t } = anim;
+  const moving = t < 1;
+  const s = from - 1; // index the fill leaves from (−1: nothing filled yet)
+  const e = to - 1; // index it arrives at
+  const shapes = [];
+  const dot = (key, cx, rad, fill, y = cy) => rad > 0.05 && shapes.push(<circle key={key} cx={cx} cy={y} r={rad} fill={fill} />);
+  const bar = (key, x0, x1, fill) =>
+    x1 > x0 && shapes.push(<rect key={key} x={x0} y={cy - r * d.bridge} width={x1 - x0} height={2 * r * d.bridge} fill={fill} />);
+
+  // Settled dots. While moving, the old frontier has already turned "done".
+  const settled = moving ? from : to;
+  for (let i = 0; i < settled; i++) {
+    if (d.preset === 'swell' && moving && i === s) continue;
+    dot(`d${i}`, x(i), r, !moving && i === to - 1 ? frontier : on);
+  }
+  if (d.preset === 'bridge') for (let i = 1; i < settled; i++) bar(`b${i}`, x(i - 1), x(i), on);
+  // Dots skipped by a multi-step jump fill in as the move lands.
+  if (moving && t > 0.5) for (let i = from; i < e; i++) dot(`j${i}`, x(i), r, on);
+
+  if (moving) {
+    const u = easeInOut(t);
+    const grow = (start) => r * Math.max(0, backOut(clamp01((t - start) / (1 - start)), d.overshoot));
+    if (s < 0) {
+      dot('grow', x(e), grow(0), frontier);
+    } else if (d.preset === 'liquid') {
+      // The head springs ahead; the tail follows late, so the blob stretches, snaps off, and lands.
+      const head = x(s) + (x(e) - x(s)) * backOut(t, d.overshoot);
+      const tail = x(s) + (x(e) - x(s)) * easeInOut(clamp01((t - 0.2) / 0.8));
+      for (let k = 0; k <= 6; k++) dot(`l${k}`, tail + ((head - tail) * k) / 6, r * (k === 6 ? 1 : 0.82), frontier);
+    } else if (d.preset === 'drip') {
+      dot('drop', x(s) + (x(e) - x(s)) * u, r * d.drop, frontier);
+      dot('land', x(e), grow(0.55), frontier);
+    } else if (d.preset === 'bridge') {
+      bar('reach', x(s), x(s) + (x(e) - x(s)) * clamp01(u * 1.6), on);
+      dot('land', x(e), grow(0.45), frontier);
+    } else if (d.preset === 'swell') {
+      // Both dots lean in, touch in the middle, then spring back apart.
+      const lean = (x(e) - x(s)) * 0.42 * Math.sin(Math.PI * u);
+      dot('src', x(s) + lean, r, on);
+      dot('dst', x(e) - lean, grow(0), frontier);
+    } else if (d.preset === 'hop') {
+      const y = cy - d.hop * size * Math.sin(Math.PI * u);
+      dot('drop', x(s) + (x(e) - x(s)) * u, r * d.drop * (1 + 0.25 * Math.sin(Math.PI * u)), frontier, y);
+      dot('land', x(e), grow(0.7), frontier);
+    }
+  }
+
+  const blur = r * d.goo;
+  return (
+    <div className="guide-progress" data-style="dots" style={style} aria-hidden="true">
+      <svg width={w} height={h} style={{ margin: -pad, overflow: 'visible' }}>
+        {blur > 0 && (
+          <filter id={filter} x="0" y="0" width={w} height={h} filterUnits="userSpaceOnUse">
+            <feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        )}
+        {Array.from({ length: n }, (_, i) => (
+          <circle key={i} cx={x(i)} cy={cy} r={r} fill="var(--guide-bar-off, #dde6e8)" />
+        ))}
+        <g filter={blur > 0 ? `url(#${filter})` : undefined}>{shapes}</g>
+      </svg>
+    </div>
+  );
+}
+
+function GuideProgress({ fw, rec, done, p, dots }) {
   const n = fw.steps.length;
   const style = { ...nudge(p), ...fontStyle(p), '--p-size': `${p.size}px` };
+  if (p.style === 'dots') {
+    const filled = done ? n : rec.live ? rec.step + 1 : rec.step;
+    return <GooDots n={n} filled={filled} live={rec.live && !done} size={p.size} d={dots} style={style} />;
+  }
   if (p.style === 'fraction') {
     return (
       <div className="guide-progress" data-style="fraction" style={style}>
@@ -1415,18 +1585,45 @@ function GuideProgress({ fw, rec, done, p }) {
   );
 }
 
+/* "Learn more" for one framework: who made it, when, why, and its steps. */
+function FrameworkInfo({ f, onClose }) {
+  const Icon = f.icon;
+  return (
+    <div className="guide-info" role="dialog" aria-label={`About ${f.title}`}>
+      <div className="guide-info-head">
+        <span className="guide-icon"><Icon /></span>
+        <div>
+          <p className="guide-info-title">{f.title}</p>
+          <p className="guide-info-by">{f.creator} · {f.year}</p>
+        </div>
+        <button type="button" className="guide-info-close" aria-label="Close" onClick={onClose}><X /></button>
+      </div>
+      <p className="guide-info-about">{f.about}</p>
+      <ol className="guide-info-steps">
+        {f.steps.map((st) => (
+          <li key={st.label}><strong>{st.label}</strong> {st.question}</li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /* Guided mode's screen: framework picker, step progress, and the current prompt,
-   arranged by the active composition. The framework can only change between takes. */
-function GuideScreen({ rec, fw, frameworks, copy, g, comp, onPick }) {
+   arranged by the active composition. The framework can only change between
+   takes; its info card opens any time. During processing the prompt fades out. */
+function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
   const [open, setOpen] = useState(false);
+  const [infoId, setInfoId] = useState(null);
   const menuOpen = open && !rec.live;
-  const done = rec.status === 'processing' || rec.status === 'stopped';
+  const done = rec.status === 'processing';
   const step = fw.steps[rec.step];
   const n = fw.steps.length;
   const L = comp.layout;
-  const progress = comp.progress.show && <GuideProgress fw={fw} rec={rec} done={done} p={comp.progress} />;
+  const progress = comp.progress.show && <GuideProgress fw={fw} rec={rec} done={done} p={comp.progress} dots={g.dots} />;
   const at = (where) => comp.progress.placement === where && progress;
   const { label, question, hint, panel } = comp;
+  const Icon = fw.icon;
+  const info = frameworks.find((f) => f.id === infoId);
 
   return (
     <div
@@ -1447,38 +1644,74 @@ function GuideScreen({ rec, fw, frameworks, copy, g, comp, onPick }) {
         style={{ top: `calc(${L.headerTop}px + var(--safe-top, 0px))` }}
       >
         {comp.chip.show && (
-          <button
-            type="button"
-            className="guide-framework"
-            aria-haspopup="listbox"
-            aria-expanded={menuOpen}
-            disabled={rec.live || rec.status === 'processing'}
-            onClick={() => setOpen((o) => !o)}
-            style={{ ...nudge(comp.chip), ...fontStyle(comp.chip), fontSize: comp.chip.size }}
-          >
-            {fw.domain} · {fw.name}
-            <Chevron />
-          </button>
+          <div className="guide-framework" style={{ ...nudge(comp.chip), ...fontStyle(comp.chip), fontSize: comp.chip.size }}>
+            <button
+              type="button"
+              className="guide-framework-pick"
+              aria-haspopup="listbox"
+              aria-expanded={menuOpen}
+              disabled={rec.live || rec.status === 'processing'}
+              onClick={() => {
+                setInfoId(null);
+                setOpen((o) => !o);
+              }}
+            >
+              <Icon className="guide-framework-icon" />
+              <span className="guide-framework-title">{fw.title}</span>
+              <Chevron />
+            </button>
+            <button
+              type="button"
+              className="guide-framework-info"
+              aria-label={`About ${fw.title}`}
+              aria-expanded={infoId === fw.id}
+              onClick={() => {
+                setOpen(false);
+                setInfoId((id) => (id === fw.id ? null : fw.id));
+              }}
+            >
+              <Info />
+            </button>
+          </div>
         )}
         {menuOpen && (
           <div className="guide-menu" role="listbox" aria-label="Framework">
-            {frameworks.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                role="option"
-                aria-selected={f.id === fw.id}
-                onClick={() => {
-                  onPick(f.id);
-                  setOpen(false);
-                }}
-              >
-                <span className="guide-menu-name">{f.domain} · {f.name}</span>
-                <span className="guide-menu-steps">{f.steps.map((st) => st.label).join(' → ')}</span>
-              </button>
-            ))}
+            {frameworks.map((f) => {
+              const RowIcon = f.icon;
+              return (
+                <div key={f.id} className="guide-menu-row" aria-selected={f.id === fw.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={f.id === fw.id}
+                    onClick={() => {
+                      onPick(f.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="guide-icon"><RowIcon /></span>
+                    <span className="guide-menu-text">
+                      <span className="guide-menu-name">{f.title}</span>
+                      <span className="guide-menu-summary">{f.summary}</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="guide-menu-info"
+                    aria-label={`About ${f.title}`}
+                    onClick={() => {
+                      setOpen(false);
+                      setInfoId(f.id);
+                    }}
+                  >
+                    <Info />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
+        {info && <FrameworkInfo f={info} onClose={() => setInfoId(null)} />}
         {at('header')}
         {at('header-row')}
       </div>
@@ -1486,6 +1719,7 @@ function GuideScreen({ rec, fw, frameworks, copy, g, comp, onPick }) {
       <div
         className="guide-prompt"
         data-panel={panel.show ? panel.shape : undefined}
+        data-hidden={done || undefined}
         style={{
           top: `calc(${L.promptTop}px + var(--safe-top, 0px))`,
           '--panel-glass': panel.glass,
@@ -1494,10 +1728,10 @@ function GuideScreen({ rec, fw, frameworks, copy, g, comp, onPick }) {
         }}
       >
         {at('prompt-top')}
-        <div className="guide-step" key={done ? 'done' : `${fw.id}-${rec.step}`} aria-live="polite">
+        <div className="guide-step" key={`${fw.id}-${rec.step}`} aria-live="polite">
           {label.show && (
             <span className="guide-label" style={{ ...nudge(label), ...fontStyle(label), fontSize: label.size, color: label.color }}>
-              {done ? copy.finished.label.replace('{n}', n) : LABEL_FORMATS[label.format](rec.step, n, step.label)}
+              {LABEL_FORMATS[label.format](rec.step, n, step.label)}
             </span>
           )}
           {question.show && (
@@ -1511,10 +1745,10 @@ function GuideScreen({ rec, fw, frameworks, copy, g, comp, onPick }) {
                 color: question.color,
               }}
             >
-              {done ? (rec.status === 'stopped' ? copy.finished.saved : copy.finished.processing) : step.question}
+              {step.question}
             </p>
           )}
-          {hint.show && !done && (
+          {hint.show && (
             <p className="guide-hint" style={{ ...nudge(hint), ...fontStyle(hint), fontSize: hint.size, color: hint.color }}>
               {step.hint}
             </p>
@@ -1815,7 +2049,6 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                   rec={rec}
                   fw={fw}
                   frameworks={frameworks}
-                  copy={copy}
                   g={g}
                   comp={comp}
                   onPick={setFrameworkId}
