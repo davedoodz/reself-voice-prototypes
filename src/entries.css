@@ -360,7 +360,6 @@
    and the rest steps back, like following along with lyrics. */
 .j-transcript { display: flex; flex-direction: column; }
 .j-seg { margin: 0 -10px; padding: 6px 10px; border-radius: 12px; cursor: pointer; transition: background 0.2s ease; }
-.j-seg:hover { background: rgba(20, 40, 48, 0.03); }
 .j-seg p { margin: 0; color: var(--body); font-size: 16.5px; line-height: 1.6; letter-spacing: -0.003em; transition: color 0.35s ease; }
 .j-transcript[data-following] .j-seg.speech p { color: var(--faint); }
 .j-transcript[data-following] .j-seg[data-active] p { color: var(--ink); }

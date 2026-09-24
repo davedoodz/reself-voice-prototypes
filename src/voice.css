@@ -348,7 +348,7 @@ button { font: inherit; color: inherit; }
 .guide-framework-icon { flex-shrink: 0; width: 14px; height: 14px; color: var(--guide-bar-on, #61A8FD); stroke-width: 2; }
 .guide-framework-pick > svg:last-child { flex-shrink: 0; width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .guide-framework-info { justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #8a9aa0; }
-.guide-framework-info:hover, .guide-framework-info[aria-expanded='true'] { background: rgba(97, 168, 253, 0.12); color: var(--guide-bar-on, #61A8FD); }
+.guide-framework-info[aria-expanded='true'] { background: rgba(97, 168, 253, 0.12); color: var(--guide-bar-on, #61A8FD); }
 .guide-framework-info svg { width: 15px; height: 15px; }
 /* Locked for the length of a take; the info card stays available. */
 .guide-framework-pick:disabled { cursor: default; opacity: 0.55; }
@@ -386,7 +386,7 @@ button { font: inherit; color: inherit; }
 }
 .guide-menu { display: flex; flex-direction: column; padding: 6px; }
 .guide-menu-row { display: flex; align-items: center; border-radius: 12px; }
-.guide-menu-row:hover, .guide-menu-row[aria-selected='true'] { background: rgba(97, 168, 253, 0.1); }
+.guide-menu-row[aria-selected='true'] { background: rgba(97, 168, 253, 0.1); }
 .guide-menu-row > button[role='option'] {
   display: flex;
   flex: 1;
@@ -403,7 +403,6 @@ button { font: inherit; color: inherit; }
 .guide-menu-name { color: #1f2a2e; font-size: 14px; font-weight: 500; }
 .guide-menu-summary { color: #8a9aa0; font-size: 12px; line-height: 1.35; }
 .guide-menu-info { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; margin-right: 4px; border: 0; border-radius: 50%; background: none; color: #9aa8ac; cursor: pointer; }
-.guide-menu-info:hover { color: var(--guide-bar-on, #61A8FD); }
 .guide-menu-info svg { width: 16px; height: 16px; }
 
 .guide-info { padding: 16px 16px 14px; color: #4a5a60; }
@@ -667,7 +666,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
-.guide-skip:hover { background: rgba(97, 168, 253, 0.12); color: #61A8FD; }
 .guide-skip:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 
 /* Mode menu: opens above the pill; the current mode is ticked by colour. */
@@ -702,7 +700,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
   font-weight: 500;
   text-decoration: none;
 }
-.mode-menu a:hover { background: rgba(97, 168, 253, 0.1); }
 .mode-menu a[aria-checked='true'] { background: rgba(97, 168, 253, 0.12); color: #61A8FD; }
 .mode-menu a:focus-visible { outline: 2px solid #61A8FD; outline-offset: -2px; }
 @keyframes mode-menu-in { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
@@ -713,3 +710,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide .guide-head > .guide-framework { align-self: center; }
 .guide .guide-head[data-row] { justify-content: center; }
 .guide .guide-head[data-row] > .guide-progress { position: absolute; right: 0; }
+
+/* Mobile prototypes: no hover states or tap flash; colour marks only the selection. */
+* { -webkit-tap-highlight-color: transparent; }
