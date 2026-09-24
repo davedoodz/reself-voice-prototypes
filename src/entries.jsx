@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { VoiceBeam } from 'voice-glow';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import {
@@ -23,8 +22,6 @@ import {
   Palette,
   Pause,
   Play,
-  RotateCcw,
-  RotateCw,
   Smartphone,
   Sparkle,
   Sparkles,
@@ -43,7 +40,7 @@ import './voice.css';
 import './unwind-fonts.css';
 import './entries.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
-import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SAFE_TOP, FRAMED_SCREEN_H, beamProps } from './recorder.jsx';
+import { FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SAFE_TOP, FRAMED_SCREEN_H } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
 import { ENTRIES } from './entries-data.js';
 
@@ -52,44 +49,75 @@ import { ENTRIES } from './entries-data.js';
  *
  * Two screens in one navigation stack:
  *   LIST    every entry, newest first, grouped by month then day. The day
- *           column sticks while its cards scroll, so the date is always
- *           in view. Record entry floats over the glow at the bottom.
+ *           column sticks beside its cards; the current month is a fixed
+ *           bar outside the scroller, so it never moves once it's up.
  *   DETAIL  tap a card → it pushes in from the right while the list slides
  *           a little left and dims (Transition › parallax, dim). Back, or a
  *           drag from the left edge, pops it again.
  *
- * The glow is the same VoiceBeam as the recorder: it breathes at rest on the
- * list and speaks again while an entry plays back (Glow panel).
  * Playback is simulated: a clock runs through the transcript, weighting each
  * segment by its word count, and the spoken segment is highlighted.
+ * The player's wave has five drawings (Player › style); "ribbon" is the
+ * logo's slanted, round-jointed zigzag.
  * ───────────────────────────────────────────────────────── */
 
-const THEMES = {
-  work: ['Work', Briefcase],
-  confidence: ['Confidence', Sprout],
-  movement: ['Movement', Footprints],
-  goals: ['Goals', Target],
-  sleep: ['Sleep', BedDouble],
-  frustration: ['Frustration', Flame],
-  nature: ['Outdoors', Trees],
-  calm: ['Calm', Wind],
-  rest: ['Rest', Coffee],
-  friends: ['Friendship', Users],
-  worry: ['Worry', CloudRain],
-  screens: ['Screens', Smartphone],
-  learning: ['Learning', GraduationCap],
-  family: ['Family', House],
-  partner: ['Partner', HeartHandshake],
-  money: ['Money', Wallet],
-  home: ['Home', House],
-  creativity: ['Creativity', Palette],
+/* Every content icon, as [Lucide flat icon, Apple emoji] (Icons › style).
+   Controls (back, play, close, chevrons) stay as glyphs in both styles. */
+const ICONS = {
+  sunrise: [Sunrise, '🌅'],
+  sun: [Sun, '☀️'],
+  sunset: [Sunset, '🌇'],
+  moon: [Moon, '🌙'],
+  duration: [Clock, '⏱️'],
+  calendar: [CalendarDays, '📅'],
+  clock: [Clock, '🕗'],
+  freeform: [AudioLines, '🎙️'],
+  dynamic: [Sparkle, '💬'],
+  guided: [Compass, '🧭'],
+  prompt: [Sparkle, '✨'],
+  insights: [Sparkles, '✨'],
+  work: [Briefcase, '💼'],
+  confidence: [Sprout, '🌱'],
+  movement: [Footprints, '👟'],
+  goals: [Target, '🎯'],
+  sleep: [BedDouble, '🛌'],
+  frustration: [Flame, '🔥'],
+  nature: [Trees, '🌳'],
+  calm: [Wind, '🍃'],
+  rest: [Coffee, '☕️'],
+  friends: [Users, '🫂'],
+  worry: [CloudRain, '🌧️'],
+  screens: [Smartphone, '📱'],
+  learning: [GraduationCap, '🎓'],
+  family: [House, '👪'],
+  partner: [HeartHandshake, '💞'],
+  money: [Wallet, '💰'],
+  home: [House, '🏠'],
+  creativity: [Palette, '🎨'],
 };
 
-const MODES = {
-  freeform: { label: 'Freeform', Icon: AudioLines },
-  dynamic: { label: 'Dynamic', Icon: Sparkle },
-  guided: { label: 'Guided', Icon: Compass },
+const THEME_LABELS = {
+  work: 'Work',
+  confidence: 'Confidence',
+  movement: 'Movement',
+  goals: 'Goals',
+  sleep: 'Sleep',
+  frustration: 'Frustration',
+  nature: 'Outdoors',
+  calm: 'Calm',
+  rest: 'Rest',
+  friends: 'Friendship',
+  worry: 'Worry',
+  screens: 'Screens',
+  learning: 'Learning',
+  family: 'Family',
+  partner: 'Partner',
+  money: 'Money',
+  home: 'Home',
+  creativity: 'Creativity',
 };
+
+const MODE_LABELS = { freeform: 'Freeform', dynamic: 'Dynamic', guided: 'Guided' };
 
 const SCREEN = {
   deviceFrame: true,
@@ -98,6 +126,30 @@ const SCREEN = {
   screenColor: '#f9f9f9',
   pageColor: '#f5f5f5',
   recordPage: { type: 'select', options: ['voice-dynamic.html', 'voice.html', 'voice-guided.html'], default: 'voice-dynamic.html' },
+};
+
+/* Which icon set, and which groups of icons show at all. */
+const ICON_DIALS = {
+  style: { type: 'select', options: ['flat', 'emoji'], default: 'flat' },
+  time: true,
+  duration: true,
+  mode: true,
+  themes: true,
+};
+
+const RECORD = {
+  label: { type: 'text', default: 'Record entry' },
+  background: '#1c1c1e',
+  textColor: '#ffffff',
+  dot: true,
+  dotColor: '#ff453a',
+  height: [56, 36, 84, 1],
+  fontSize: [16, 12, 22, 0.5],
+  paddingX: [24, 10, 56, 1],
+  radius: [28, 0, 42, 1],
+  /* From the horizontal centre, and up from the bottom edge. */
+  x: [0, -150, 150, 1],
+  bottom: [42, 0, 260, 1],
 };
 
 const CURVES = {
@@ -117,21 +169,68 @@ const TRANSITION = {
   edgeSwipe: true,
 };
 
-const GLOW = {
-  restLevel: [0.16, 0, 1, 0.01],
-  breatheSec: [7, 2, 16, 0.1],
-  playLevel: [0.8, 0, 1, 0.01],
-  /* The glow drops back to rest on the detail screen unless audio plays. */
-  showOnDetail: true,
+/* The player's wave. `style` picks the drawing; each drawing has its own
+   folder. followVoice 0 = even wave, 1 = follows the recording's loudness. */
+const WAVE_STYLES = ['ribbon', 'sine', 'bars', 'dots', 'mirror'];
+const PLAYER = {
+  style: { type: 'select', options: WAVE_STYLES, default: 'ribbon' },
+  layout: {
+    card: true,
+    playSize: [34, 24, 56, 1],
+    showTime: true,
+    showSpeed: true,
+  },
+  color: {
+    played: '#80DCF7',
+    track: '#dde6e9',
+    playhead: false,
+    playheadColor: '#1f2a2e',
+  },
+  ribbon: {
+    height: [30, 12, 64, 1],
+    stroke: [4, 1, 10, 0.1],
+    cycles: [14, 3, 40, 0.5],
+    amplitude: [0.85, 0.1, 1, 0.01],
+    sharpness: [0.8, 0, 1, 0.01],
+    slant: [0.45, -1, 1, 0.01],
+    followVoice: [0.8, 0, 1, 0.01],
+  },
+  sine: {
+    height: [26, 12, 64, 1],
+    stroke: [2, 0.5, 6, 0.1],
+    cycles: [24, 3, 60, 0.5],
+    amplitude: [0.9, 0.1, 1, 0.01],
+    slant: [0, -1, 1, 0.01],
+    followVoice: [1, 0, 1, 0.01],
+  },
+  bars: {
+    height: [26, 10, 64, 1],
+    count: [48, 12, 120, 1],
+    width: [0.5, 0.1, 1, 0.01],
+    minHeight: [0.14, 0, 1, 0.01],
+    skew: [0, -30, 30, 1],
+    round: true,
+  },
+  dots: {
+    height: [22, 10, 64, 1],
+    count: [40, 10, 100, 1],
+    maxSize: [5, 1, 12, 0.1],
+    minSize: [1.4, 0.5, 6, 0.1],
+  },
+  mirror: {
+    height: [26, 10, 64, 1],
+    amplitude: [0.95, 0.1, 1, 0.01],
+    resolution: [60, 12, 160, 1],
+  },
 };
 
 /* ── Formatting ────────────────────────────────────────── */
-const TODAY = new Date('2026-09-24T12:00');
 const at = (e) => new Date(e.at);
 const pad = (n) => String(n).padStart(2, '0');
 const dayKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-const clock = (sec) => `${Math.floor(sec / 60)}:${pad(Math.floor(sec % 60))}`;
+/* Always four digits: 6:52 → 06:52. */
+const clock = (sec) => `${pad(Math.floor(sec / 60))}:${pad(Math.floor(sec % 60))}`;
 const timeOfDay = (d) =>
   d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' AM', ' am').replace(' PM', ' pm');
 const longDuration = (sec) => {
@@ -144,21 +243,10 @@ const totalSpoken = (sec) => {
   const m = Math.round((sec % 3600) / 60);
   return h ? `${h} h ${m} min` : `${m} min`;
 };
-
-function relativeDay(d) {
-  const days = Math.round((new Date(dayKey(TODAY)) - new Date(dayKey(d))) / 86400000);
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
-  if (days < 14) return 'Last week';
-  return `${Math.floor(days / 7)} weeks ago`;
-}
-
-function DayPartIcon({ d }) {
+const dayPart = (d) => {
   const h = d.getHours();
-  const Icon = h < 5 ? Moon : h < 11 ? Sunrise : h < 17 ? Sun : h < 20 ? Sunset : Moon;
-  return <Icon aria-hidden="true" />;
-}
+  return h < 5 ? 'moon' : h < 11 ? 'sunrise' : h < 17 ? 'sun' : h < 20 ? 'sunset' : 'moon';
+};
 
 const promptCount = (e) => e.transcript.filter((s) => s.kind === 'prompt' || s.kind === 'step').length;
 
@@ -199,17 +287,21 @@ function timeline(e) {
   });
 }
 
-/* A stable waveform per entry, so the same entry always looks the same. */
-function waveform(id, n = 54) {
-  let h = 2166136261;
-  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  const rand = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) / 4294967296);
-  let prev = 0.5;
-  return Array.from({ length: n }, (_, i) => {
-    prev = prev * 0.45 + rand() * 0.55;
-    const taper = Math.min(1, (i + 2) / 5, (n - i + 1) / 5);
-    return 0.18 + prev * 0.82 * taper;
-  });
+/* ── Icons ─────────────────────────────────────────────── */
+const IconCtx = createContext({ style: 'flat', time: true, duration: true, mode: true, themes: true });
+
+/* `group` is the Icons toggle that hides it (time, duration, mode, themes). */
+function Ico({ k, group }) {
+  const ic = useContext(IconCtx);
+  if (group && !ic[group]) return null;
+  const [Flat, emoji] = ICONS[k];
+  return ic.style === 'emoji' ? (
+    <span className="j-emoji" aria-hidden="true">
+      {emoji}
+    </span>
+  ) : (
+    <Flat aria-hidden="true" />
+  );
 }
 
 /* ── Playback ──────────────────────────────────────────── */
@@ -218,7 +310,6 @@ function usePlayback(entry) {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const posRef = useRef(0);
-  const playingRef = useRef(false);
   const duration = entry?.duration ?? 0;
 
   const seek = useCallback(
@@ -230,7 +321,6 @@ function usePlayback(entry) {
   );
 
   useEffect(() => {
-    playingRef.current = playing;
     if (!playing) return;
     let last = performance.now();
     let raf = requestAnimationFrame(function tick(now) {
@@ -253,8 +343,6 @@ function usePlayback(entry) {
     pos,
     playing,
     speed,
-    posRef,
-    playingRef,
     seek,
     toggle: () => {
       if (!playing && posRef.current >= duration) seek(0);
@@ -267,53 +355,158 @@ function usePlayback(entry) {
   };
 }
 
+/* ── Wave drawings ─────────────────────────────────────── */
+
+/* A stable loudness curve per entry, 0.18–1, quiet at both ends. */
+function loudness(id, n = 64) {
+  let h = 2166136261;
+  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  const rand = () => (h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) / 4294967296;
+  let prev = 0.5;
+  return Array.from({ length: n }, (_, i) => {
+    prev = prev * 0.45 + rand() * 0.55;
+    const taper = Math.min(1, (i + 2) / 5, (n - i + 1) / 5);
+    return 0.18 + prev * 0.82 * taper;
+  });
+}
+
+/* Loudness at u ∈ [0, 1], eased between samples. */
+function envAt(v, u) {
+  const x = Math.max(0, Math.min(1, u)) * (v.length - 1);
+  const i = Math.floor(x);
+  const f = x - i;
+  const b = v[Math.min(i + 1, v.length - 1)];
+  return v[i] + (b - v[i]) * f * f * (3 - 2 * f);
+}
+
+/* sin → triangle as sharpness goes 0 → 1; the triangle's corners get the
+   round joins, like the logo's peaks. */
+const waveAt = (phi, sharp) => (1 - sharp) * Math.sin(phi) + sharp * (2 / Math.PI) * Math.asin(Math.sin(phi));
+
+/* A stroked line through the wave; `slant` leans every peak right, as in the logo. */
+function linePath(w, h, v, d, sharp) {
+  const lean = Math.abs(d.slant) * h * 0.5;
+  const x0 = d.stroke / 2 + lean;
+  const span = w - 2 * x0;
+  const amp = d.amplitude * (h / 2 - d.stroke / 2);
+  const n = Math.max(160, Math.round(d.cycles * 18));
+  let p = '';
+  for (let i = 0; i <= n; i++) {
+    const u = i / n;
+    const edge = Math.min(1, u * 10, (1 - u) * 10);
+    const e = (1 - d.followVoice + d.followVoice * envAt(v, u)) * edge;
+    const dy = amp * e * waveAt(u * d.cycles * Math.PI * 2, sharp);
+    p += `${i ? 'L' : 'M'}${(x0 + u * span + d.slant * dy).toFixed(2)} ${(h / 2 - dy).toFixed(2)}`;
+  }
+  return p;
+}
+
+function waveShape(style, w, h, v, d, color) {
+  if (style === 'ribbon' || style === 'sine') {
+    return (
+      <path
+        d={linePath(w, h, v, d, style === 'ribbon' ? d.sharpness : 0)}
+        fill="none"
+        stroke={color}
+        strokeWidth={d.stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    );
+  }
+  if (style === 'bars') {
+    const step = w / d.count;
+    const bw = Math.max(1, step * d.width);
+    return (
+      <g transform={`translate(0 ${h / 2}) skewX(${-d.skew}) translate(0 ${-h / 2})`} fill={color}>
+        {Array.from({ length: d.count }, (_, i) => {
+          const bh = Math.max(d.minHeight, envAt(v, (i + 0.5) / d.count)) * h;
+          return <rect key={i} x={i * step + (step - bw) / 2} y={(h - bh) / 2} width={bw} height={bh} rx={d.round ? bw / 2 : 0.5} />;
+        })}
+      </g>
+    );
+  }
+  if (style === 'dots') {
+    const step = w / d.count;
+    return (
+      <g fill={color}>
+        {Array.from({ length: d.count }, (_, i) => {
+          const r = (d.minSize + (d.maxSize - d.minSize) * envAt(v, (i + 0.5) / d.count)) / 2;
+          return <circle key={i} cx={i * step + step / 2} cy={h / 2} r={Math.min(r, step / 2, h / 2)} />;
+        })}
+      </g>
+    );
+  }
+  // mirror: the loudness as a soft filled shape, top and bottom.
+  const n = d.resolution;
+  const pts = Array.from({ length: n + 1 }, (_, i) => {
+    const u = i / n;
+    const edge = Math.min(1, u * 12, (1 - u) * 12);
+    return [u * w, (d.amplitude * envAt(v, u) * edge * h) / 2];
+  });
+  const top = pts.map(([x, a], i) => `${i ? 'L' : 'M'}${x.toFixed(2)} ${(h / 2 - a).toFixed(2)}`).join('');
+  const bottom = pts
+    .reverse()
+    .map(([x, a]) => `L${x.toFixed(2)} ${(h / 2 + a).toFixed(2)}`)
+    .join('');
+  return <path d={`${top}${bottom}Z`} fill={color} />;
+}
+
+function useWidth(ref) {
+  const [w, setW] = useState(0);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const ro = new ResizeObserver(() => setW(el.offsetWidth));
+    ro.observe(el);
+    setW(el.offsetWidth);
+    return () => ro.disconnect();
+  }, [ref]);
+  return w;
+}
+
 /* ── List ──────────────────────────────────────────────── */
-function Duration({ sec, max }) {
+function Duration({ sec }) {
   return (
     <span className="j-duration" aria-label={`Duration ${longDuration(sec)}`}>
-      <span className="j-meter" aria-hidden="true">
-        <span style={{ width: `${Math.max(8, (sec / max) * 100)}%` }} />
-      </span>
+      <Ico k="duration" group="duration" />
       {clock(sec)}
     </span>
   );
 }
 
 function ModeChip({ e, large }) {
-  const { Icon } = MODES[e.mode];
   return (
     <span className="j-mode" data-mode={e.mode} data-large={large || undefined}>
-      <Icon aria-hidden="true" />
+      <Ico k={e.mode} group="mode" />
       {modeLine(e)}
     </span>
   );
 }
 
 function ThemeIcons({ themes }) {
+  const ic = useContext(IconCtx);
+  if (!ic.themes) return null;
   return (
     <span className="j-theme-icons">
-      {themes.map((k) => {
-        const [label, Icon] = THEMES[k];
-        return (
-          <span key={k} className="j-theme-icon" title={label} aria-label={label} role="img">
-            <Icon aria-hidden="true" />
-          </span>
-        );
-      })}
+      {themes.map((k) => (
+        <span key={k} className="j-theme-icon" title={THEME_LABELS[k]} aria-label={THEME_LABELS[k]} role="img">
+          <Ico k={k} />
+        </span>
+      ))}
     </span>
   );
 }
 
-function EntryCard({ e, max, onOpen, index }) {
+function EntryCard({ e, onOpen, index }) {
   const d = at(e);
   return (
     <button type="button" className="j-card" onClick={() => onOpen(e.id)} style={{ '--i': index }}>
       <span className="j-card-top">
         <span className="j-time">
-          <DayPartIcon d={d} />
+          <Ico k={dayPart(d)} group="time" />
           {timeOfDay(d)}
         </span>
-        <Duration sec={e.duration} max={max} />
+        <Duration sec={e.duration} />
       </span>
       <span className="j-title">{e.title}</span>
       <span className="j-summary">{e.summary}</span>
@@ -326,55 +519,85 @@ function EntryCard({ e, max, onOpen, index }) {
   );
 }
 
-function List({ months, max, total, onOpen, recordHref }) {
+/* The month bar lives outside the scroller, so once a month label reaches
+   it, the bar takes over that label's text and stays perfectly still. */
+function useStuckMonth(scrollRef, barRef) {
+  const [month, setMonth] = useState(null);
+  useEffect(() => {
+    const box = scrollRef.current;
+    const update = () => {
+      const line = barRef.current.offsetTop;
+      let label = null;
+      for (const el of box.querySelectorAll('.j-month-label')) {
+        if (el.offsetTop - box.scrollTop <= line) label = el.textContent;
+      }
+      setMonth(label);
+    };
+    update();
+    box.addEventListener('scroll', update, { passive: true });
+    return () => box.removeEventListener('scroll', update);
+  }, [scrollRef, barRef]);
+  return month;
+}
+
+function List({ months, total, onOpen, recordHref, rec }) {
+  const scrollRef = useRef(null);
+  const barRef = useRef(null);
+  const stuck = useStuckMonth(scrollRef, barRef);
   let index = 0;
   return (
     <>
-    <div className="j-status" aria-hidden="true" />
-    <div className="j-scroll">
-      <header className="j-head">
-        <p className="j-eyebrow">Your journal</p>
-        <h1 className="j-large-title">Entries</h1>
-        <p className="j-stats">
-          {ENTRIES.length} entries · {totalSpoken(total)} of talking it out
-        </p>
-      </header>
+      <div className="j-status" aria-hidden="true" />
+      <div ref={barRef} className="j-month-label j-month-bar" data-shown={stuck ? true : undefined} aria-hidden="true">
+        {stuck}
+      </div>
+      <div className="j-scroll" ref={scrollRef}>
+        <header className="j-head">
+          <p className="j-eyebrow">Your journal</p>
+          <h1 className="j-large-title">Entries</h1>
+          <p className="j-stats">
+            {ENTRIES.length} entries · {totalSpoken(total)} of talking it out
+          </p>
+        </header>
 
-      {months.map((m) => (
-        <section key={m.label} className="j-month" aria-label={m.label}>
-          <h2 className="j-month-label">{m.label}</h2>
-          {m.days.map((day) => (
-            <div key={day.key} className="j-day">
-              <div className="j-date" aria-label={day.date.toDateString()}>
-                <span className="j-dow">{day.date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                <span className="j-dnum">{day.date.getDate()}</span>
-                <span className="j-rel">{relativeDay(day.date)}</span>
+        {months.map((m) => (
+          <section key={m.label} className="j-month" aria-label={m.label}>
+            <h2 className="j-month-label">{m.label}</h2>
+            {m.days.map((day) => (
+              <div key={day.key} className="j-day">
+                <div className="j-date" aria-label={day.date.toDateString()}>
+                  <span className="j-dow">{day.date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                  <span className="j-dnum">{day.date.getDate()}</span>
+                </div>
+                <div className="j-day-cards">
+                  {day.entries.map((e) => (
+                    <EntryCard key={e.id} e={e} onOpen={onOpen} index={index++} />
+                  ))}
+                </div>
               </div>
-              <div className="j-day-cards">
-                {day.entries.map((e) => (
-                  <EntryCard key={e.id} e={e} max={max} onOpen={onOpen} index={index++} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-      ))}
-      <p className="j-end">That's everything since you started.</p>
+            ))}
+          </section>
+        ))}
+        <p className="j-end">That's everything since you started.</p>
+      </div>
 
       <a className="j-record" href={recordHref}>
-        <span className="j-record-dot" aria-hidden="true" />
-        Record entry
+        {rec.dot && <span className="j-record-dot" aria-hidden="true" />}
+        {rec.label}
       </a>
-    </div>
     </>
   );
 }
 
 /* ── Detail ────────────────────────────────────────────── */
-function Player({ e, pb }) {
-  const bars = useMemo(() => waveform(e.id), [e.id]);
+function Player({ e, pb, p }) {
+  const v = useMemo(() => loudness(e.id), [e.id]);
   const waveRef = useRef(null);
+  const w = useWidth(waveRef);
+  const d = p[p.style];
+  const h = d.height;
   const progress = pb.pos / e.duration;
+  const started = pb.playing || pb.pos > 0;
 
   function seekTo(ev) {
     const r = waveRef.current.getBoundingClientRect();
@@ -382,7 +605,15 @@ function Player({ e, pb }) {
   }
 
   return (
-    <section className="j-player" aria-label="Recording">
+    <section
+      className="j-player"
+      data-card={p.layout.card || undefined}
+      aria-label="Recording"
+      style={{ '--play-size': `${p.layout.playSize}px` }}
+    >
+      <button type="button" className="j-play" onClick={pb.toggle} aria-label={pb.playing ? 'Pause' : 'Play'}>
+        {pb.playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+      </button>
       <div
         ref={waveRef}
         className="j-wave"
@@ -393,6 +624,7 @@ function Player({ e, pb }) {
         aria-valuemax={e.duration}
         aria-valuenow={Math.round(pb.pos)}
         aria-valuetext={`${clock(pb.pos)} of ${clock(e.duration)}`}
+        style={{ height: h }}
         onPointerDown={(ev) => {
           ev.currentTarget.setPointerCapture(ev.pointerId);
           seekTo(ev);
@@ -403,32 +635,35 @@ function Player({ e, pb }) {
           if (ev.key === 'ArrowLeft') pb.skip(-5);
         }}
       >
-        {bars.map((v, i) => (
-          <span key={i} data-on={i / bars.length < progress || undefined} style={{ height: `${v * 100}%` }} />
-        ))}
-        <i className="j-playhead" style={{ left: `${progress * 100}%` }} />
+        {w > 0 && (
+          <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+            <defs>
+              <clipPath id="j-played">
+                <rect x={-20} y={-20} width={progress * w + 20} height={h + 40} />
+              </clipPath>
+            </defs>
+            {waveShape(p.style, w, h, v, d, p.color.track)}
+            <g clipPath="url(#j-played)">{waveShape(p.style, w, h, v, d, p.color.played)}</g>
+            {p.color.playhead && started && (
+              <line
+                x1={progress * w}
+                x2={progress * w}
+                y1={1}
+                y2={h - 1}
+                stroke={p.color.playheadColor}
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            )}
+          </svg>
+        )}
       </div>
-      <div className="j-times">
-        <span>{clock(pb.pos)}</span>
-        <span>-{clock(e.duration - pb.pos)}</span>
-      </div>
-      <div className="j-transport">
+      {p.layout.showTime && <span className="j-ptime">{clock(started ? pb.pos : e.duration)}</span>}
+      {p.layout.showSpeed && (
         <button type="button" className="j-speed" onClick={pb.cycleSpeed} aria-label="Playback speed">
           {pb.speed}×
         </button>
-        <button type="button" className="j-skip" onClick={() => pb.skip(-15)} aria-label="Back 15 seconds">
-          <RotateCcw aria-hidden="true" />
-          <small>15</small>
-        </button>
-        <button type="button" className="j-play" onClick={pb.toggle} aria-label={pb.playing ? 'Pause' : 'Play'}>
-          {pb.playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-        </button>
-        <button type="button" className="j-skip" onClick={() => pb.skip(15)} aria-label="Forward 15 seconds">
-          <RotateCw aria-hidden="true" />
-          <small>15</small>
-        </button>
-        <span className="j-speed-spacer" aria-hidden="true" />
-      </div>
+      )}
     </section>
   );
 }
@@ -446,7 +681,7 @@ function Prompts({ e, onJump }) {
         {items.map((s, n) => (
           <li key={s.i}>
             <button type="button" onClick={() => onJump(s.i)} data-skipped={s.answered === false || undefined}>
-              <span className="j-prompt-mark">{guided ? n + 1 : <Sparkle aria-hidden="true" />}</span>
+              <span className="j-prompt-mark">{guided ? n + 1 : <Ico k="prompt" />}</span>
               <span className="j-prompt-body">
                 {guided && <span className="j-step-label">{s.label}</span>}
                 <span className="j-prompt-text">{s.text}</span>
@@ -484,7 +719,7 @@ function Transcript({ e, pb, segRefs }) {
             {s.kind === 'speech' && <p>{s.text}</p>}
             {s.kind === 'prompt' && (
               <p className="j-seg-q">
-                <Sparkle aria-hidden="true" />
+                <Ico k="prompt" group="mode" />
                 {s.text}
                 {s.answered === false && <em> · faded, not answered</em>}
               </p>
@@ -511,7 +746,7 @@ function InsightsSheet({ e, open, onClose, onOpenEntry }) {
         <div className="j-sheet-grab" aria-hidden="true" />
         <header className="j-sheet-head">
           <span className="j-ai-badge">
-            <Sparkles aria-hidden="true" />
+            <Ico k="insights" />
             AI insights
           </span>
           <button type="button" className="ctl j-sheet-close" onClick={onClose} aria-label="Close" tabIndex={open ? 0 : -1}>
@@ -540,9 +775,10 @@ function InsightsSheet({ e, open, onClose, onOpenEntry }) {
   );
 }
 
-function Detail({ e, pb, onBack, onOpenEntry, scrollRef }) {
+function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
   const [insights, setInsights] = useState(false);
   const segRefs = useRef([]);
+  const ic = useContext(IconCtx);
   const d = at(e);
 
   useEffect(() => setInsights(false), [e.id]);
@@ -555,9 +791,6 @@ function Detail({ e, pb, onBack, onOpenEntry, scrollRef }) {
     el.animate([{ background: 'rgba(95, 179, 184, 0.16)' }, { background: 'rgba(95, 179, 184, 0)' }], { duration: 1400, delay: 350 });
   }
 
-  const insightCount = e.insights.lines.length;
-  const linkCount = e.insights.links.length;
-
   return (
     <>
       <nav className="j-nav">
@@ -565,43 +798,36 @@ function Detail({ e, pb, onBack, onOpenEntry, scrollRef }) {
           <ChevronLeft aria-hidden="true" />
         </button>
         <span className="j-nav-title">
-          {relativeDay(d)} · {timeOfDay(d)}
+          {d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {timeOfDay(d)}
         </span>
-        <span className="j-nav-spacer" aria-hidden="true" />
+        <span aria-hidden="true" />
       </nav>
 
       <div className="j-scroll" ref={scrollRef}>
-        <Player e={e} pb={pb} />
+        <Player e={e} pb={pb} p={p} />
 
         <header className="j-detail-head">
           <ModeChip e={e} large />
           <h1 className="j-detail-title">{e.title}</h1>
-          <dl className="j-meta">
+          <dl className="j-meta" data-icons={ic.time || undefined}>
             <div>
-              <dt>
-                <CalendarDays aria-label="Date" />
-              </dt>
+              <dt>{ic.time ? <Ico k="calendar" /> : 'Date'}</dt>
               <dd>{d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</dd>
             </div>
             <div>
-              <dt>
-                <Clock aria-label="Time" />
-              </dt>
+              <dt>{ic.time ? <Ico k="clock" /> : 'Time'}</dt>
               <dd>
                 {timeOfDay(d)} <span className="j-meta-soft">· {longDuration(e.duration)} spoken</span>
               </dd>
             </div>
           </dl>
           <div className="j-theme-chips">
-            {e.themes.map((k) => {
-              const [label, Icon] = THEMES[k];
-              return (
-                <span key={k} className="j-theme-chip">
-                  <Icon aria-hidden="true" />
-                  {label}
-                </span>
-              );
-            })}
+            {e.themes.map((k) => (
+              <span key={k} className="j-theme-chip">
+                <Ico k={k} group="themes" />
+                {THEME_LABELS[k]}
+              </span>
+            ))}
           </div>
         </header>
 
@@ -618,17 +844,8 @@ function Detail({ e, pb, onBack, onOpenEntry, scrollRef }) {
         </p>
       </div>
 
-      <button type="button" className="j-ai" onClick={() => setInsights(true)}>
-        <span className="j-ai-icon" aria-hidden="true">
-          <Sparkles />
-        </span>
-        <span className="j-ai-text">
-          <strong>AI insights</strong>
-          <small>
-            {insightCount} insights · {linkCount} connected entries
-          </small>
-        </span>
-        <ChevronRight className="j-ai-go" aria-hidden="true" />
+      <button type="button" className="j-ai" onClick={() => setInsights(true)} aria-label="AI insights">
+        <Ico k="insights" />
       </button>
 
       <InsightsSheet e={e} open={insights} onClose={() => setInsights(false)} onOpenEntry={onOpenEntry} />
@@ -639,12 +856,12 @@ function Detail({ e, pb, onBack, onOpenEntry, scrollRef }) {
 /* ── Screen ────────────────────────────────────────────── */
 function Entries() {
   const s = useDialKit('Screen', SCREEN, { id: 'entries-screen' });
-  const tr = useDialKit('Transition', TRANSITION, { id: 'entries-transition' });
-  const glow = useDialKit('Glow', GLOW, { id: 'entries-glow' });
-  const b = useDialKit('Voice beam', BEAM, { id: 'entries-beam', defaultCollapsed: true });
+  const icons = useDialKit('Icons', ICON_DIALS, { id: 'entries-icons' });
+  const rec = useDialKit('Record button', RECORD, { id: 'entries-record' });
+  const p = useDialKit('Player', PLAYER, { id: 'entries-player' });
+  const tr = useDialKit('Transition', TRANSITION, { id: 'entries-transition', defaultCollapsed: true });
 
   const months = useMemo(() => group(ENTRIES), []);
-  const max = Math.max(...ENTRIES.map((e) => e.duration));
   const total = ENTRIES.reduce((a, e) => a + e.duration, 0);
 
   const [view, setView] = useState('list');
@@ -666,23 +883,6 @@ function Entries() {
     pb.stop();
     setView('list');
   }, [pb]);
-
-  /* The glow: a slow breath at rest; while an entry plays, it follows a
-     speech-like envelope, and falls quiet during a prompt's silence. */
-  const live = useRef({});
-  live.current = { glow, view, pb, entry };
-  const getLevel = useCallback(() => {
-    const { glow: g, view: v, pb: p, entry: e } = live.current;
-    const sec = performance.now() / 1000;
-    const breath = g.restLevel * (0.55 + 0.45 * Math.sin((sec / g.breatheSec) * Math.PI * 2));
-    if (v === 'detail' && !g.showOnDetail) return 0;
-    if (v !== 'detail' || !p.playingRef.current) return breath;
-    const times = timeline(e);
-    const i = times.findIndex((t) => p.posRef.current >= t.start && p.posRef.current < t.end);
-    if (e.transcript[i]?.kind !== 'speech') return breath;
-    const syll = Math.abs(Math.sin(sec * 9.3)) * 0.55 + Math.abs(Math.sin(sec * 3.7 + 1)) * 0.45;
-    return Math.max(breath, g.playLevel * (0.35 + 0.65 * syll));
-  }, []);
 
   /* Edge swipe: drag the entry off to the right to go back. */
   function onPointerDown(ev) {
@@ -714,7 +914,6 @@ function Entries() {
   const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
   const deviceW = framed ? FRAME.w * FRAME_K : 390;
   const deviceH = framed ? FRAME.h * FRAME_K : screenH;
-  const beam = beamProps(b);
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
@@ -733,11 +932,25 @@ function Entries() {
           }}
         >
           {framed && <div className="screen-fill" style={{ height: screenH, background: s.screenColor }} />}
-          <VoiceBeam className="beam-host" level={getLevel} {...beam}>
+          <IconCtx.Provider value={icons}>
             <section
               className="voice-screen journal"
+              data-icons={icons.style}
               aria-label="Journal entries"
-              style={{ height: screenH, background: s.screenColor, '--screen-bg': s.screenColor }}
+              style={{
+                height: screenH,
+                background: s.screenColor,
+                '--screen-bg': s.screenColor,
+                '--rec-bg': rec.background,
+                '--rec-fg': rec.textColor,
+                '--rec-dot': rec.dotColor,
+                '--rec-h': `${rec.height}px`,
+                '--rec-font': `${rec.fontSize}px`,
+                '--rec-pad': `${rec.paddingX}px`,
+                '--rec-radius': `${rec.radius}px`,
+                '--rec-x': `${rec.x}px`,
+                '--rec-bottom': `${rec.bottom}px`,
+              }}
             >
               <div
                 ref={stackRef}
@@ -757,14 +970,14 @@ function Entries() {
                 }}
               >
                 <div className="j-layer j-list" inert={view === 'detail' || undefined}>
-                  <List months={months} max={max} total={total} onOpen={open} recordHref={`/${s.recordPage}`} />
+                  <List months={months} total={total} onOpen={open} recordHref={`/${s.recordPage}`} rec={rec} />
                 </div>
                 <div className="j-layer j-detail" inert={view === 'list' || undefined}>
-                  <Detail e={entry} pb={pb} onBack={back} onOpenEntry={open} scrollRef={detailScroll} />
+                  <Detail e={entry} pb={pb} p={p} onBack={back} onOpenEntry={open} scrollRef={detailScroll} />
                 </div>
               </div>
             </section>
-          </VoiceBeam>
+          </IconCtx.Provider>
           <StatusBar height={screenH} />
           {framed && <img className="iphone-frame" src={iphoneFrameUrl} alt="" draggable={false} />}
         </div>

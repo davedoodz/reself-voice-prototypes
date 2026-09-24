@@ -1,4 +1,4 @@
-/* Simulated journal history for the entries prototype, newest first.
+/* Simulated journal history for the entries prototype, July–September 2026.
  * The four Guided entries reuse the recorder's framework answers and the first
  * Freeform/Dynamic entries reuse its scripts, so every prototype tells one story.
  *
@@ -42,7 +42,7 @@ export const ENTRIES = [
   },
   {
     id: 'three-runs',
-    at: '2026-09-23T07:05',
+    at: '2026-09-21T07:05',
     duration: 276,
     mode: 'guided',
     framework: 'WOOP',
@@ -70,7 +70,7 @@ export const ENTRIES = [
   },
   {
     id: 'presentation-moved',
-    at: '2026-09-21T21:40',
+    at: '2026-09-16T21:40',
     duration: 558,
     mode: 'guided',
     framework: 'Gross model',
@@ -91,14 +91,14 @@ export const ENTRIES = [
     insights: {
       lines: [
         'The worry that others doubt you appears here and in the Maya entry: both times, the facts were thinner than the story.',
-        'Three days later you spoke up with Priya and it went well. That is evidence against the belief you named here.',
+        'A week later you spoke up with Priya and it went well. That is evidence against the belief you named here.',
       ],
       links: ['maya-reply', 'priya-one-on-one'],
     },
   },
   {
     id: 'river-walk',
-    at: '2026-09-20T10:22',
+    at: '2026-09-06T10:22',
     duration: 134,
     mode: 'freeform',
     title: 'The long walk by the river',
@@ -112,14 +112,14 @@ export const ENTRIES = [
     insights: {
       lines: [
         'Your calmest entries happen outdoors and before noon.',
-        'The "free hour every morning" idea returns three days later as your running plan.',
+        'The "free hour every morning" idea returns two weeks later as your running plan.',
       ],
       links: ['three-runs', 'end-of-summer'],
     },
   },
   {
     id: 'maya-reply',
-    at: '2026-09-18T23:48',
+    at: '2026-08-21T23:48',
     duration: 451,
     mode: 'guided',
     framework: 'ABCDE',
@@ -142,14 +142,14 @@ export const ENTRIES = [
     insights: {
       lines: [
         'Late-night entries lean toward worry. This one was recorded at 11:48 pm.',
-        'You resolved it the same way as the presentation entry: ask, don’t guess.',
+        'You ended with a plan to ask, not guess. It becomes your go-to move in later entries.',
       ],
       links: ['presentation-moved', 'cant-switch-off'],
     },
   },
   {
     id: 'first-workshop',
-    at: '2026-09-16T18:30',
+    at: '2026-08-12T18:30',
     duration: 767,
     mode: 'guided',
     framework: 'Gibbs cycle',
@@ -173,15 +173,15 @@ export const ENTRIES = [
     ],
     insights: {
       lines: [
-        'This is your longest entry this month. Work you care about gets the most of your time here.',
-        'The calm that arrived after the screen went black is the same feeling you describe on the river walk.',
+        'This is your longest entry so far. Work you care about gets the most of your time here.',
+        'The calm that arrived after the screen went black came from letting go of the plan.',
       ],
       links: ['river-walk', 'priya-one-on-one'],
     },
   },
   {
     id: 'call-with-mom',
-    at: '2026-09-14T08:02',
+    at: '2026-07-27T08:02',
     duration: 303,
     mode: 'freeform',
     title: 'Sunday call with Mom',
@@ -201,7 +201,7 @@ export const ENTRIES = [
   },
   {
     id: 'money-talk',
-    at: '2026-09-12T15:15',
+    at: '2026-08-08T15:15',
     duration: 506,
     mode: 'dynamic',
     title: 'The money talk with Sam',
@@ -221,14 +221,14 @@ export const ENTRIES = [
     insights: {
       lines: [
         'You skipped the question about what money means to you. It might be worth coming back to.',
-        'Dreading a conversation more than its subject is a pattern here and in the presentation entry.',
+        'Dreading a conversation more than its subject is a pattern here and in the dishes entry.',
       ],
       links: ['presentation-moved', 'dishes-snap'],
     },
   },
   {
     id: 'cant-switch-off',
-    at: '2026-09-08T22:55',
+    at: '2026-07-02T22:55',
     duration: 108,
     mode: 'freeform',
     title: "Can't switch off",
@@ -246,7 +246,7 @@ export const ENTRIES = [
   },
   {
     id: 'back-to-painting',
-    at: '2026-09-03T19:20',
+    at: '2026-07-09T19:20',
     duration: 365,
     mode: 'dynamic',
     title: 'Picking up the brushes again',
@@ -267,7 +267,7 @@ export const ENTRIES = [
   },
   {
     id: 'dishes-snap',
-    at: '2026-08-29T09:10',
+    at: '2026-07-18T09:10',
     duration: 602,
     mode: 'guided',
     framework: 'Gross model',
@@ -292,7 +292,7 @@ export const ENTRIES = [
   },
   {
     id: 'end-of-summer',
-    at: '2026-08-24T20:45',
+    at: '2026-08-30T20:45',
     duration: 220,
     mode: 'freeform',
     title: 'Last swim of summer',
@@ -304,7 +304,7 @@ export const ENTRIES = [
       { kind: 'speech', text: "I haven't checked my email in six days and nothing fell apart. I want to bring a bit of this back with me, even if it’s just the evenings." },
     ],
     insights: {
-      lines: ['This is the first entry about protecting slow time. Four weeks later, the river walk says it again.'],
+      lines: ['This is the first entry about protecting slow time. A week later, the river walk says it again.'],
       links: ['river-walk'],
     },
   },
