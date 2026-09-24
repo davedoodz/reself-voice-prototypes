@@ -167,8 +167,36 @@ button { font: inherit; color: inherit; }
 
 @keyframes prompt-linger { to { transform: scaleX(0); } }
 
-/* ── Guided header ── */
-.guide { position: absolute; z-index: 7; display: flex; flex-direction: column; align-items: center; text-align: center; }
+/* ── Guided screen ──
+   Two regions: the head (framework chip, header progress) and the prompt block.
+   The active composition places both; only the chip and menu take pointer input. */
+.guide { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.guide-head,
+.guide-prompt {
+  position: absolute;
+  right: var(--guide-pad, 32px);
+  left: var(--guide-pad, 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.guide[data-align='left'] :is(.guide-head, .guide-prompt, .guide-step) { align-items: flex-start; text-align: left; }
+.guide-framework, .guide-menu { pointer-events: auto; }
+
+/* Optional surface behind the prompt: a glass card, or a chat bubble. */
+.guide-prompt[data-panel] {
+  padding: var(--panel-pad, 20px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: var(--panel-radius, 24px);
+  background: rgba(255, 255, 255, var(--panel-glass, 0.72));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 50, 70, 0.08);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.guide-prompt[data-panel='bubble'] { border-bottom-left-radius: 6px; }
+.guide[data-align='center'] .guide-prompt[data-panel='bubble'] { border-bottom-left-radius: var(--panel-radius, 24px); }
+
 .guide-framework {
   display: inline-flex;
   align-items: center;
@@ -222,22 +250,41 @@ button { font: inherit; color: inherit; }
 .guide-menu-name { color: #1f2a2e; font-size: 14px; font-weight: 500; }
 .guide-menu-steps { color: #8a9aa0; font-size: 12px; }
 
-/* Done steps are solid, the live step is half-strength, the rest are track. */
-.guide-progress { display: flex; gap: var(--guide-bar-gap, 6px); width: 100%; margin: 22px 0 18px; }
-.guide-progress span {
-  flex: 1;
-  height: var(--guide-bar-h, 3px);
-  border-radius: 999px;
+/* Progress styles. Done steps are solid, the live step is half-strength, the
+   rest are track. --p-size is bar height, dot size, or font size. */
+.guide-progress { display: flex; gap: 6px; }
+.guide-head .guide-progress { margin-top: 18px; }
+.guide-prompt .guide-progress:first-child { margin-bottom: 14px; }
+.guide-prompt .guide-progress:last-child { margin-top: 18px; }
+
+.guide-progress:is([data-style='bars'], [data-style='dots']) span {
   background: var(--guide-bar-off, #dde6e8);
   transition: background-color 0.4s ease, opacity 0.4s ease;
 }
-.guide-progress span[data-state] { background: var(--guide-bar-on, #5fb3b8); }
-.guide-progress span[data-state='current'] { opacity: 0.45; }
+.guide-progress[data-style='bars'] { align-self: stretch; }
+.guide-progress[data-style='bars'] span { flex: 1; height: var(--p-size, 3px); border-radius: 999px; }
+.guide-progress[data-style='dots'] span { width: var(--p-size, 7px); height: var(--p-size, 7px); border-radius: 50%; }
+.guide-progress:is([data-style='bars'], [data-style='dots']) span[data-state] { background: var(--guide-bar-on, #5fb3b8); }
+.guide-progress:is([data-style='bars'], [data-style='dots']) span[data-state='current'] { opacity: 0.45; }
+
+.guide-progress[data-style='steps'] { flex-wrap: wrap; gap: 4px 0; font-size: var(--p-size, 12px); font-weight: 500; }
+.guide-progress[data-style='steps'] span { color: #b6c3c7; transition: color 0.4s ease; }
+.guide-progress[data-style='steps'] span:not(:last-child)::after { content: '·'; margin: 0 8px; color: #cfd8db; }
+.guide-progress[data-style='steps'] span[data-state='done'] { color: #9fcfd2; }
+.guide-progress[data-style='steps'] span[data-state='current'] { color: var(--guide-bar-on, #5fb3b8); }
+
+.guide-progress[data-style='fraction'] {
+  color: var(--guide-bar-on, #5fb3b8);
+  font-size: var(--p-size, 13px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
 
 .guide-step { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: guide-in var(--guide-in, 560ms) cubic-bezier(0.22, 1, 0.36, 1) backwards; }
-.guide-label { color: var(--guide-label, #5fb3b8); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.guide-question { margin: 0; color: var(--guide-q-color, #1f2a2e); font-size: var(--guide-q-size, 26px); font-weight: 500; letter-spacing: -0.015em; line-height: 1.22; text-wrap: balance; }
-.guide-hint { margin: 0; color: var(--guide-hint-color, #8a9aa0); font-size: var(--guide-hint-size, 15px); line-height: 1.4; text-wrap: balance; }
+.guide-label { font-weight: 600; letter-spacing: 0.08em; line-height: 1.1; text-transform: uppercase; }
+.guide-question { margin: 0; letter-spacing: -0.015em; line-height: 1.22; text-wrap: balance; }
+.guide-hint { margin: 0; line-height: 1.4; text-wrap: balance; }
 
 @keyframes guide-in {
   from { opacity: 0; filter: blur(var(--guide-blur, 8px)); transform: translateY(var(--guide-y, 10px)); }

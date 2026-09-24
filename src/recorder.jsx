@@ -492,22 +492,9 @@ const GUIDE = {
   /* Demo only: move on by itself once the simulated answer ends. */
   autoAdvance: false,
   advanceAfterMs: [2500, 0, 10000, 100],
-  header: {
-    top: [100, 40, 400, 1],
-    sidePadding: [32, 12, 80, 1],
-    questionSize: [26, 16, 38, 0.5],
-    questionColor: '#1f2a2e',
-    showHint: true,
-    hintSize: [15, 11, 22, 0.5],
-    hintColor: '#8a9aa0',
-    labelColor: '#5fb3b8',
-  },
-  progress: {
-    show: true,
-    height: [3, 1, 8, 0.5],
-    gap: [6, 0, 16, 1],
-    activeColor: '#5fb3b8',
-    trackColor: '#dde6e8',
+  colors: {
+    accent: '#5fb3b8',
+    track: '#dde6e8',
   },
   /* A new prompt arriving. */
   motion: {
@@ -515,6 +502,141 @@ const GUIDE = {
     offsetY: [10, -40, 40, 1],
     blur: [8, 0, 24, 0.5],
   },
+};
+
+/* ── Guided compositions ────────────────────────────────
+ * Five arrangements of the same elements. Each has its own folder, so every
+ * element can be hidden (show), moved (x/y nudge, px) and edited per composition;
+ * only the active composition's folder affects the screen.
+ *   stack         centred header, bars, prompt stacked beneath
+ *   card          prompt inside a glass card, dots inside it, left aligned
+ *   editorial     big step number, bold left-aligned question, named steps
+ *   conversation  prompt as a chat bubble above the controls, answer above it
+ *   focus         the answer is the hero; the question is a quiet line on top
+ * ─────────────────────────────────────────────────────── */
+const COMPOSITIONS = [
+  { value: 'stack', label: '1 · Stack' },
+  { value: 'card', label: '2 · Card' },
+  { value: 'editorial', label: '3 · Editorial' },
+  { value: 'conversation', label: '4 · Conversation' },
+  { value: 'focus', label: '5 · Focus' },
+];
+
+const LABEL_FORMATS = {
+  full: (i, n, name) => `${i + 1} of ${n} · ${name}`,
+  count: (i, n) => `Step ${i + 1} of ${n}`,
+  name: (i, n, name) => name,
+  number: (i) => String(i + 1).padStart(2, '0'),
+};
+
+const move = ({ show = true, x = 0, y = 0 }) => ({ show, x: [x, -200, 200, 1], y: [y, -400, 400, 1] });
+const select = (options, value) => ({ type: 'select', options, default: value });
+
+function compositionConfig(d) {
+  return {
+    _collapsed: true,
+    layout: {
+      align: select(['center', 'left'], d.align),
+      sidePadding: [d.sidePadding, 12, 80, 1],
+      /* Framework chip (and header progress) distance from the top. */
+      headerTop: [d.headerTop, 40, 400, 1],
+      /* The prompt block hangs from the top, sits on the middle, or rests on the bottom. */
+      promptAnchor: select(['top', 'center', 'bottom'], d.promptAnchor),
+      promptOffset: [d.promptOffset, -300, 600, 1],
+    },
+    panel: {
+      show: d.panel.show,
+      shape: select(['card', 'bubble'], d.panel.shape),
+      glass: [d.panel.glass, 0, 1, 0.01],
+      radius: [d.panel.radius, 0, 40, 1],
+      padding: [d.panel.padding, 0, 40, 1],
+    },
+    chip: { ...move(d.chip), size: [d.chip.size, 10, 18, 0.5] },
+    progress: {
+      ...move(d.progress),
+      style: select(['bars', 'dots', 'steps', 'fraction'], d.progress.style),
+      placement: select(['header', 'prompt-top', 'prompt-bottom'], d.progress.placement),
+      /* Bar height, dot size, or font size, depending on style. */
+      size: [d.progress.size, 1, 20, 0.5],
+    },
+    label: {
+      ...move(d.label),
+      format: select(Object.keys(LABEL_FORMATS), d.label.format),
+      size: [d.label.size, 9, 60, 0.5],
+      color: d.label.color,
+    },
+    question: {
+      ...move(d.question),
+      size: [d.question.size, 12, 44, 0.5],
+      weight: [d.question.weight, 300, 700, 10],
+      color: d.question.color,
+    },
+    hint: { ...move(d.hint), size: [d.hint.size, 10, 24, 0.5], color: d.hint.color },
+    transcript: {
+      ...move(d.transcript),
+      size: [d.transcript.size, 12, 36, 0.5],
+      align: select(['center', 'left'], d.transcript.align),
+    },
+  };
+}
+
+const INK = '#1f2a2e';
+const MUTED = '#8a9aa0';
+const ACCENT = '#5fb3b8';
+const NO_PANEL = { show: false, shape: 'card', glass: 0.72, radius: 24, padding: 20 };
+
+const COMPOSITION = {
+  active: select(COMPOSITIONS, 'stack'),
+  stack: compositionConfig({
+    align: 'center', sidePadding: 32, headerTop: 100, promptAnchor: 'top', promptOffset: 176,
+    panel: NO_PANEL,
+    chip: { size: 13 },
+    progress: { style: 'bars', placement: 'header', size: 3 },
+    label: { format: 'full', size: 12, color: ACCENT },
+    question: { size: 26, weight: 500, color: INK },
+    hint: { size: 15, color: MUTED },
+    transcript: { size: 21, align: 'center' },
+  }),
+  card: compositionConfig({
+    align: 'left', sidePadding: 22, headerTop: 100, promptAnchor: 'top', promptOffset: 150,
+    panel: { show: true, shape: 'card', glass: 0.72, radius: 28, padding: 22 },
+    chip: { size: 13 },
+    progress: { style: 'dots', placement: 'prompt-top', size: 7 },
+    label: { format: 'count', size: 12, color: ACCENT },
+    question: { size: 24, weight: 500, color: INK },
+    hint: { size: 14, color: MUTED },
+    transcript: { size: 20, align: 'left' },
+  }),
+  editorial: compositionConfig({
+    align: 'left', sidePadding: 30, headerTop: 100, promptAnchor: 'top', promptOffset: 150,
+    panel: NO_PANEL,
+    chip: { size: 13 },
+    progress: { style: 'steps', placement: 'prompt-bottom', size: 12 },
+    label: { format: 'number', size: 44, color: ACCENT },
+    question: { size: 32, weight: 600, color: INK },
+    hint: { size: 16, color: MUTED },
+    transcript: { size: 20, align: 'left', y: 10 },
+  }),
+  conversation: compositionConfig({
+    align: 'left', sidePadding: 22, headerTop: 100, promptAnchor: 'bottom', promptOffset: 128,
+    panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
+    chip: { size: 13 },
+    progress: { style: 'fraction', placement: 'header', size: 13 },
+    label: { format: 'name', size: 11, color: ACCENT },
+    question: { size: 19, weight: 500, color: INK },
+    hint: { size: 13, color: MUTED },
+    transcript: { size: 20, align: 'left', y: -150 },
+  }),
+  focus: compositionConfig({
+    align: 'center', sidePadding: 36, headerTop: 92, promptAnchor: 'top', promptOffset: 172,
+    panel: NO_PANEL,
+    chip: { size: 12 },
+    progress: { style: 'bars', placement: 'header', size: 2 },
+    label: { show: false, format: 'name', size: 12, color: ACCENT },
+    question: { size: 18, weight: 450, color: MUTED },
+    hint: { show: false, size: 13, color: MUTED },
+    transcript: { size: 27, align: 'center', y: -170 },
+  }),
 };
 
 /* Each page is one variant; DialKit gets a stable config object per variant. */
@@ -938,85 +1060,131 @@ function PromptCard({ rec, p, bottom }) {
   );
 }
 
-/* Guided mode's header: framework picker, step progress, and the current prompt.
-   The framework can only change between takes. */
-function GuideHeader({ rec, fw, g, onPick }) {
+/* A per-element nudge from its folder's x/y. */
+const nudge = (e) => (e.x || e.y ? { transform: `translate(${e.x}px, ${e.y}px)` } : undefined);
+
+function GuideProgress({ fw, rec, done, p }) {
+  const n = fw.steps.length;
+  const style = { ...nudge(p), '--p-size': `${p.size}px` };
+  if (p.style === 'fraction') {
+    return (
+      <div className="guide-progress" data-style="fraction" style={style}>
+        {done ? n : rec.step + 1} / {n}
+      </div>
+    );
+  }
+  return (
+    <div className="guide-progress" data-style={p.style} style={style} aria-hidden="true">
+      {fw.steps.map((st, i) => (
+        <span key={st.label} data-state={done || i < rec.step ? 'done' : i === rec.step && rec.live ? 'current' : undefined}>
+          {p.style === 'steps' ? st.label : null}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* Guided mode's screen: framework picker, step progress, and the current prompt,
+   arranged by the active composition. The framework can only change between takes. */
+function GuideScreen({ rec, fw, g, comp, onPick }) {
   const [open, setOpen] = useState(false);
   const menuOpen = open && !rec.live;
   const done = rec.status === 'processing' || rec.status === 'stopped';
   const step = fw.steps[rec.step];
   const n = fw.steps.length;
+  const L = comp.layout;
+  const progress = comp.progress.show && <GuideProgress fw={fw} rec={rec} done={done} p={comp.progress} />;
+  const at = (where) => comp.progress.placement === where && progress;
+  const promptPos =
+    L.promptAnchor === 'top'
+      ? { top: `calc(${L.promptOffset}px + var(--safe-top, 0px))` }
+      : L.promptAnchor === 'bottom'
+        ? { bottom: L.promptOffset }
+        : { top: `calc(50% + ${L.promptOffset}px)`, translate: '0 -50%' };
+  const { label, question, hint, panel } = comp;
+
   return (
     <div
       className="guide"
+      data-align={L.align}
       style={{
-        top: `calc(${g.header.top}px + var(--safe-top, 0px))`,
-        left: g.header.sidePadding,
-        right: g.header.sidePadding,
-        '--guide-q-size': `${g.header.questionSize}px`,
-        '--guide-q-color': g.header.questionColor,
-        '--guide-hint-size': `${g.header.hintSize}px`,
-        '--guide-hint-color': g.header.hintColor,
-        '--guide-label': g.header.labelColor,
-        '--guide-bar-h': `${g.progress.height}px`,
-        '--guide-bar-gap': `${g.progress.gap}px`,
-        '--guide-bar-on': g.progress.activeColor,
-        '--guide-bar-off': g.progress.trackColor,
+        '--guide-pad': `${L.sidePadding}px`,
+        '--guide-bar-on': g.colors.accent,
+        '--guide-bar-off': g.colors.track,
         '--guide-in': `${g.motion.inMs}ms`,
         '--guide-y': `${g.motion.offsetY}px`,
         '--guide-blur': `${g.motion.blur}px`,
       }}
     >
-      <button
-        type="button"
-        className="guide-framework"
-        aria-haspopup="listbox"
-        aria-expanded={menuOpen}
-        disabled={rec.live || rec.status === 'processing'}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {fw.domain} · {fw.name}
-        <Chevron />
-      </button>
-      {menuOpen && (
-        <div className="guide-menu" role="listbox" aria-label="Framework">
-          {FRAMEWORKS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              role="option"
-              aria-selected={f.id === fw.id}
-              onClick={() => {
-                onPick(f.id);
-                setOpen(false);
-              }}
-            >
-              <span className="guide-menu-name">{f.domain} · {f.name}</span>
-              <span className="guide-menu-steps">{f.steps.map((st) => st.label).join(' → ')}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {g.progress.show && (
-        <div className="guide-progress" aria-hidden="true">
-          {fw.steps.map((st, i) => (
-            <span key={st.label} data-state={done || i < rec.step ? 'done' : i === rec.step && rec.live ? 'current' : undefined} />
-          ))}
-        </div>
-      )}
-      <div className="guide-step" key={done ? 'done' : `${fw.id}-${rec.step}`} aria-live="polite">
-        {done ? (
-          <>
-            <span className="guide-label">All {n} steps</span>
-            <p className="guide-question">{rec.status === 'stopped' ? 'Entry saved.' : 'That’s the whole reflection.'}</p>
-          </>
-        ) : (
-          <>
-            <span className="guide-label">{rec.step + 1} of {n} · {step.label}</span>
-            <p className="guide-question">{step.question}</p>
-            {g.header.showHint && <p className="guide-hint">{step.hint}</p>}
-          </>
+      <div className="guide-head" style={{ top: `calc(${L.headerTop}px + var(--safe-top, 0px))` }}>
+        {comp.chip.show && (
+          <button
+            type="button"
+            className="guide-framework"
+            aria-haspopup="listbox"
+            aria-expanded={menuOpen}
+            disabled={rec.live || rec.status === 'processing'}
+            onClick={() => setOpen((o) => !o)}
+            style={{ ...nudge(comp.chip), fontSize: comp.chip.size }}
+          >
+            {fw.domain} · {fw.name}
+            <Chevron />
+          </button>
         )}
+        {menuOpen && (
+          <div className="guide-menu" role="listbox" aria-label="Framework">
+            {FRAMEWORKS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                role="option"
+                aria-selected={f.id === fw.id}
+                onClick={() => {
+                  onPick(f.id);
+                  setOpen(false);
+                }}
+              >
+                <span className="guide-menu-name">{f.domain} · {f.name}</span>
+                <span className="guide-menu-steps">{f.steps.map((st) => st.label).join(' → ')}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {at('header')}
+      </div>
+
+      <div
+        className="guide-prompt"
+        data-panel={panel.show ? panel.shape : undefined}
+        style={{
+          ...promptPos,
+          '--panel-glass': panel.glass,
+          '--panel-radius': `${panel.radius}px`,
+          '--panel-pad': `${panel.padding}px`,
+        }}
+      >
+        {at('prompt-top')}
+        <div className="guide-step" key={done ? 'done' : `${fw.id}-${rec.step}`} aria-live="polite">
+          {label.show && (
+            <span className="guide-label" style={{ ...nudge(label), fontSize: label.size, color: label.color }}>
+              {done ? `All ${n} steps` : LABEL_FORMATS[label.format](rec.step, n, step.label)}
+            </span>
+          )}
+          {question.show && (
+            <p
+              className="guide-question"
+              style={{ ...nudge(question), fontSize: question.size, fontWeight: question.weight, color: question.color }}
+            >
+              {done ? (rec.status === 'stopped' ? 'Entry saved.' : 'That’s the whole reflection.') : step.question}
+            </p>
+          )}
+          {hint.show && !done && (
+            <p className="guide-hint" style={{ ...nudge(hint), fontSize: hint.size, color: hint.color }}>
+              {step.hint}
+            </p>
+          )}
+        </div>
+        {at('prompt-bottom')}
       </div>
     </div>
   );
@@ -1100,7 +1268,7 @@ function Layout({ layout, rec, s }) {
 }
 
 /* ── Transcript ────────────────────────────────────────── */
-function Transcript({ items, rec, t, rightInset, questionStyle }) {
+function Transcript({ items, rec, t, rightInset, questionStyle, offsetX = 0 }) {
   const { overflow: o, words: w, type: ty } = t;
   const n = Math.min(rec.visible, items.length);
   let start = 0;
@@ -1135,6 +1303,7 @@ function Transcript({ items, rec, t, rightInset, questionStyle }) {
       style={{
         left: ty.sidePadding,
         right: ty.sidePadding + rightInset,
+        transform: offsetX ? `translateX(${offsetX}px)` : undefined,
         bottom: ty.textY,
         height: boxHeight,
         WebkitMaskImage: mask,
@@ -1182,6 +1351,8 @@ export function VoiceRecorder({ variant = 'freeform' }) {
   // `variant` is fixed for a page's lifetime, so this hook's call order never changes.
   const pr = v.prompts ? useDialKit('Prompts', PROMPTS, { id: 'voice-prompts' }) : NO_PROMPTS;
   const g = v.guided ? useDialKit('Guide', GUIDE, { id: 'voice-guide' }) : null;
+  const gc = v.guided ? useDialKit('Composition', COMPOSITION, { id: 'voice-composition' }) : null;
+  const comp = gc && gc[gc.active];
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
   const [frameworkId, setFrameworkId] = useState(FRAMEWORKS[0].id);
   const fw = FRAMEWORKS.find((f) => f.id === frameworkId);
@@ -1195,7 +1366,19 @@ export function VoiceRecorder({ variant = 'freeform' }) {
   const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
   const deviceW = framed ? FRAME.w * FRAME_K : 390;
   const deviceH = framed ? FRAME.h * FRAME_K : screenH;
-  const textBoxH = t.overflow.maxLines * t.type.lineHeight * t.type.textSize;
+  /* Guided compositions move, resize, and realign the transcript. */
+  const tv = comp
+    ? {
+        ...t,
+        type: {
+          ...t.type,
+          textSize: comp.transcript.size,
+          align: comp.transcript.align,
+          textY: t.type.textY - comp.transcript.y,
+        },
+      }
+    : t;
+  const textBoxH = tv.overflow.maxLines * tv.type.lineHeight * tv.type.textSize;
 
   const screenRef = useRef(null);
   /* Rank the bottom controls by distance from the record button so the exit
@@ -1292,18 +1475,21 @@ export function VoiceRecorder({ variant = 'freeform' }) {
               }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}
-              <Transcript
-                items={rec.items}
-                rec={rec}
-                t={t}
-                rightInset={s.layout === 'rail' ? 40 : 0}
-                questionStyle={v.prompts && { '--question-color': pr.question.color, '--question-scale': pr.question.scale }}
-              />
+              {(!comp || comp.transcript.show) && (
+                <Transcript
+                  items={rec.items}
+                  rec={rec}
+                  t={tv}
+                  offsetX={comp?.transcript.x}
+                  rightInset={s.layout === 'rail' ? 40 : 0}
+                  questionStyle={v.prompts && { '--question-color': pr.question.color, '--question-scale': pr.question.scale }}
+                />
+              )}
               {v.prompts && (
                 <PromptCard key={rec.prompt?.id} rec={rec} p={pr} bottom={t.type.textY + textBoxH + pr.card.gap} />
               )}
-              {g && <GuideHeader rec={rec} fw={fw} g={g} onPick={setFrameworkId} />}
-              <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
+              {comp && <GuideScreen rec={rec} fw={fw} g={g} comp={comp} onPick={setFrameworkId} />}
+              <Processing rec={rec} p={c.processing} bottom={tv.type.textY} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>
