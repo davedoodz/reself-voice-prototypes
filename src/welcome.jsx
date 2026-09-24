@@ -41,22 +41,22 @@ const BRAND = {
   groupY: [0.4, 0.2, 0.6, 0.005],
   logo: {
     /* The word: the blue PNG, or flat Test Family text ("un" upright, "wind" italic). */
-    word: { type: 'select', options: [{ value: 'png', label: 'Blue PNG' }, { value: 'text', label: 'Flat text' }], default: 'png' },
-    textColor: '#61A8FD',
+    word: { type: 'select', options: [{ value: 'png', label: 'Blue PNG' }, { value: 'text', label: 'Flat text' }], default: 'text' },
+    textColor: '#8e98a6',
     /* The word stays centred on screen; the mark sits to its left or above it. */
     markPlace: { type: 'select', options: [{ value: 'left', label: 'Left of word' }, { value: 'above', label: 'Above word' }], default: 'left' },
     markGap: [7, -20, 60, 1],
-    markScale: [1, 0.4, 2.5, 0.01],
+    markScale: [1.16, 0.4, 2.5, 0.01],
     markX: [0, -120, 120, 1],
-    markY: [0, -120, 120, 1],
-    wordX: [0, -150, 150, 1],
-    wordY: [0, -200, 200, 1],
+    markY: [2, -120, 120, 1],
+    wordX: [40, -150, 150, 1],
+    wordY: [3, -200, 200, 1],
   },
   tagline: 'Talk it out. Find clarity.',
-  taglineColor: '#6f7f86',
-  taglineSize: [20, 14, 28, 0.5],
+  taglineColor: '#8e98a6',
+  taglineSize: [20.5, 14, 28, 0.5],
   button: {
-    background: '#1c1c1e',
+    background: '#72bdfa',
     text: '#ffffff',
   },
 };
@@ -101,8 +101,8 @@ const WELCOME_BEAM = {
 const INTRO = {
   /* The wordmark starts this far into the logo's opening (0 = with it, 1 = after). */
   lettersAt: [0.16, 0, 1, 0.01],
-  letterMs: [960, 100, 3000, 10],
-  letterDrift: [-26, -120, 60, 1],
+  letterMs: [1610, 100, 3000, 10],
+  letterDrift: [-52, -120, 60, 1],
   letterBlur: [10, 0, 30, 0.5],
   /* Both measured from the moment the mark starts drawing. */
   taglineAfterMs: [1190, 0, 5000, 10],

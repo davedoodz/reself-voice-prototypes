@@ -19,3 +19,7 @@ export function beamColors(color = BRAND_BLUE, brightness = 1) {
     bandColors: { core: rgb(c), above: rgb(soft), mid: rgb(deep), below: rgb(c) },
   };
 }
+
+/* The beam's own blue: deeper than the UI accent so the soft, brightened glow
+   still reads as blue rather than cyan. */
+export const BEAM_BLUE = '#1d80e7';

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { VoiceBeam } from 'voice-glow';
-import { beamColors } from './brand.js';
+import { BEAM_BLUE, beamColors } from './brand.js';
 import './styles.css';
 
 const beamStyle = {
@@ -60,7 +60,7 @@ function App() {
             release={0.9}
             breatheDuration={8}
             colorVariant="ice"
-            {...beamColors(undefined, 1.3)}
+            {...beamColors(BEAM_BLUE, 1.3)}
             theme="light"
             borderRadius={62}
             scale={3}
@@ -91,7 +91,7 @@ function App() {
             bloomScale={1.05}
             bloomHeight={2.25}
             brightness={1.3}
-            saturation={2.2}
+            saturation={4}
             hueRange={0}
             hueDuration={2}
             style={beamStyle}

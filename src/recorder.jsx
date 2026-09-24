@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { VoiceBeam } from 'voice-glow';
-import { BRAND_BLUE, beamColors } from './brand.js';
+import { BEAM_BLUE, beamColors } from './brand.js';
 import { Info, X } from 'lucide-react';
 import brainIcon from './icons/brain.png';
 import heartIcon from './icons/heart.png';
@@ -130,9 +130,9 @@ export const BEAM = {
     },
     theme: { type: 'select', options: ['light', 'dark'], default: 'light' },
     /* Overrides the variant's lobe and band colours with shades of this blue. */
-    beamColor: BRAND_BLUE,
+    beamColor: BEAM_BLUE,
     brightness: [3, 0, 4, 0.01],
-    saturation: [2.2, 0, 4, 0.01],
+    saturation: [4, 0, 4, 0.01],
     hueRange: [0, 0, 180, 1],
     hueDuration: [2, 0.5, 30, 0.1],
     hueBase: [0, -180, 180, 1],
