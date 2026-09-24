@@ -225,7 +225,7 @@ function LogoMotion() {
           <button key={o.key} type="button" className="lm-card" onClick={() => replay([o.key])}>
             <span className="lm-stage">
               <Lockup showWord={s.showWord}>
-                <AnimatedMark option={o} c={c[o.key]} run={runs[o.key]} delayMs={s.delayMs} color="#80DCF7" />
+                <AnimatedMark option={o} c={c[o.key]} run={runs[o.key]} delayMs={s.delayMs} color="#61A8FD" />
               </Lockup>
             </span>
             <span className="lm-meta">

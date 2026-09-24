@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { VoiceBeam } from 'voice-glow';
+import { BRAND_BLUE, beamColors } from './brand.js';
 import { Info, X } from 'lucide-react';
 import brainIcon from './icons/brain.png';
 import heartIcon from './icons/heart.png';
@@ -128,11 +129,13 @@ export const BEAM = {
       default: 'ice',
     },
     theme: { type: 'select', options: ['light', 'dark'], default: 'light' },
+    /* Overrides the variant's lobe and band colours with shades of this blue. */
+    beamColor: BRAND_BLUE,
     brightness: [3, 0, 4, 0.01],
     saturation: [2.2, 0, 4, 0.01],
     hueRange: [0, 0, 180, 1],
     hueDuration: [2, 0.5, 30, 0.1],
-    hueBase: [15, -180, 180, 1],
+    hueBase: [0, -180, 180, 1],
     strokeOpacity: [2, 0, 4, 0.05],
     innerOpacity: [2, 0, 4, 0.05],
     bloomOpacity: [2, 0, 4, 0.05],
@@ -149,6 +152,7 @@ export function beamProps(b) {
     release: b.response.release,
     breatheDuration: b.response.breatheDuration,
     colorVariant: b.color.colorVariant,
+    ...beamColors(b.color.beamColor, b.color.brightness),
     theme: b.color.theme,
     borderRadius: b.shape.borderRadius,
     scale: b.shape.scale,
@@ -260,7 +264,7 @@ const CONTROLS = {
     label: 'Processing your entry',
     textSize: [17, 11, 28, 0.5],
     textColor: '#8a9aa0',
-    shimmerColor: '#7dbec0',
+    shimmerColor: '#61A8FD',
     shimmerMs: [1600, 300, 5000, 50],
     /* VoiceBeam's own processing sweep: the glow gathers into one beam that
        travels left ↔ right along the bottom edge. With scale 3 the library's
@@ -297,7 +301,7 @@ const TRANSCRIPT = {
   words: {
     wordInMs: [620, 80, 2000, 10],
     wordBlur: [16.5, 0, 24, 0.5],
-    newColor: '#7dbec0',
+    newColor: '#61A8FD',
     textColor: '#a1acb0',
   },
   type: {
@@ -462,7 +466,7 @@ export const PROMPTS = {
     glass: [0.72, 0, 1, 0.01],
     textSize: [17, 12, 26, 0.5],
     textColor: '#2a3438',
-    accent: '#5fb3b8',
+    accent: '#61A8FD',
   },
   /* The countdown before an untouched card fades, and the star's motion. */
   timer: CARD_TIMER,
@@ -475,7 +479,7 @@ export const PROMPTS = {
   },
   /* How an answered question reads inside the transcript. */
   question: {
-    color: '#7dbec0',
+    color: '#61A8FD',
     scale: [0.72, 0.5, 1.2, 0.01],
   },
 };
@@ -661,7 +665,7 @@ const GUIDE = {
   autoAdvance: false,
   advanceAfterMs: [2500, 0, 10000, 100],
   colors: {
-    accent: '#5fb3b8',
+    accent: '#61A8FD',
     track: '#e4eff2',
   },
   /* A new prompt arriving. */
@@ -797,7 +801,7 @@ function compositionConfig(d) {
 
 const INK = '#1f2a2e';
 const MUTED = '#8a9aa0';
-const ACCENT = '#5fb3b8';
+const ACCENT = '#61A8FD';
 const NO_PANEL = { show: false, shape: 'card', glass: 0.72, radius: 24, padding: 20 };
 
 const COMPOSITION = {
@@ -1568,8 +1572,8 @@ function GooDots({ n, filled, live, size, d, style }) {
   const cy = pad + r;
   const w = 2 * pad + n * size + (n - 1) * d.gap;
   const h = 2 * pad + size;
-  const on = 'var(--guide-bar-on, #5fb3b8)';
-  const current = 'color-mix(in srgb, var(--guide-bar-on, #5fb3b8) 45%, var(--guide-bar-off, #dde6e8))';
+  const on = 'var(--guide-bar-on, #61A8FD)';
+  const current = 'color-mix(in srgb, var(--guide-bar-on, #61A8FD) 45%, var(--guide-bar-off, #dde6e8))';
   const frontier = live ? current : on;
 
   const { from, to, t } = anim;

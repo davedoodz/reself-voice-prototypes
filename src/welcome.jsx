@@ -8,7 +8,9 @@ import './welcome.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
-import { MARK_PATH, MARK_W, MARK_H, UNWIND_DIALS, clamp01, unwindFrame } from './unwind-mark.js';
+import { UNWIND_DIALS } from './unwind-mark.js';
+import waveLogo from './icons/wave.png';
+import wordLogo from './icons/unwind.png';
 
 /* ─────────────────────────────────────────────────────────
  * UNWIND — first-run welcome
@@ -34,11 +36,7 @@ import { MARK_PATH, MARK_W, MARK_H, UNWIND_DIALS, clamp01, unwindFrame } from '.
  *  GET STARTED   the glow takes one deep breath (swell), then the recorder opens
  * ───────────────────────────────────────────────────────── */
 
-/* Paper wordmark: "un" in Test Family Regular, "wind" in Test Family Italic. */
-const WORDMARK = [...'unwind'].map((ch, i) => ({ ch, italic: i >= 2 }));
-
 const BRAND = {
-  color: '#80DCF7',
   wordSize: [48, 32, 72, 1],
   groupY: [0.4, 0.2, 0.6, 0.005],
   tagline: 'Talk it out. Find clarity.',
@@ -84,9 +82,8 @@ const WELCOME_BEAM = {
 };
 
 const INTRO = {
-  /* The letters start this far into the logo's opening (0 = with it, 1 = after). */
+  /* The wordmark starts this far into the logo's opening (0 = with it, 1 = after). */
   lettersAt: [0.16, 0, 1, 0.01],
-  letterStaggerMs: [90, 0, 400, 5],
   letterMs: [960, 100, 3000, 10],
   letterDrift: [-26, -120, 60, 1],
   letterBlur: [10, 0, 30, 0.5],
@@ -183,54 +180,54 @@ function useGlow(br, pulse) {
 
 /* ── Brand ─────────────────────────────────────────────── */
 
-/* The "Unwind" opening (logo-motion.html option 03): the mark starts coiled to a
-   sliver and uncoils to full width, once, then holds the exact Paper path.
-   Every frame rewrites the path's points; no tilt, shine or colour change. */
+/* The logo is two blue PNGs from blue-icons/: the wave mark and the "unwind"
+   wordmark. The mark still plays the "Unwind" opening (logo-motion.html option
+   03): it starts squeezed to a sliver and springs out to full width, once. The
+   wordmark then sweeps in from the left on the wind, blurred, settling. */
 function Mark({ o, delayMs }) {
-  const path = useRef(null);
+  const img = useRef(null);
   const cfg = useRef(o);
   cfg.current = o;
 
   useLayoutEffect(() => {
-    const el = path.current;
+    const el = img.current;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const t0 = performance.now() + delayMs;
     let raf;
     const tick = (now) => {
       const p = (now - t0) / cfg.current.durationMs;
       if (p >= 1) {
-        el.setAttribute('d', MARK_PATH);
+        el.style.transform = '';
         el.style.opacity = '';
         return;
       }
       raf = requestAnimationFrame(tick);
-      const f = unwindFrame(clamp01(p), cfg.current);
-      el.setAttribute('d', f.d);
-      el.style.opacity = p < 0 ? '0' : String(f.opacity);
+      const c = cfg.current;
+      const q = Math.min(1, Math.max(0, p));
+      const sx = c.startWidth + (1 - c.startWidth) * springOut(q, c.bounce);
+      el.style.transformOrigin = c.anchor === 'center' ? '50% 50%' : '0 50%';
+      el.style.transform = `scaleX(${sx})`;
+      el.style.opacity = p < 0 ? '0' : String(Math.min(1, q / 0.12));
     };
     /* First frame before paint, so the finished logo never flashes. */
     tick(performance.now());
     return () => cancelAnimationFrame(raf);
   }, [delayMs]);
 
-  return (
-    <svg className="w-mark" viewBox={`0 0 ${MARK_W} ${MARK_H}`} aria-hidden="true">
-      <path ref={path} d={MARK_PATH} fill="currentColor" />
-    </svg>
-  );
+  return <img ref={img} className="w-mark" src={waveLogo} alt="" draggable={false} />;
+}
+
+/* 0 → 1 with a damped overshoot; bounce 0 is a plain ease-out. */
+function springOut(t, bounce) {
+  const e = 1 - (1 - t) ** 3;
+  return e + bounce * Math.sin(Math.PI * t) * (1 - t);
 }
 
 function Wordmark(markProps) {
   return (
     <h1 className="w-logo" aria-label="Unwind">
       <Mark {...markProps} />
-      <span className="w-word" aria-hidden="true">
-        {WORDMARK.map(({ ch, italic }, i) => (
-          <span key={i} className="w-letter" data-italic={italic || undefined} style={{ '--i': i }}>
-            {ch}
-          </span>
-        ))}
-      </span>
+      <img className="w-word" src={wordLogo} alt="" draggable={false} />
     </h1>
   );
 }
@@ -297,13 +294,11 @@ function Welcome() {
               style={{
                 height: screenH,
                 background: s.screenColor,
-                '--brand': brand.color,
                 '--word-size': `${brand.wordSize}px`,
                 '--group-y': `${brand.groupY * 100}%`,
                 '--tagline-color': brand.taglineColor,
                 '--tagline-size': `${brand.taglineSize}px`,
                 '--letter-delay': `${markDelay + logo.durationMs * intro.lettersAt}ms`,
-                '--letter-stagger': `${intro.letterStaggerMs}ms`,
                 '--letter-ms': `${intro.letterMs}ms`,
                 '--letter-drift': `${intro.letterDrift}px`,
                 '--letter-blur': `${intro.letterBlur}px`,

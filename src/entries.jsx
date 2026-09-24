@@ -179,7 +179,7 @@ const AI = {
     background: '#141a1c',
     rim: true,
     rimWidth: [2.5, 0.5, 8, 0.1],
-    rimA: '#80dcf7',
+    rimA: '#61A8FD',
     rimB: '#a8b6ff',
     rimC: '#f1b6e4',
     rimD: '#ffe0b0',
@@ -187,7 +187,7 @@ const AI = {
     glow: [0.6, 0, 1, 0.01],
   },
   cards: {
-    from: '#80dcf7',
+    from: '#61A8FD',
     via: '#a8b6ff',
     to: '#f1b6e4',
     strength: [0.15, 0, 1, 0.01],
@@ -209,7 +209,7 @@ const PLAYER = {
   color: {
     /* The pill behind the play button and wave. */
     bar: '#ffffff',
-    played: '#80DCF7',
+    played: '#61A8FD',
     track: '#dde6e9',
     playhead: false,
     playheadColor: '#1f2a2e',
@@ -819,7 +819,7 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
     const box = scrollRef.current;
     if (!el || !box) return;
     box.scrollTo({ top: el.offsetTop - 140, behavior: 'smooth' });
-    el.animate([{ background: 'rgba(95, 179, 184, 0.16)' }, { background: 'rgba(95, 179, 184, 0)' }], { duration: 1400, delay: 350 });
+    el.animate([{ background: 'rgba(97, 168, 253, 0.16)' }, { background: 'rgba(97, 168, 253, 0)' }], { duration: 1400, delay: 350 });
   }
 
   return (

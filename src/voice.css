@@ -89,7 +89,7 @@ button { font: inherit; color: inherit; }
 .word.question {
   display: block;
   margin: 0.5em 0 0.2em;
-  color: var(--question-color, #7dbec0);
+  color: var(--question-color, #61A8FD);
   font-size: calc(var(--question-scale, 0.72) * 1em);
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -124,7 +124,7 @@ button { font: inherit; color: inherit; }
   animation: prompt-in var(--prompt-in, 620ms) cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .prompt-card:active { transform: scale(0.98); }
-.prompt-card:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.prompt-card:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 .prompt-card:not([data-phase='offered']) { opacity: 0; filter: blur(var(--prompt-blur, 8px)); pointer-events: none; }
 /* Ignored: drifts up and away. Answered: sinks toward the transcript it joins. */
 .prompt-card[data-phase='faded'] { transform: translateY(calc(var(--prompt-y, 12px) * -1)); }
@@ -138,7 +138,7 @@ button { font: inherit; color: inherit; }
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--prompt-accent, #5fb3b8);
+  color: var(--prompt-accent, #61A8FD);
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -181,7 +181,7 @@ button { font: inherit; color: inherit; }
   left: var(--bar-inset, 0px);
   height: var(--bar-h, 2px);
   border-radius: var(--bar-h, 2px);
-  background: var(--prompt-accent, #5fb3b8);
+  background: var(--prompt-accent, #61A8FD);
   opacity: var(--bar-opacity, 0.4);
   animation-name: linger-shrink;
 }
@@ -199,7 +199,7 @@ button { font: inherit; color: inherit; }
 }
 .linger-ring[data-place='corner'] { position: absolute; top: 12px; right: 12px; }
 .linger-ring[data-place='hint'] { width: calc(var(--star-size, 12px) + 2px); height: calc(var(--star-size, 12px) + 2px); margin-left: 2px; }
-.linger-ring circle { fill: none; stroke: var(--prompt-accent, #5fb3b8); stroke-width: var(--ring-stroke, 2); }
+.linger-ring circle { fill: none; stroke: var(--prompt-accent, #61A8FD); stroke-width: var(--ring-stroke, 2); }
 .linger-ring .track { opacity: var(--ring-track, 0.18); }
 .linger-ring .linger {
   opacity: var(--ring-opacity, 0.7);
@@ -218,7 +218,7 @@ button { font: inherit; color: inherit; }
   height: calc(100% - var(--border-stroke, 1.5px));
   rx: calc(var(--prompt-radius, 22px) - var(--border-stroke, 1.5px) / 2);
   fill: none;
-  stroke: var(--prompt-accent, #5fb3b8);
+  stroke: var(--prompt-accent, #61A8FD);
   stroke-width: var(--border-stroke, 1.5px);
   stroke-dasharray: 1;
   opacity: var(--border-opacity, 0.6);
@@ -232,7 +232,7 @@ button { font: inherit; color: inherit; }
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--prompt-accent, #5fb3b8);
+  background: var(--prompt-accent, #61A8FD);
   opacity: var(--wash-opacity, 0.14);
   animation-name: linger-shrink;
   transform-origin: left;
@@ -248,7 +248,7 @@ button { font: inherit; color: inherit; }
   width: var(--dot-size, 5px);
   height: var(--dot-size, 5px);
   border-radius: 50%;
-  background: var(--prompt-accent, #5fb3b8);
+  background: var(--prompt-accent, #61A8FD);
   opacity: var(--dot-opacity, 0.6);
   animation-name: linger-dot;
   animation-duration: var(--dot-fade, 300ms);
@@ -342,15 +342,15 @@ button { font: inherit; color: inherit; }
 .guide-framework button { display: inline-flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 .guide-framework-pick { gap: 6px; min-width: 0; height: 100%; padding: 0 4px 0 11px; transition: opacity 0.3s ease; }
 .guide-framework-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.guide-framework-icon { flex-shrink: 0; width: 14px; height: 14px; color: var(--guide-bar-on, #5fb3b8); stroke-width: 2; }
+.guide-framework-icon { flex-shrink: 0; width: 14px; height: 14px; color: var(--guide-bar-on, #61A8FD); stroke-width: 2; }
 .guide-framework-pick > svg:last-child { flex-shrink: 0; width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .guide-framework-info { justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #8a9aa0; }
-.guide-framework-info:hover, .guide-framework-info[aria-expanded='true'] { background: rgba(95, 179, 184, 0.12); color: var(--guide-bar-on, #5fb3b8); }
+.guide-framework-info:hover, .guide-framework-info[aria-expanded='true'] { background: rgba(97, 168, 253, 0.12); color: var(--guide-bar-on, #61A8FD); }
 .guide-framework-info svg { width: 15px; height: 15px; }
 /* Locked for the length of a take; the info card stays available. */
 .guide-framework-pick:disabled { cursor: default; opacity: 0.55; }
 .guide-framework-pick:disabled > svg:last-child { display: none; }
-.guide-framework button:focus-visible, .guide-menu button:focus-visible, .guide-info button:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.guide-framework button:focus-visible, .guide-menu button:focus-visible, .guide-info button:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 
 /* Lucide icon in a soft accent tile, used in the menu and the info card. */
 .guide-icon {
@@ -360,8 +360,8 @@ button { font: inherit; color: inherit; }
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--guide-bar-on, #5fb3b8) 13%, transparent);
-  color: var(--guide-bar-on, #5fb3b8);
+  background: color-mix(in srgb, var(--guide-bar-on, #61A8FD) 13%, transparent);
+  color: var(--guide-bar-on, #61A8FD);
 }
 .guide-icon svg { width: 17px; height: 17px; }
 
@@ -383,7 +383,7 @@ button { font: inherit; color: inherit; }
 }
 .guide-menu { display: flex; flex-direction: column; padding: 6px; }
 .guide-menu-row { display: flex; align-items: center; border-radius: 12px; }
-.guide-menu-row:hover, .guide-menu-row[aria-selected='true'] { background: rgba(95, 179, 184, 0.1); }
+.guide-menu-row:hover, .guide-menu-row[aria-selected='true'] { background: rgba(97, 168, 253, 0.1); }
 .guide-menu-row > button[role='option'] {
   display: flex;
   flex: 1;
@@ -400,7 +400,7 @@ button { font: inherit; color: inherit; }
 .guide-menu-name { color: #1f2a2e; font-size: 14px; font-weight: 500; }
 .guide-menu-summary { color: #8a9aa0; font-size: 12px; line-height: 1.35; }
 .guide-menu-info { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; margin-right: 4px; border: 0; border-radius: 50%; background: none; color: #9aa8ac; cursor: pointer; }
-.guide-menu-info:hover { color: var(--guide-bar-on, #5fb3b8); }
+.guide-menu-info:hover { color: var(--guide-bar-on, #61A8FD); }
 .guide-menu-info svg { width: 16px; height: 16px; }
 
 .guide-info { padding: 16px 16px 14px; color: #4a5a60; }
@@ -412,7 +412,7 @@ button { font: inherit; color: inherit; }
 .guide-info-close svg { width: 14px; height: 14px; }
 .guide-info-about { margin: 0 0 12px; font-size: 13px; line-height: 1.45; }
 .guide-info-steps { display: flex; flex-direction: column; gap: 6px; margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.35; }
-.guide-info-steps strong { color: var(--guide-bar-on, #5fb3b8); font-weight: 600; }
+.guide-info-steps strong { color: var(--guide-bar-on, #61A8FD); font-weight: 600; }
 
 /* After the last step the prompt steps aside; only "Processing" shows. */
 .guide-prompt { transition: opacity 0.45s ease, filter 0.45s ease; }
@@ -433,17 +433,17 @@ button { font: inherit; color: inherit; }
 .guide-progress[data-style='bars'] span { flex: 1; height: var(--p-size, 3px); border-radius: 999px; }
 /* Dots draw as SVG (GooDots) so their transitions can merge like metaballs. */
 .guide-progress[data-style='dots'] svg { display: block; }
-.guide-progress[data-style='bars'] span[data-state] { background: var(--guide-bar-on, #5fb3b8); }
+.guide-progress[data-style='bars'] span[data-state] { background: var(--guide-bar-on, #61A8FD); }
 .guide-progress[data-style='bars'] span[data-state='current'] { opacity: 0.45; }
 
 .guide-progress[data-style='steps'] { flex-wrap: wrap; gap: 4px 0; font-size: var(--p-size, 12px); font-weight: 500; }
 .guide-progress[data-style='steps'] span { color: #b6c3c7; transition: color 0.4s ease; }
 .guide-progress[data-style='steps'] span:not(:last-child)::after { content: '·'; margin: 0 8px; color: #cfd8db; }
-.guide-progress[data-style='steps'] span[data-state='done'] { color: #9fcfd2; }
-.guide-progress[data-style='steps'] span[data-state='current'] { color: var(--guide-bar-on, #5fb3b8); }
+.guide-progress[data-style='steps'] span[data-state='done'] { color: #b0d4fe; }
+.guide-progress[data-style='steps'] span[data-state='current'] { color: var(--guide-bar-on, #61A8FD); }
 
 .guide-progress[data-style='fraction'] {
-  color: var(--guide-bar-on, #5fb3b8);
+  color: var(--guide-bar-on, #61A8FD);
   font-size: var(--p-size, 13px);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -621,7 +621,7 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .capsule { display: flex; gap: 4px; padding: 5px; border-radius: 999px; }
 .capsule .ctl:not(.stop) { border-color: transparent; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 
-.ctl:focus-visible, .mode-pill:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.ctl:focus-visible, .mode-pill:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 
 /* ── Timer ── */
 .timer {

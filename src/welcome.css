@@ -20,39 +20,28 @@
 .w-logo {
   display: flex;
   align-items: flex-end;
-  /* Paper: "un" starts 3px past the end of the mark. */
-  gap: calc(var(--word-size, 48px) * 0.07);
+  gap: calc(var(--word-size, 48px) * 0.14);
   margin: 0;
-  color: var(--brand, #80dcf7);
   font-weight: 400;
 }
 
-/* Paper: the mark is 47×27 beside a 48px word, its base on the baseline. */
+/* Both parts are the blue PNGs from blue-icons/, sized off --word-size. */
 .w-mark {
-  width: calc(var(--word-size, 48px) * 0.97);
-  height: auto;
-  margin-bottom: calc(var(--word-size, 48px) * 0.2);
   flex-shrink: 0;
-  /* Its opening is the path warp in welcome.jsx (Mark); nothing here animates it. */
-  overflow: visible;
+  width: auto;
+  height: calc(var(--word-size, 48px) * 0.62);
+  margin-bottom: calc(var(--word-size, 48px) * 0.12);
+  user-select: none;
+  /* Its opening is the squeeze-and-spring in welcome.jsx (Mark); nothing here animates it. */
 }
 
-/* "un" upright (Test Family Regular), "wind" italic (Test Family Italic). */
+/* The wordmark is carried in on the wind: from the left, blurred, settling. */
 .w-word {
-  display: inline-flex;
-  font-family: 'Unwind Family', 'Test Family', serif;
-  font-size: var(--word-size, 48px);
-  font-style: normal;
-  line-height: 1.2;
-  letter-spacing: -0.04em;
-}
-.w-letter[data-italic] { font-style: italic; }
-
-/* Each letter is carried in on the wind: from the left, blurred, settling. */
-.w-letter {
-  display: inline-block;
-  animation: w-letter-in var(--letter-ms, 900ms) cubic-bezier(0.22, 1, 0.36, 1)
-    calc(var(--letter-delay, 1000ms) + var(--i) * var(--letter-stagger, 90ms)) backwards;
+  display: block;
+  width: auto;
+  height: calc(var(--word-size, 48px) * 1.02);
+  user-select: none;
+  animation: w-letter-in var(--letter-ms, 900ms) cubic-bezier(0.22, 1, 0.36, 1) var(--letter-delay, 1000ms) backwards;
 }
 
 @keyframes w-letter-in {
@@ -109,7 +98,7 @@
   transition: transform 0.15s ease, background 0.2s ease;
 }
 .w-btn:active { transform: scale(0.97); }
-.w-btn:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.w-btn:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 
 .w-btn.primary {
   border: 0;
@@ -143,5 +132,5 @@
 .welcome[data-leaving] .w-brand { opacity: 0; filter: blur(10px); transform: translate(24px, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .w-letter, .w-tagline, .w-actions > * { animation: none; }
+  .w-word, .w-tagline, .w-actions > * { animation: none; }
 }

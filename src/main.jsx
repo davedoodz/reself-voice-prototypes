@@ -1,9 +1,10 @@
 import { createRoot } from 'react-dom/client';
 import { VoiceBeam } from 'voice-glow';
+import { beamColors } from './brand.js';
 import './styles.css';
 
 const beamStyle = {
-  '--voice-hue-base': '15deg',
+  '--voice-hue-base': '0deg',
   '--voice-stroke-opacity': '2',
   '--voice-inner-opacity': '2',
   '--voice-bloom-opacity': '2',
@@ -59,6 +60,7 @@ function App() {
             release={0.9}
             breatheDuration={8}
             colorVariant="ice"
+            {...beamColors(undefined, 1.3)}
             theme="light"
             borderRadius={62}
             scale={3}

@@ -97,7 +97,7 @@ code { color: #17678c; font-family: 'DM Mono', monospace; font-size: .9em; }
 .time { align-self: center; margin: 0 0 24px; color: #91a6b0; font-family: 'DM Mono', monospace; font-size: 10px; }
 .message { max-width: 78%; padding: 13px 15px; border-radius: 19px; font-size: 13px; line-height: 1.45; text-align: left; }
 .incoming { border-bottom-left-radius: 5px; background: #e7f4f9; color: #294a5c; }
-.outgoing { align-self: flex-end; margin-top: 13px; border-bottom-right-radius: 5px; color: white; background: #197ba4; }
+.outgoing { align-self: flex-end; margin-top: 13px; border-bottom-right-radius: 5px; color: white; background: #61A8FD; }
 
 .composer {
   position: absolute;
@@ -109,15 +109,15 @@ code { color: #17678c; font-family: 'DM Mono', monospace; font-size: .9em; }
   justify-content: space-between;
   min-height: 70px;
   padding: 0 23px;
-  border: 1px solid rgba(24, 115, 151, .16);
+  border: 1px solid rgba(97, 168, 253, .16);
   border-radius: 30px;
   background: rgba(250, 254, 255, .83);
-  box-shadow: 0 8px 24px rgba(29, 107, 140, .08);
+  box-shadow: 0 8px 24px rgba(97, 168, 253, .08);
   color: #678896;
   font-size: 14px;
 }
 
-.pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #23bce6; box-shadow: 0 0 0 6px rgba(39, 192, 233, .13); }
+.pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #61A8FD; box-shadow: 0 0 0 6px rgba(97, 168, 253, .13); }
 .note { max-width: 480px; margin: 28px auto 0; color: #628394; font-size: 12px; line-height: 1.5; }
 
 @media (max-width: 480px) {

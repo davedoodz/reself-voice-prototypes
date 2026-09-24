@@ -10,8 +10,8 @@
   --body: #3b484c;
   --muted: #7d8d93;
   --faint: #a9b6ba;
-  --accent: #5fb3b8;
-  --accent-ink: #3a8f95;
+  --accent: #61A8FD;
+  --accent-ink: #61A8FD;
   --guided: #5b6fd1;
   --line: rgba(20, 40, 48, 0.07);
   --serif: 'Unwind Family', 'Test Family', Georgia, serif;
@@ -63,7 +63,7 @@
 .j-scroll::-webkit-scrollbar { display: none; }
 
 :where(.journal) button { border: 0; background: none; padding: 0; text-align: left; cursor: pointer; }
-.journal :focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+.journal :focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 .journal svg { flex-shrink: 0; }
 
 /* ── List ── */
@@ -177,7 +177,7 @@
   overflow: hidden;
   margin-top: 1px;
   padding-left: 10px;
-  border-left: 2px solid rgba(95, 179, 184, 0.45);
+  border-left: 2px solid rgba(97, 168, 253, 0.45);
   color: var(--body);
   font-family: var(--serif);
   font-size: 15px;
@@ -207,7 +207,7 @@
 
 /* The blue PNG icons (stars, play, pause, record dot). */
 .j-png { display: block; flex-shrink: 0; object-fit: contain; pointer-events: none; user-select: none; }
-.j-mode[data-mode='dynamic'] { background: rgba(95, 179, 184, 0.14); color: var(--accent-ink); }
+.j-mode[data-mode='dynamic'] { background: rgba(97, 168, 253, 0.14); color: var(--accent-ink); }
 .j-mode[data-mode='guided'] { background: rgba(91, 111, 209, 0.1); color: var(--guided); }
 .j-mode[data-large] { height: 30px; padding: 0 12px 0 10px; font-size: 13px; }
 .j-mode[data-large] svg { width: 14px; height: 14px; }
@@ -344,7 +344,7 @@
   background: #fff;
   box-shadow: 0 0 0 1px var(--line);
 }
-.j-prompt-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(95, 179, 184, 0.14); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
+.j-prompt-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(97, 168, 253, 0.14); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
 .j-prompt-mark .j-png { width: 18px; height: 18px; }
 .j-prompt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .j-prompt-text { color: var(--ink); font-size: 14.5px; font-weight: 500; line-height: 1.35; }
@@ -371,7 +371,7 @@
 .j-seg.prompt em { font-style: normal; font-weight: 400; font-size: 13px; }
 .j-seg.step .j-seg-q { display: block; margin-top: 3px; color: var(--ink); font-family: var(--serif); font-size: 19px; font-weight: 400; font-style: italic; letter-spacing: -0.01em; }
 .j-seg.step .j-step-label { color: var(--guided); }
-.j-seg[data-active] { background: rgba(95, 179, 184, 0.08); }
+.j-seg[data-active] { background: rgba(97, 168, 253, 0.08); }
 
 .j-detail .j-end { padding: 0 22px; }
 
@@ -391,7 +391,7 @@
   background: var(--ai-bg, #141a1c);
   box-shadow:
     0 14px 30px -8px rgba(60, 110, 200, calc(var(--ai-glow, 0.6) * 0.75)),
-    0 0 24px -6px color-mix(in srgb, var(--ai-rim-a, #80dcf7) calc(var(--ai-glow, 0.6) * 100%), transparent);
+    0 0 24px -6px color-mix(in srgb, var(--ai-rim-a, #61A8FD) calc(var(--ai-glow, 0.6) * 100%), transparent);
   transition: transform 0.15s ease;
 }
 /* The rim: a conic ring through colours A → D, turning when Spin is on. */
@@ -443,7 +443,7 @@
   border-radius: 20px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--ai-card-a, #80dcf7) var(--ai-card-o, 15%), transparent),
+    color-mix(in srgb, var(--ai-card-a, #61A8FD) var(--ai-card-o, 15%), transparent),
     color-mix(in srgb, var(--ai-card-b, #a8b6ff) var(--ai-card-o, 15%), transparent) 60%,
     color-mix(in srgb, var(--ai-card-c, #f1b6e4) var(--ai-card-o, 15%), transparent)
   );
