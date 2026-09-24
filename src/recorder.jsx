@@ -1772,12 +1772,14 @@ function FrameworkInfo({ f, index, count, selected, locked, onSelect, onStep, on
           <p className="guide-info-by">{f.creator} · {f.year}</p>
         </div>
       </div>
-      <p className="guide-info-about">{f.about}</p>
-      <ol className="guide-info-steps">
-        {f.steps.map((st) => (
-          <li key={st.label}><strong>{st.label}</strong> {st.question}</li>
-        ))}
-      </ol>
+      <div className="guide-info-body">
+        <p className="guide-info-about">{f.about}</p>
+        <ol className="guide-info-steps">
+          {f.steps.map((st) => (
+            <li key={st.label}><strong>{st.label}</strong> {st.question}</li>
+          ))}
+        </ol>
+      </div>
       {/* The framework is locked during a take, like the chip. */}
       <button type="button" className="guide-info-select" disabled={selected || locked} onClick={onSelect}>
         {selected ? 'Selected' : 'Select this model'}
@@ -1850,6 +1852,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
   return (
     <div
       className="guide"
+      data-overlay={menuOpen || info ? "" : undefined}
       data-align={L.align}
       style={{
         '--guide-pad': `${L.sidePadding}px`,

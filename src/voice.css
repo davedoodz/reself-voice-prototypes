@@ -743,3 +743,15 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-info > .guide-info-steppers button { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.04); color: #4a5a60; cursor: pointer; }
 .guide-info > .guide-info-steppers button:active { background: rgba(97, 168, 253, 0.14); color: #61A8FD; }
 .guide-info > .guide-info-steppers svg { width: 16px; height: 16px; }
+
+/* The picker and info card sit above the prompt deck, fully opaque. Every info
+   card is the same height, so Select and the arrows never jump; the text scrolls
+   inside if a framework runs long. */
+.guide .guide-head { z-index: 2; }
+.guide-menu, .guide-info { background: #fff; }
+.guide-info { display: flex; flex-direction: column; height: var(--info-h, 500px); }
+.guide-info-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.guide-info-body::-webkit-scrollbar { display: none; }
+.guide-info-select { flex-shrink: 0; }
+/* With the picker or an info card open, the prompt deck steps out of the way. */
+.guide[data-overlay] .guide-prompt { opacity: 0; filter: blur(4px); pointer-events: none; transition: opacity 0.2s ease, filter 0.2s ease; }
