@@ -378,10 +378,10 @@ const CARD_TIMER = {
     inset: [0, 0, 60, 1],
   },
   ring: {
-    size: [20, 10, 40, 1],
-    stroke: [2, 0.5, 6, 0.5],
-    opacity: [0.7, 0.05, 1, 0.01],
-    track: [0.18, 0, 1, 0.01],
+    size: [23, 10, 40, 1],
+    stroke: [3, 0.5, 6, 0.5],
+    opacity: [0.45, 0.05, 1, 0.01],
+    track: [0.1, 0, 1, 0.01],
     place: select(['corner', 'hint'], 'corner'),
   },
   border: {
@@ -460,10 +460,10 @@ export const PROMPTS = {
   answerDelayMs: [700, 0, 3000, 50],
   card: {
     hint: 'Tap to answer',
-    width: [277, 200, 360, 1],
+    width: [328, 200, 360, 1],
     /* Height above the transcript; raise it to lift the card up the screen. */
-    gap: [28, -200, 560, 1],
-    hintSize: [12, 9, 22, 0.5],
+    gap: [290, -200, 560, 1],
+    hintSize: [12.5, 9, 22, 0.5],
     radius: [22, 0, 40, 1],
     glass: [0.06, 0, 1, 0.01],
     textSize: [18, 12, 26, 0.5],
