@@ -41,7 +41,7 @@ const EXIT_CURVES = {
 const EXIT_COUNT = 4;
 
 const DEFAULT_TEXT =
-  "Today felt slower in a good way. I finally took the long walk by the river and noticed how quiet my head got after the first twenty minutes. I want to remember that feeling, and protect one unscheduled hour every morning this week. Tomorrow I'll call Mom, water the plants, and start the chapter I keep putting off.";
+  'Yeah so today felt slower in a good way. I finally took the long walk by the river and noticed how quiet my head got later. I want to remember that feeling, and protect one free hour every morning this week.';
 
 const LAYOUTS = [
   { value: 'dock', label: '1 · Bottom dock' },
@@ -156,16 +156,16 @@ const CONTROLS = {
     /* Distance from the screen's bottom edge; lower = further down. */
     bottomInset: [44, 0, 140, 1],
     /* Nudge the pill or the button cluster on its own; positive = down. */
-    pillShiftY: [0, -40, 40, 1],
-    buttonsShiftY: [0, -40, 40, 1],
+    pillShiftY: [12, -40, 40, 1],
+    buttonsShiftY: [12, -40, 40, 1],
   },
   record: {
     buttonColor: '#1c1c1e',
-    squareColor: '#ffffff',
-    dotSize: [18, 6, 36, 0.5],
+    squareColor: '#9fe9f8',
+    dotSize: [22, 6, 36, 0.5],
     squareSize: [11, 4, 28, 0.5],
     squareRadius: [2.5, 0, 14, 0.5],
-    dotColor: '#ff453a',
+    dotColor: '#9fe9f8',
     morphMs: [320, 0, 1200, 10],
   },
   /* Stop → bottom controls leave (and the transcript fades) → processing → saved. */
@@ -181,11 +181,11 @@ const CONTROLS = {
   processing: {
     fadeOutMs: [500, 0, 2000, 10],
     gapMs: [0, 0, 1500, 10],
-    durationMs: [2600, 300, 8000, 50],
+    durationMs: [4000, 300, 8000, 50],
     label: 'Processing your entry',
     textSize: [17, 11, 28, 0.5],
     textColor: '#8a9aa0',
-    shimmerColor: '#1f2a2e',
+    shimmerColor: '#7dbec0',
     shimmerMs: [1600, 300, 5000, 50],
     /* VoiceBeam's own processing sweep: the glow gathers into one beam that
        travels left ↔ right along the bottom edge. With scale 3 the library's
@@ -204,8 +204,8 @@ const CONTROLS = {
 const TRANSCRIPT = {
   text: { type: 'text', default: DEFAULT_TEXT, placeholder: 'What the recorder hears…' },
   timing: {
-    startDelayMs: [400, 0, 3000, 10],
-    wordMs: [290, 60, 800, 10],
+    startDelayMs: [700, 0, 3000, 10],
+    wordMs: [200, 60, 800, 10],
     holdMs: [1900, 0, 6000, 50],
     clearMs: [600, 100, 2000, 50],
   },
