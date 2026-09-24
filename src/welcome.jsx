@@ -27,13 +27,14 @@ import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from 
  *  GET STARTED   the glow takes one deep breath (swell), then the recorder opens
  * ───────────────────────────────────────────────────────── */
 
-const WORDMARK = 'unwind';
+/* Paper wordmark: "un" in Test Family Regular, "wind" in Test Family Italic. */
+const WORDMARK = [...'unwind'].map((ch, i) => ({ ch, italic: i >= 2 }));
 
 const BRAND = {
   color: '#80DCF7',
   wordSize: [48, 32, 72, 1],
   groupY: [0.4, 0.2, 0.6, 0.005],
-  tagline: 'Breathe out. Say it out loud.',
+  tagline: 'Talk it out. Find clarity.',
   taglineColor: '#6f7f86',
   taglineSize: [20, 14, 28, 0.5],
 };
@@ -136,8 +137,8 @@ function Wordmark() {
     <h1 className="w-logo" aria-label="Unwind">
       <Mark />
       <span className="w-word" aria-hidden="true">
-        {[...WORDMARK].map((ch, i) => (
-          <span key={i} className="w-letter" style={{ '--i': i }}>
+        {WORDMARK.map(({ ch, italic }, i) => (
+          <span key={i} className="w-letter" data-italic={italic || undefined} style={{ '--i': i }}>
             {ch}
           </span>
         ))}

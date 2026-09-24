@@ -505,21 +505,22 @@ const GUIDE = {
 };
 
 /* ── Guided compositions ────────────────────────────────
- * Five arrangements of the same elements. Each has its own folder, so every
- * element can be hidden (show), moved (x/y nudge, px) and edited per composition;
- * only the active composition's folder affects the screen.
- *   stack         centred header, bars, prompt stacked beneath
- *   card          prompt inside a glass card, dots inside it, left aligned
- *   editorial     big step number, bold left-aligned question, named steps
- *   conversation  prompt as a chat bubble above the controls, answer above it
- *   focus         the answer is the hero; the question is a quiet line on top
+ * Five arrangements of the upper portion (framework chip, progress, step label,
+ * question, hint). The transcript and bottom controls are the same in all five.
+ * Each composition has its own folder, so every element can be hidden (show),
+ * moved (x/y nudge, px) and edited per composition; only the active one applies.
+ *   stack      centred chip, bars, label, question, hint
+ *   card       left-aligned prompt inside a glass card, dots on top
+ *   editorial  big step number, bold left question, step names underneath
+ *   bubble     chip and "2 / 4" on one row; the prompt is a chat bubble
+ *   minimal    chip and dots on one row; just the step name and the question
  * ─────────────────────────────────────────────────────── */
 const COMPOSITIONS = [
   { value: 'stack', label: '1 · Stack' },
   { value: 'card', label: '2 · Card' },
   { value: 'editorial', label: '3 · Editorial' },
-  { value: 'conversation', label: '4 · Conversation' },
-  { value: 'focus', label: '5 · Focus' },
+  { value: 'bubble', label: '4 · Bubble' },
+  { value: 'minimal', label: '5 · Minimal' },
 ];
 
 const LABEL_FORMATS = {
@@ -539,10 +540,9 @@ function compositionConfig(d) {
       align: select(['center', 'left'], d.align),
       sidePadding: [d.sidePadding, 12, 80, 1],
       /* Framework chip (and header progress) distance from the top. */
-      headerTop: [d.headerTop, 40, 400, 1],
-      /* The prompt block hangs from the top, sits on the middle, or rests on the bottom. */
-      promptAnchor: select(['top', 'center', 'bottom'], d.promptAnchor),
-      promptOffset: [d.promptOffset, -300, 600, 1],
+      headerTop: [d.headerTop, 40, 300, 1],
+      /* Prompt block distance from the top. */
+      promptTop: [d.promptTop, 80, 420, 1],
     },
     panel: {
       show: d.panel.show,
@@ -555,7 +555,8 @@ function compositionConfig(d) {
     progress: {
       ...move(d.progress),
       style: select(['bars', 'dots', 'steps', 'fraction'], d.progress.style),
-      placement: select(['header', 'prompt-top', 'prompt-bottom'], d.progress.placement),
+      /* header-row puts the progress on the chip's row, at the far side. */
+      placement: select(['header', 'header-row', 'prompt-top', 'prompt-bottom'], d.progress.placement),
       /* Bar height, dot size, or font size, depending on style. */
       size: [d.progress.size, 1, 20, 0.5],
     },
@@ -572,11 +573,6 @@ function compositionConfig(d) {
       color: d.question.color,
     },
     hint: { ...move(d.hint), size: [d.hint.size, 10, 24, 0.5], color: d.hint.color },
-    transcript: {
-      ...move(d.transcript),
-      size: [d.transcript.size, 12, 36, 0.5],
-      align: select(['center', 'left'], d.transcript.align),
-    },
   };
 }
 
@@ -588,54 +584,49 @@ const NO_PANEL = { show: false, shape: 'card', glass: 0.72, radius: 24, padding:
 const COMPOSITION = {
   active: select(COMPOSITIONS, 'stack'),
   stack: compositionConfig({
-    align: 'center', sidePadding: 32, headerTop: 100, promptAnchor: 'top', promptOffset: 176,
+    align: 'center', sidePadding: 32, headerTop: 100, promptTop: 176,
     panel: NO_PANEL,
     chip: { size: 13 },
     progress: { style: 'bars', placement: 'header', size: 3 },
     label: { format: 'full', size: 12, color: ACCENT },
     question: { size: 26, weight: 500, color: INK },
     hint: { size: 15, color: MUTED },
-    transcript: { size: 21, align: 'center' },
   }),
   card: compositionConfig({
-    align: 'left', sidePadding: 22, headerTop: 100, promptAnchor: 'top', promptOffset: 150,
+    align: 'left', sidePadding: 22, headerTop: 100, promptTop: 150,
     panel: { show: true, shape: 'card', glass: 0.72, radius: 28, padding: 22 },
     chip: { size: 13 },
     progress: { style: 'dots', placement: 'prompt-top', size: 7 },
     label: { format: 'count', size: 12, color: ACCENT },
     question: { size: 24, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
-    transcript: { size: 20, align: 'left' },
   }),
   editorial: compositionConfig({
-    align: 'left', sidePadding: 30, headerTop: 100, promptAnchor: 'top', promptOffset: 150,
+    align: 'left', sidePadding: 30, headerTop: 100, promptTop: 150,
     panel: NO_PANEL,
     chip: { size: 13 },
     progress: { style: 'steps', placement: 'prompt-bottom', size: 12 },
     label: { format: 'number', size: 44, color: ACCENT },
     question: { size: 32, weight: 600, color: INK },
     hint: { size: 16, color: MUTED },
-    transcript: { size: 20, align: 'left', y: 10 },
   }),
-  conversation: compositionConfig({
-    align: 'left', sidePadding: 22, headerTop: 100, promptAnchor: 'bottom', promptOffset: 128,
+  bubble: compositionConfig({
+    align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
     panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
     chip: { size: 13 },
-    progress: { style: 'fraction', placement: 'header', size: 13 },
+    progress: { style: 'fraction', placement: 'header-row', size: 13 },
     label: { format: 'name', size: 11, color: ACCENT },
-    question: { size: 19, weight: 500, color: INK },
-    hint: { size: 13, color: MUTED },
-    transcript: { size: 20, align: 'left', y: -150 },
+    question: { size: 21, weight: 500, color: INK },
+    hint: { size: 14, color: MUTED },
   }),
-  focus: compositionConfig({
-    align: 'center', sidePadding: 36, headerTop: 92, promptAnchor: 'top', promptOffset: 172,
+  minimal: compositionConfig({
+    align: 'center', sidePadding: 32, headerTop: 100, promptTop: 190,
     panel: NO_PANEL,
     chip: { size: 12 },
-    progress: { style: 'bars', placement: 'header', size: 2 },
-    label: { show: false, format: 'name', size: 12, color: ACCENT },
-    question: { size: 18, weight: 450, color: MUTED },
-    hint: { show: false, size: 13, color: MUTED },
-    transcript: { size: 27, align: 'center', y: -170 },
+    progress: { style: 'dots', placement: 'header-row', size: 6 },
+    label: { format: 'name', size: 11, color: ACCENT },
+    question: { size: 30, weight: 500, color: INK },
+    hint: { show: false, size: 14, color: MUTED },
   }),
 };
 
@@ -1095,12 +1086,6 @@ function GuideScreen({ rec, fw, g, comp, onPick }) {
   const L = comp.layout;
   const progress = comp.progress.show && <GuideProgress fw={fw} rec={rec} done={done} p={comp.progress} />;
   const at = (where) => comp.progress.placement === where && progress;
-  const promptPos =
-    L.promptAnchor === 'top'
-      ? { top: `calc(${L.promptOffset}px + var(--safe-top, 0px))` }
-      : L.promptAnchor === 'bottom'
-        ? { bottom: L.promptOffset }
-        : { top: `calc(50% + ${L.promptOffset}px)`, translate: '0 -50%' };
   const { label, question, hint, panel } = comp;
 
   return (
@@ -1116,7 +1101,11 @@ function GuideScreen({ rec, fw, g, comp, onPick }) {
         '--guide-blur': `${g.motion.blur}px`,
       }}
     >
-      <div className="guide-head" style={{ top: `calc(${L.headerTop}px + var(--safe-top, 0px))` }}>
+      <div
+        className="guide-head"
+        data-row={comp.progress.placement === 'header-row' || undefined}
+        style={{ top: `calc(${L.headerTop}px + var(--safe-top, 0px))` }}
+      >
         {comp.chip.show && (
           <button
             type="button"
@@ -1151,13 +1140,14 @@ function GuideScreen({ rec, fw, g, comp, onPick }) {
           </div>
         )}
         {at('header')}
+        {at('header-row')}
       </div>
 
       <div
         className="guide-prompt"
         data-panel={panel.show ? panel.shape : undefined}
         style={{
-          ...promptPos,
+          top: `calc(${L.promptTop}px + var(--safe-top, 0px))`,
           '--panel-glass': panel.glass,
           '--panel-radius': `${panel.radius}px`,
           '--panel-pad': `${panel.padding}px`,
@@ -1268,7 +1258,7 @@ function Layout({ layout, rec, s }) {
 }
 
 /* ── Transcript ────────────────────────────────────────── */
-function Transcript({ items, rec, t, rightInset, questionStyle, offsetX = 0 }) {
+function Transcript({ items, rec, t, rightInset, questionStyle }) {
   const { overflow: o, words: w, type: ty } = t;
   const n = Math.min(rec.visible, items.length);
   let start = 0;
@@ -1303,7 +1293,6 @@ function Transcript({ items, rec, t, rightInset, questionStyle, offsetX = 0 }) {
       style={{
         left: ty.sidePadding,
         right: ty.sidePadding + rightInset,
-        transform: offsetX ? `translateX(${offsetX}px)` : undefined,
         bottom: ty.textY,
         height: boxHeight,
         WebkitMaskImage: mask,
@@ -1366,19 +1355,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
   const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
   const deviceW = framed ? FRAME.w * FRAME_K : 390;
   const deviceH = framed ? FRAME.h * FRAME_K : screenH;
-  /* Guided compositions move, resize, and realign the transcript. */
-  const tv = comp
-    ? {
-        ...t,
-        type: {
-          ...t.type,
-          textSize: comp.transcript.size,
-          align: comp.transcript.align,
-          textY: t.type.textY - comp.transcript.y,
-        },
-      }
-    : t;
-  const textBoxH = tv.overflow.maxLines * tv.type.lineHeight * tv.type.textSize;
+  const textBoxH = t.overflow.maxLines * t.type.lineHeight * t.type.textSize;
 
   const screenRef = useRef(null);
   /* Rank the bottom controls by distance from the record button so the exit
@@ -1475,21 +1452,18 @@ export function VoiceRecorder({ variant = 'freeform' }) {
               }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}
-              {(!comp || comp.transcript.show) && (
-                <Transcript
-                  items={rec.items}
-                  rec={rec}
-                  t={tv}
-                  offsetX={comp?.transcript.x}
-                  rightInset={s.layout === 'rail' ? 40 : 0}
-                  questionStyle={v.prompts && { '--question-color': pr.question.color, '--question-scale': pr.question.scale }}
-                />
-              )}
+              <Transcript
+                items={rec.items}
+                rec={rec}
+                t={t}
+                rightInset={s.layout === 'rail' ? 40 : 0}
+                questionStyle={v.prompts && { '--question-color': pr.question.color, '--question-scale': pr.question.scale }}
+              />
               {v.prompts && (
                 <PromptCard key={rec.prompt?.id} rec={rec} p={pr} bottom={t.type.textY + textBoxH + pr.card.gap} />
               )}
               {comp && <GuideScreen rec={rec} fw={fw} g={g} comp={comp} onPick={setFrameworkId} />}
-              <Processing rec={rec} p={c.processing} bottom={tv.type.textY} />
+              <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>

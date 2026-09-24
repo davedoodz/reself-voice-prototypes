@@ -182,6 +182,11 @@ button { font: inherit; color: inherit; }
   text-align: center;
 }
 .guide[data-align='left'] :is(.guide-head, .guide-prompt, .guide-step) { align-items: flex-start; text-align: left; }
+/* Chip and progress share one row: chip on the leading edge, progress on the far side. */
+.guide .guide-head[data-row] { flex-direction: row; align-items: center; justify-content: space-between; }
+.guide-head[data-row] .guide-progress { margin: 0; align-self: center; }
+.guide-head[data-row] .guide-progress[data-style='bars'] { flex: 0 0 96px; }
+.guide-head[data-row] .guide-menu { top: 38px; }
 .guide-framework, .guide-menu { pointer-events: auto; }
 
 /* Optional surface behind the prompt: a glass card, or a chat bubble. */

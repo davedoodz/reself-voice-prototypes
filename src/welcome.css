@@ -33,7 +33,8 @@
 .w-logo {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  /* Paper: "un" starts 3px past the end of the mark. */
+  gap: calc(var(--word-size, 48px) * 0.07);
   margin: 0;
   color: var(--brand, #80dcf7);
   font-weight: 400;
@@ -53,14 +54,16 @@
   from { clip-path: inset(0 100% 0 0); opacity: 0.4; transform: translateX(-10px); }
 }
 
+/* "un" upright (Test Family Regular), "wind" italic (Test Family Italic). */
 .w-word {
   display: inline-flex;
-  font-family: 'Unwind Family', Georgia, serif;
+  font-family: 'Unwind Family', 'Test Family', serif;
   font-size: var(--word-size, 48px);
-  font-style: italic;
+  font-style: normal;
   line-height: 1.2;
   letter-spacing: -0.04em;
 }
+.w-letter[data-italic] { font-style: italic; }
 
 /* Each letter is carried in on the wind: from the left, blurred, settling. */
 .w-letter {
@@ -80,7 +83,7 @@
 .w-tagline {
   margin: 0;
   color: var(--tagline-color, #6f7f86);
-  font-family: 'Unwind Family', Georgia, serif;
+  font-family: 'Unwind Family', 'Test Family', serif;
   font-size: var(--tagline-size, 20px);
   line-height: 1.3;
   letter-spacing: -0.01em;
