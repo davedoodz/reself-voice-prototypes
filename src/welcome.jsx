@@ -39,9 +39,26 @@ import wordLogo from './icons/unwind.png';
 const BRAND = {
   wordSize: [48, 32, 72, 1],
   groupY: [0.4, 0.2, 0.6, 0.005],
+  logo: {
+    /* The word: the blue PNG, or flat Test Family text ("un" upright, "wind" italic). */
+    word: { type: 'select', options: [{ value: 'png', label: 'Blue PNG' }, { value: 'text', label: 'Flat text' }], default: 'png' },
+    textColor: '#61A8FD',
+    /* The word stays centred on screen; the mark sits to its left or above it. */
+    markPlace: { type: 'select', options: [{ value: 'left', label: 'Left of word' }, { value: 'above', label: 'Above word' }], default: 'left' },
+    markGap: [7, -20, 60, 1],
+    markScale: [1, 0.4, 2.5, 0.01],
+    markX: [0, -120, 120, 1],
+    markY: [0, -120, 120, 1],
+    wordX: [0, -150, 150, 1],
+    wordY: [0, -200, 200, 1],
+  },
   tagline: 'Talk it out. Find clarity.',
   taglineColor: '#6f7f86',
   taglineSize: [20, 14, 28, 0.5],
+  button: {
+    background: '#1c1c1e',
+    text: '#ffffff',
+  },
 };
 
 const BREATH = {
@@ -223,11 +240,21 @@ function springOut(t, bounce) {
   return e + bounce * Math.sin(Math.PI * t) * (1 - t);
 }
 
-function Wordmark(markProps) {
+const WORD_LETTERS = [...'unwind'].map((ch, i) => ({ ch, italic: i >= 2 }));
+
+function Wordmark({ lg, ...markProps }) {
   return (
-    <h1 className="w-logo" aria-label="Unwind">
+    <h1 className="w-logo" data-mark={lg.markPlace} aria-label="Unwind">
       <Mark {...markProps} />
-      <img className="w-word" src={wordLogo} alt="" draggable={false} />
+      {lg.word === 'png' ? (
+        <img className="w-word" src={wordLogo} alt="" draggable={false} />
+      ) : (
+        <span className="w-word w-word-text" aria-hidden="true" style={{ color: lg.textColor }}>
+          {WORD_LETTERS.map(({ ch, italic }, i) => (
+            <span key={i} data-italic={italic || undefined}>{ch}</span>
+          ))}
+        </span>
+      )}
     </h1>
   );
 }
@@ -298,6 +325,14 @@ function Welcome() {
                 '--group-y': `${brand.groupY * 100}%`,
                 '--tagline-color': brand.taglineColor,
                 '--tagline-size': `${brand.taglineSize}px`,
+                '--word-x': `${brand.logo.wordX}px`,
+                '--word-y': `${brand.logo.wordY}px`,
+                '--mark-gap': `${brand.logo.markGap}px`,
+                '--mark-scale': brand.logo.markScale,
+                '--mark-x': `${brand.logo.markX}px`,
+                '--mark-y': `${brand.logo.markY}px`,
+                '--cta-bg': brand.button.background,
+                '--cta-fg': brand.button.text,
                 '--letter-delay': `${markDelay + logo.durationMs * intro.lettersAt}ms`,
                 '--letter-ms': `${intro.letterMs}ms`,
                 '--letter-drift': `${intro.letterDrift}px`,
@@ -307,7 +342,7 @@ function Welcome() {
               }}
             >
               <div className="w-brand">
-                <Wordmark o={logo} delayMs={markDelay} />
+                <Wordmark lg={brand.logo} o={logo} delayMs={markDelay} />
                 <p className="w-tagline">{brand.tagline}</p>
               </div>
 

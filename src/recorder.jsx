@@ -897,8 +897,7 @@ function withCopy(copy) {
 
 /* Each page is one variant; DialKit gets a stable config object per variant. */
 const VARIANTS = {
-  /* idleBeam false: no glow on the start screen; it appears when recording starts. */
-  freeform: { modeLabel: 'Freeform', text: FREEFORM_TEXT, prompts: false, guided: false, idleBeam: false },
+  freeform: { modeLabel: 'Freeform', text: FREEFORM_TEXT, prompts: false, guided: false },
   dynamic: { modeLabel: 'Dynamic', text: DYNAMIC_TEXT, prompts: true, guided: false },
   /* The script comes from the chosen framework, so the Transcript text field is unused. */
   guided: { modeLabel: 'Guided', text: FREEFORM_TEXT, prompts: false, guided: true },
@@ -2100,7 +2099,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
           <VoiceBeam
             className="beam-host"
             level={rec.getLevel}
-            active={rec.status !== 'stopped' && (v.idleBeam !== false || rec.status !== 'idle')}
+            active={rec.status !== 'stopped' && rec.status !== 'idle'}
             {...beamProps(b)}
             processing={rec.thinking}
             processingDuration={c.processing.beam.passSeconds}
