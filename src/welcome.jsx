@@ -22,7 +22,8 @@ import { MARK_PATH, MARK_W, MARK_H, UNWIND_DIALS, clamp01, unwindFrame } from '.
  *
  *    0ms   screen empty, glow at rest (Breath › low)
  *  +start  the glow pulses `count` times: rise → fall → gap (Beam pulse)
- *  +end    last pulse lands; breathing begins with its first inhale
+ *  +end    last pulse lands; the train repeats every restMs (or, with
+ *          afterIntro 'breathe', breathing begins with its first inhale)
  *  +offset the logo mark uncoils from a sliver to full width (Logo opening)
  *          (negative offset = the mark arrives while the last pulse falls)
  *  +word   the letters of "unwind" are blown in, one by one
@@ -50,32 +51,38 @@ const BREATH = {
   exhaleSec: [6, 1, 12, 0.1],
   restSec: [1.5, 0, 6, 0.1],
   low: [0.12, 0, 1, 0.01],
-  high: [0.62, 0, 1, 0.01],
-  swellSec: [1.1, 0.2, 4, 0.05],
+  high: [0.83, 0, 1, 0.01],
+  swellSec: [0.65, 0.2, 4, 0.05],
 };
 
-/* The glow's entrance. VoiceBeam smooths the level (Voice beam › attack /
-   release), so pulses much shorter than ~250ms read as one soft swell. */
+/* The glow's heartbeat: `count` pulses open the intro, then (afterIntro 'pulse')
+   the same train repeats every restMs for as long as the screen is up.
+   VoiceBeam smooths the level (Voice beam › attack / release), so pulses much
+   shorter than ~250ms read as one soft swell. */
 const PULSE = {
-  startMs: [400, 0, 3000, 10],
+  startMs: [30, 0, 3000, 10],
   count: [2, 1, 6, 1],
   riseMs: [280, 40, 2000, 10],
-  fallMs: [560, 40, 3000, 10],
+  fallMs: [530, 40, 3000, 10],
   gapMs: [140, 0, 2000, 10],
-  peak: [0.95, 0, 1, 0.01],
-  /* When the logo appears relative to the last pulse ending. */
+  peak: [1, 0, 1, 0.01],
+  /* When the logo appears relative to the last intro pulse ending. */
   wordmarkOffsetMs: [-200, -2000, 2000, 10],
+  /* After the intro: keep pulsing, or settle into the slow Breath cycle. */
+  afterIntro: { type: 'select', options: ['pulse', 'breathe'], default: 'pulse' },
+  /* Stillness between repeated trains; the glow rests at Breath › low. */
+  restMs: [2400, 0, 10000, 10],
 };
 
 const INTRO = {
   /* The letters start this far into the logo's opening (0 = with it, 1 = after). */
-  lettersAt: [0.45, 0, 1, 0.01],
+  lettersAt: [0.16, 0, 1, 0.01],
   letterStaggerMs: [90, 0, 400, 5],
-  letterMs: [900, 100, 3000, 10],
+  letterMs: [580, 100, 3000, 10],
   letterDrift: [-26, -120, 60, 1],
   letterBlur: [10, 0, 30, 0.5],
   /* Both measured from the moment the mark starts drawing. */
-  taglineAfterMs: [1400, 0, 5000, 10],
+  taglineAfterMs: [1190, 0, 5000, 10],
   ctaAfterMs: [2000, 0, 6000, 10],
 };
 
@@ -103,22 +110,30 @@ function breathAt(sec, br) {
   return 0;
 }
 
-/* Where the last pulse lands, in ms from the start of the intro. */
-const pulseEndMs = (p) => p.startMs + p.count * (p.riseMs + p.fallMs) + (p.count - 1) * p.gapMs;
+/* One train's length: `count` × (rise + fall), with gaps between. */
+const trainMs = (p) => p.count * (p.riseMs + p.fallMs) + (p.count - 1) * p.gapMs;
 
-/* One pulse train in 0–1: rest until startMs, then rise → fall → gap, `count` times. */
-function pulseAt(ms, p) {
-  const t = ms - p.startMs;
-  if (t < 0) return 0;
-  const cycle = p.riseMs + p.fallMs + p.gapMs;
-  const x = t % cycle;
+/* Where the last intro pulse lands, in ms from the start of the intro. */
+const pulseEndMs = (p) => p.startMs + trainMs(p);
+
+/* One pulse train in 0–1, t in ms from its first rise: rise → fall → gap, `count` times. */
+function trainAt(t, p) {
+  if (t < 0 || t >= trainMs(p)) return 0;
+  const x = t % (p.riseMs + p.fallMs + p.gapMs);
   if (x < p.riseMs) return ease(x / p.riseMs);
   if (x < p.riseMs + p.fallMs) return 1 - ease((x - p.riseMs) / p.fallMs);
   return 0;
 }
 
-/* The glow's level getter: pulse train, then breathing from the moment it ends.
-   VoiceBeam samples it every frame, so none of this re-renders React.
+/* After the intro's train: rest, then the same train again, forever. */
+function loopAt(t, p) {
+  const x = t % (p.restMs + trainMs(p));
+  return x < p.restMs ? 0 : trainAt(x - p.restMs, p);
+}
+
+/* The glow's level getter: the intro's pulse train, then either the train on a
+   loop or breathing, from the moment it ends. VoiceBeam samples it every frame,
+   so none of this re-renders React.
    `swell()` takes one deep breath up to full and resolves at the top of it. */
 function useGlow(br, pulse) {
   const cfg = useRef({ br, pulse });
@@ -131,10 +146,10 @@ function useGlow(br, pulse) {
     const now = performance.now();
     const ms = now - start.current;
     const end = pulseEndMs(p);
-    const base =
-      ms < end
-        ? c.low + (p.peak - c.low) * pulseAt(ms, p)
-        : c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
+    let base;
+    if (ms < end) base = c.low + (p.peak - c.low) * trainAt(ms - p.startMs, p);
+    else if (p.afterIntro === 'pulse') base = c.low + (p.peak - c.low) * loopAt(ms - end, p);
+    else base = c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
     if (swellFrom.current === null) return base;
     const k = Math.min(1, (now - swellFrom.current) / (c.swellSec * 1000));
     return base + (1 - base) * ease(k);
