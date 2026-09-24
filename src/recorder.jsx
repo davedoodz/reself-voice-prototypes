@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { VoiceBeam } from 'voice-glow';
 import { BEAM_BLUE, beamColors } from './brand.js';
-import { Info, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, X } from 'lucide-react';
 import brainIcon from './icons/brain.png';
 import heartIcon from './icons/heart.png';
 import loopIcon from './icons/loop.png';
@@ -1759,10 +1759,16 @@ function GuideProgress({ fw, rec, done, p, dots }) {
   );
 }
 
-/* "Learn more" for one framework: who made it, when, why, and its steps. */
-function FrameworkInfo({ f, onClose }) {
+/* "Learn more" for one framework: who made it, when, why, and its steps.
+   The arrows step through every framework's card without closing. */
+function FrameworkInfo({ f, index, count, onStep, onClose }) {
   return (
     <div className="guide-info" role="dialog" aria-label={`About ${f.title}`}>
+      <div className="guide-info-nav">
+        <button type="button" aria-label="Previous framework" onClick={() => onStep(-1)}><ChevronLeft /></button>
+        <span>{index + 1} of {count}</span>
+        <button type="button" aria-label="Next framework" onClick={() => onStep(1)}><ChevronRight /></button>
+      </div>
       <div className="guide-info-head">
         <img className="guide-icon" src={f.icon} alt="" />
         <div>
@@ -1926,6 +1932,12 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
         {info && (
           <FrameworkInfo
             f={info}
+            index={frameworks.indexOf(info)}
+            count={frameworks.length}
+            onStep={(d) => {
+              const i = frameworks.indexOf(info);
+              setInfoId(frameworks[(i + d + frameworks.length) % frameworks.length].id);
+            }}
             onClose={() => {
               setInfoId(null);
               if (infoFromMenu) setOpen(true);
