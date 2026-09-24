@@ -639,7 +639,7 @@ const GUIDE = {
   advanceAfterMs: [2500, 0, 10000, 100],
   colors: {
     accent: '#5fb3b8',
-    track: '#dde6e8',
+    track: '#e4eff2',
   },
   /* A new prompt arriving. */
   motion: {
@@ -658,19 +658,19 @@ const GUIDE = {
         { value: 'swell', label: '4 · Swell' },
         { value: 'hop', label: '5 · Hop' },
       ],
-      'liquid',
+      'drip',
     ),
-    durationMs: [760, 100, 3000, 10],
-    gap: [7, 0, 24, 0.5],
+    durationMs: [440, 100, 3000, 10],
+    gap: [6, 0, 24, 0.5],
     /* How far the goo reaches, in dot radii; 0 turns merging off. */
-    goo: [0.55, 0, 1.5, 0.01],
-    overshoot: [1.5, 1, 3, 0.01],
+    goo: [0.6, 0, 1.5, 0.01],
+    overshoot: [2.16, 1, 3, 0.01],
     /* Travelling droplet size (drip, hop) as a share of a dot. */
-    drop: [0.62, 0.2, 1.2, 0.01],
+    drop: [0.8, 0.2, 1.2, 0.01],
     /* Hop height, in dot sizes. */
-    hop: [1.3, 0, 4, 0.05],
+    hop: [0.9, 0, 4, 0.05],
     /* Bridge thickness (bridge) as a share of a dot. */
-    bridge: [0.5, 0.1, 1, 0.01],
+    bridge: [0.24, 0.1, 1, 0.01],
   },
 };
 
@@ -731,6 +731,18 @@ function compositionConfig(d) {
       radius: [d.panel.radius, 0, 40, 1],
       padding: [d.panel.padding, 0, 40, 1],
     },
+    /* With a panel on: the next prompts wait as cards stacked behind this one.
+       Next shuffles the front card to the back and the one beneath comes forward. */
+    deck: {
+      show: d.deck?.show ?? false,
+      depth: [2, 0, 4, 1],
+      offset: [10, 0, 40, 1],
+      scale: [0.05, 0, 0.2, 0.005],
+      fade: [0.3, 0, 1, 0.01],
+      shuffleMs: [640, 0, 2000, 10],
+      lift: [46, 0, 160, 1],
+      tilt: [-4, -20, 20, 0.5],
+    },
     chip: { ...move(d.chip), font: font(d.chip.font), size: [d.chip.size, 10, 18, 0.5] },
     progress: {
       ...move(d.progress),
@@ -766,7 +778,7 @@ const ACCENT = '#5fb3b8';
 const NO_PANEL = { show: false, shape: 'card', glass: 0.72, radius: 24, padding: 20 };
 
 const COMPOSITION = {
-  active: select(COMPOSITIONS, 'stack'),
+  active: select(COMPOSITIONS, 'bubble'),
   stack: compositionConfig({
     align: 'center', sidePadding: 32, headerTop: 100, promptTop: 176,
     panel: NO_PANEL,
@@ -778,9 +790,10 @@ const COMPOSITION = {
   }),
   card: compositionConfig({
     align: 'left', sidePadding: 22, headerTop: 100, promptTop: 150,
-    panel: { show: true, shape: 'card', glass: 0.72, radius: 28, padding: 22 },
+    panel: { show: true, shape: 'bubble', glass: 0.72, radius: 28, padding: 22 },
+    deck: { show: true },
     chip: { size: 13 },
-    progress: { style: 'dots', placement: 'prompt-top', size: 7 },
+    progress: { style: 'steps', placement: 'prompt-top', size: 7 },
     label: { format: 'count', size: 12, color: ACCENT },
     question: { size: 24, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
@@ -797,9 +810,10 @@ const COMPOSITION = {
   bubble: compositionConfig({
     align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
     panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
-    chip: { size: 13 },
-    progress: { style: 'dots', placement: 'header-row', size: 7 },
-    label: { format: 'name', size: 11, color: ACCENT },
+    deck: { show: true },
+    chip: { size: 13, x: 29, y: -4 },
+    progress: { style: 'dots', placement: 'prompt-bottom', size: 7 },
+    label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
   }),
@@ -1622,7 +1636,43 @@ function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
   const L = comp.layout;
   const progress = comp.progress.show && <GuideProgress fw={fw} rec={rec} done={done} p={comp.progress} dots={g.dots} />;
   const at = (where) => comp.progress.placement === where && progress;
-  const { label, question, hint, panel } = comp;
+  const { label, question, hint, panel, deck } = comp;
+  const stacked = panel.show && deck.show;
+  /* Prompts still to come, shown as cards behind the front one. */
+  const ghosts = stacked && !done ? Math.min(deck.depth, n - 1 - rec.step) : 0;
+  /* On Next, the card just answered shuffles to the back of the deck. */
+  const [leaving, setLeaving] = useState(null);
+  const prevStep = useRef(rec.step);
+  useEffect(() => {
+    const from = prevStep.current;
+    prevStep.current = rec.step;
+    if (!stacked || rec.step !== from + 1 || deck.shuffleMs === 0 || reducedMotion()) return;
+    setLeaving({ step: from, key: `${fw.id}-${from}-out` });
+    const id = setTimeout(() => setLeaving(null), deck.shuffleMs);
+    return () => clearTimeout(id);
+  }, [rec.step]);
+  const stepContent = (i) => (
+    <>
+      {label.show && (
+        <span className="guide-label" style={{ ...nudge(label), ...fontStyle(label), fontSize: label.size, color: label.color }}>
+          {LABEL_FORMATS[label.format](i, n, fw.steps[i].label)}
+        </span>
+      )}
+      {question.show && (
+        <p
+          className="guide-question"
+          style={{ ...nudge(question), ...fontStyle(question), fontSize: question.size, fontWeight: question.weight, color: question.color }}
+        >
+          {fw.steps[i].question}
+        </p>
+      )}
+      {hint.show && (
+        <p className="guide-hint" style={{ ...nudge(hint), ...fontStyle(hint), fontSize: hint.size, color: hint.color }}>
+          {fw.steps[i].hint}
+        </p>
+      )}
+    </>
+  );
   const Icon = fw.icon;
   const info = frameworks.find((f) => f.id === infoId);
 
@@ -1719,43 +1769,42 @@ function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
 
       <div
         className="guide-prompt"
-        data-panel={panel.show ? panel.shape : undefined}
         data-hidden={done || undefined}
+        data-shuffling={leaving ? '' : undefined}
         style={{
           top: `calc(${L.promptTop}px + var(--safe-top, 0px))`,
           '--panel-glass': panel.glass,
           '--panel-radius': `${panel.radius}px`,
           '--panel-pad': `${panel.padding}px`,
+          '--deck-offset': `${deck.offset}px`,
+          '--deck-scale': deck.scale,
+          '--deck-fade': deck.fade,
+          '--deck-ms': `${deck.shuffleMs}ms`,
+          '--deck-lift': `${deck.lift}px`,
+          '--deck-tilt': `${deck.tilt}deg`,
         }}
       >
-        {at('prompt-top')}
-        <div className="guide-step" key={`${fw.id}-${rec.step}`} aria-live="polite">
-          {label.show && (
-            <span className="guide-label" style={{ ...nudge(label), ...fontStyle(label), fontSize: label.size, color: label.color }}>
-              {LABEL_FORMATS[label.format](rec.step, n, step.label)}
-            </span>
-          )}
-          {question.show && (
-            <p
-              className="guide-question"
-              style={{
-                ...nudge(question),
-                ...fontStyle(question),
-                fontSize: question.size,
-                fontWeight: question.weight,
-                color: question.color,
-              }}
-            >
-              {step.question}
-            </p>
-          )}
-          {hint.show && (
-            <p className="guide-hint" style={{ ...nudge(hint), ...fontStyle(hint), fontSize: hint.size, color: hint.color }}>
-              {step.hint}
-            </p>
-          )}
+        {Array.from({ length: ghosts }, (_, k) => (
+          <div key={rec.step + k + 1} className="guide-card guide-ghost" data-panel={panel.shape} style={{ '--d': k + 1 }} />
+        ))}
+        {leaving && (
+          <div
+            key={leaving.key}
+            className="guide-card guide-leaving"
+            data-panel={panel.shape}
+            style={{ '--back': ghosts + 1 }}
+            aria-hidden="true"
+          >
+            {stepContent(leaving.step)}
+          </div>
+        )}
+        <div className="guide-card guide-front" data-panel={panel.show ? panel.shape : undefined}>
+          {at('prompt-top')}
+          <div className="guide-step" key={`${fw.id}-${rec.step}`} aria-live="polite">
+            {stepContent(rec.step)}
+          </div>
+          {at('prompt-bottom')}
         </div>
-        {at('prompt-bottom')}
       </div>
     </div>
   );
