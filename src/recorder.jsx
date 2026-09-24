@@ -361,7 +361,7 @@ const DIRECTIONS = [
 ];
 
 const CARD_TIMER = {
-  style: select(TIMERS, 'bar'),
+  style: select(TIMERS, 'ring'),
   pace: select(
     [
       { value: 'linear', label: 'Steady' },
@@ -378,7 +378,7 @@ const CARD_TIMER = {
     inset: [0, 0, 60, 1],
   },
   ring: {
-    size: [18, 10, 40, 1],
+    size: [20, 10, 40, 1],
     stroke: [2, 0.5, 6, 0.5],
     opacity: [0.7, 0.05, 1, 0.01],
     track: [0.18, 0, 1, 0.01],
@@ -403,8 +403,8 @@ const CARD_TIMER = {
 };
 
 const STAR = {
-  motion: select(STAR_MOTIONS, 'twinkle'),
-  size: [16, 10, 32, 0.5],
+  motion: select(STAR_MOTIONS, 'popIn'),
+  size: [20.5, 10, 32, 0.5],
   popIn: {
     durationMs: [700, 100, 3000, 10],
     delayMs: [150, 0, 3000, 10],
@@ -460,11 +460,11 @@ export const PROMPTS = {
   answerDelayMs: [700, 0, 3000, 50],
   card: {
     hint: 'Tap to answer',
-    width: [300, 200, 360, 1],
+    width: [277, 200, 360, 1],
     gap: [28, 0, 240, 1],
     radius: [22, 0, 40, 1],
-    glass: [0.72, 0, 1, 0.01],
-    textSize: [17, 12, 26, 0.5],
+    glass: [0.06, 0, 1, 0.01],
+    textSize: [18, 12, 26, 0.5],
     textColor: '#2a3438',
     accent: '#61A8FD',
   },
@@ -480,7 +480,7 @@ export const PROMPTS = {
   /* How an answered question reads inside the transcript. */
   question: {
     color: '#61A8FD',
-    scale: [0.72, 0.5, 1.2, 0.01],
+    scale: [0.66, 0.5, 1.2, 0.01],
   },
 };
 /* Freeform scripts have no marks, so only the timing fields are ever read. */
