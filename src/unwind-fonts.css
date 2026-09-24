@@ -1,0 +1,15 @@
+/* Unwind brand type: Test Family (Klim trial). "un" Regular, "wind" Italic. */
+@font-face {
+  font-family: 'Unwind Family';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url('../fonts/TestFamily-Italic.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Unwind Family';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../fonts/TestFamily-Regular.otf') format('opentype');
+}

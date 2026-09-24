@@ -12,6 +12,7 @@ export default defineConfig({
         voiceDynamic: resolve(import.meta.dirname, 'voice-dynamic.html'),
         voiceGuided: resolve(import.meta.dirname, 'voice-guided.html'),
         welcome: resolve(import.meta.dirname, 'welcome.html'),
+        logoMotion: resolve(import.meta.dirname, 'logo-motion.html'),
       },
     },
   },

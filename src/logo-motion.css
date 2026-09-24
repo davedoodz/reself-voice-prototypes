@@ -1,0 +1,66 @@
+@import './unwind-fonts.css';
+
+:root {
+  color: #1f1f1f;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #f2f2f2; }
+
+/* Right padding keeps the cards clear of the DialKit panel. */
+.lm-page { max-width: 1400px; margin: 0 auto; padding: 56px 340px 80px 40px; }
+
+.lm-head { margin-bottom: 36px; }
+.lm-head h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+.lm-head p { margin: 0; color: #5f6d73; font-size: 15px; }
+
+.lm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
+
+.lm-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #f9f9f9;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+.lm-card:focus-visible { outline: 2px solid #3aa7d9; outline-offset: 2px; }
+
+.lm-stage { display: grid; place-items: center; height: 260px; }
+
+/* Same proportions as the Paper lockup: mark 0.97 × the word size, base on the baseline. */
+.lm-lockup { display: flex; align-items: flex-end; gap: calc(var(--word-size) * 0.07); color: #80dcf7; }
+.lm-mark {
+  width: calc(var(--word-size) * 0.97);
+  height: auto;
+  margin-bottom: calc(var(--word-size) * 0.2);
+  overflow: visible;
+  flex-shrink: 0;
+}
+.lm-word {
+  font-family: 'Unwind Family', 'Test Family', serif;
+  font-size: var(--word-size);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.lm-word em { font-style: italic; }
+
+.lm-meta {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  column-gap: 8px;
+  row-gap: 2px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  background: #fff;
+}
+.lm-num { grid-row: span 2; color: #8a9aa0; font-size: 13px; font-variant-numeric: tabular-nums; line-height: 22px; }
+.lm-name { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.lm-line { color: #5f6d73; font-size: 14px; line-height: 1.4; }
