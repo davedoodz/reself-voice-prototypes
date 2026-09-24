@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { VoiceBeam } from 'voice-glow';
-import { Brain, HeartPulse, Info, RefreshCcw, Target, X } from 'lucide-react';
+import { Info, X } from 'lucide-react';
+import brainIcon from './icons/brain.png';
+import heartIcon from './icons/heart.png';
+import loopIcon from './icons/loop.png';
+import nextIcon from './icons/arrow.png';
+import targetIcon from './icons/target.png';
+import recordIcon from './icons/circle.png';
+import stopIcon from './icons/square.png';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import './voice.css';
@@ -230,11 +237,8 @@ const CONTROLS = {
   },
   record: {
     buttonColor: '#1c1c1e',
-    squareColor: '#9fe9f8',
     dotSize: [22, 6, 36, 0.5],
     squareSize: [11, 4, 28, 0.5],
-    squareRadius: [2.5, 0, 14, 0.5],
-    dotColor: '#9fe9f8',
     morphMs: [320, 0, 1200, 10],
   },
   /* Stop → bottom controls leave (and the transcript fades) → processing → saved. */
@@ -469,7 +473,7 @@ const FRAMEWORKS = [
     title: 'Gross’s Emotion Regulation Model',
     creator: 'James J. Gross',
     year: '1998',
-    icon: HeartPulse,
+    icon: heartIcon,
     summary: 'Untangle a strong feeling by slowing down what happened.',
     about:
       'Stanford psychologist James Gross showed that an emotion unfolds in stages: a situation, what you notice, how you read it, and how you respond. You can step in at any of them. Walking through the situation, your response, its cause, and another perspective helps you understand a feeling instead of pushing it away.',
@@ -509,7 +513,7 @@ const FRAMEWORKS = [
     title: 'Ellis’s ABCDE Model',
     creator: 'Albert Ellis',
     year: '1950s',
-    icon: Brain,
+    icon: brainIcon,
     summary: 'Catch an upsetting thought and check whether it holds up.',
     about:
       'Albert Ellis, who founded Rational Emotive Behavior Therapy, noticed that events rarely upset us on their own. Our beliefs about them do. His ABC model, later extended with D (dispute) and E (effective belief), helps you spot the thought in the middle and trade it for one that fits the facts.',
@@ -552,7 +556,7 @@ const FRAMEWORKS = [
     title: 'Oettingen’s WOOP Method',
     creator: 'Gabriele Oettingen',
     year: '2014',
-    icon: Target,
+    icon: targetIcon,
     summary: 'Turn a wish into a plan by facing what gets in the way.',
     about:
       'NYU psychologist Gabriele Oettingen found that picturing success alone can drain the energy to pursue it. WOOP pairs the wish with your main inner obstacle and an if-then plan, a combination her research links to better follow-through on goals and habits.',
@@ -588,7 +592,7 @@ const FRAMEWORKS = [
     title: 'Gibbs’ Reflective Cycle',
     creator: 'Graham Gibbs',
     year: '1988',
-    icon: RefreshCcw,
+    icon: loopIcon,
     summary: 'Learn from an experience by walking all the way around it.',
     about:
       'Educator Graham Gibbs introduced this cycle in Learning by Doing (1988) so students could turn experiences into lessons. It moves from what happened to how you felt, what went well, what it means, and what you would do next time.',
@@ -1123,7 +1127,6 @@ const BackIcon = () => icon(<path d="M15 5l-7 7 7 7" />);
 const PauseIcon = () => icon(<><path d="M9 6v12" /><path d="M15 6v12" /></>);
 const PlayIcon = () => icon(<path className="fill" d="M8 5.5v13l10.5-6.5z" />);
 const RestartIcon = () => icon(<><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v4h4" /></>);
-const NextIcon = () => icon(<><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></>);
 const Chevron = () => (
   <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 5 6 7.5 8.5 5" /></svg>
 );
@@ -1218,9 +1221,12 @@ function RecordButton({ rec, size, withLabel }) {
       onClick={rec.primary === 'record' ? rec.record : rec.primary === 'next' ? rec.next : rec.stop}
     >
       {rec.primary === 'next' ? (
-        <span className="next-glyph" aria-hidden="true"><NextIcon /></span>
+        <img className="next-glyph" src={nextIcon} alt="" />
       ) : (
-        <span className="rec-glyph" data-mode={rec.live ? 'stop' : 'record'} aria-hidden="true" />
+        <span className="rec-glyph" data-mode={rec.live ? 'stop' : 'record'} aria-hidden="true">
+          <img className="rec-dot" src={recordIcon} alt="" />
+          <img className="rec-square" src={stopIcon} alt="" />
+        </span>
       )}
       {withLabel && <span>{label}</span>}
     </button>
@@ -1602,11 +1608,10 @@ function GuideProgress({ fw, rec, done, p, dots }) {
 
 /* "Learn more" for one framework: who made it, when, why, and its steps. */
 function FrameworkInfo({ f, onClose }) {
-  const Icon = f.icon;
   return (
     <div className="guide-info" role="dialog" aria-label={`About ${f.title}`}>
       <div className="guide-info-head">
-        <span className="guide-icon"><Icon /></span>
+        <img className="guide-icon" src={f.icon} alt="" />
         <div>
           <p className="guide-info-title">{f.title}</p>
           <p className="guide-info-by">{f.creator} · {f.year}</p>
@@ -1673,7 +1678,6 @@ function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
       )}
     </>
   );
-  const Icon = fw.icon;
   const info = frameworks.find((f) => f.id === infoId);
 
   return (
@@ -1707,7 +1711,7 @@ function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
                 setOpen((o) => !o);
               }}
             >
-              <Icon className="guide-framework-icon" />
+              <img className="guide-framework-icon" src={fw.icon} alt="" />
               <span className="guide-framework-title">{fw.title}</span>
               <Chevron />
             </button>
@@ -1728,7 +1732,6 @@ function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
         {menuOpen && (
           <div className="guide-menu" role="listbox" aria-label="Framework">
             {frameworks.map((f) => {
-              const RowIcon = f.icon;
               return (
                 <div key={f.id} className="guide-menu-row" aria-selected={f.id === fw.id}>
                   <button
@@ -1740,7 +1743,7 @@ function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
                       setOpen(false);
                     }}
                   >
-                    <span className="guide-icon"><RowIcon /></span>
+                    <img className="guide-icon" src={f.icon} alt="" />
                     <span className="guide-menu-text">
                       <span className="guide-menu-name">{f.title}</span>
                       <span className="guide-menu-summary">{f.summary}</span>
@@ -2069,10 +2072,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 '--glass': c.buttons.glass,
                 '--dot-size': `${c.record.dotSize}px`,
                 '--square-size': `${c.record.squareSize}px`,
-                '--square-radius': `${c.record.squareRadius}px`,
-                '--dot-color': c.record.dotColor,
                 '--button-color': c.record.buttonColor,
-                '--square-color': c.record.squareColor,
                 '--text-fade-ms': `${rec.status === 'processing' ? c.processing.fadeOutMs : 450}ms`,
                 '--morph-ms': `${c.record.morphMs}ms`,
                 '--exit-ms': `${c.exit.durationMs}ms`,
