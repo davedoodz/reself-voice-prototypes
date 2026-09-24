@@ -1764,10 +1764,14 @@ function GuideProgress({ fw, rec, done, p, dots }) {
 function FrameworkInfo({ f, index, count, selected, locked, onSelect, onStep, onClose }) {
   return (
     <div className="guide-info" role="dialog" aria-label={`About ${f.title}`}>
+      {/* Top row: framework arrows and counter on the left, close on the right. */}
       <div className="guide-info-nav">
-        <button type="button" aria-label="Previous framework" onClick={() => onStep(-1)}><ChevronLeft /></button>
-        <span>{index + 1} of {count}</span>
-        <button type="button" aria-label="Next framework" onClick={() => onStep(1)}><ChevronRight /></button>
+        <div className="guide-info-steppers">
+          <button type="button" aria-label="Previous framework" onClick={() => onStep(-1)}><ChevronLeft /></button>
+          <span>{index + 1} of {count}</span>
+          <button type="button" aria-label="Next framework" onClick={() => onStep(1)}><ChevronRight /></button>
+        </div>
+        <button type="button" className="guide-info-close" aria-label="Close" onClick={onClose}><X /></button>
       </div>
       <div className="guide-info-head">
         <img className="guide-icon" src={f.icon} alt="" />
@@ -1775,7 +1779,6 @@ function FrameworkInfo({ f, index, count, selected, locked, onSelect, onStep, on
           <p className="guide-info-title">{f.title}</p>
           <p className="guide-info-by">{f.creator} · {f.year}</p>
         </div>
-        <button type="button" className="guide-info-close" aria-label="Close" onClick={onClose}><X /></button>
       </div>
       <p className="guide-info-about">{f.about}</p>
       <ol className="guide-info-steps">

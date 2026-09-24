@@ -738,3 +738,5 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 }
 .guide-info-select:active:not(:disabled) { transform: scale(0.97); }
 .guide-info-select:disabled { background: rgba(97, 168, 253, 0.12); color: #61A8FD; cursor: default; }
+.guide-info-steppers { display: flex; gap: 8px; align-items: center; }
+.guide-info-nav .guide-info-close { background: rgba(0, 0, 0, 0.04); color: #6b7a80; }
