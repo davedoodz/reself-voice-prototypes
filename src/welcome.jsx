@@ -15,14 +15,18 @@ import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from 
  * VoiceBeam the recorder listens with, so tapping Get started hands the user
  * to a screen where that glow is already waiting in the same place.
  *
- * The glow breathes (level follows an inhale → hold → exhale → rest cycle)
- * and its colours drift sideways with `flow`, like wind.
+ * The glow pulses to announce itself, then breathes (level follows an
+ * inhale → hold → exhale → rest cycle) while its colours drift sideways with
+ * `flow`, like wind.
  *
- *    0ms   screen empty, glow starts its first inhale
- *  +mark   the logo mark is drawn left → right, like a gust
+ *    0ms   screen empty, glow at rest (Breath › low)
+ *  +start  the glow pulses `count` times: rise → fall → gap (Beam pulse)
+ *  +end    last pulse lands; breathing begins with its first inhale
+ *  +offset the logo mark is drawn left → right, like a gust
+ *          (negative offset = the mark arrives while the last pulse falls)
  *  +word   the letters of "unwind" are blown in, one by one
- *  +line   tagline settles
- *  +cta    buttons and legal rise in
+ *  +line   tagline settles (Intro › taglineAfterMs after the mark)
+ *  +cta    buttons and legal rise in (Intro › ctaAfterMs after the mark)
  *
  *  GET STARTED   the glow takes one deep breath (swell), then the recorder opens
  * ───────────────────────────────────────────────────────── */
@@ -49,15 +53,28 @@ const BREATH = {
   swellSec: [1.1, 0.2, 4, 0.05],
 };
 
+/* The glow's entrance. VoiceBeam smooths the level (Voice beam › attack /
+   release), so pulses much shorter than ~250ms read as one soft swell. */
+const PULSE = {
+  startMs: [400, 0, 3000, 10],
+  count: [2, 1, 6, 1],
+  riseMs: [280, 40, 2000, 10],
+  fallMs: [560, 40, 3000, 10],
+  gapMs: [140, 0, 2000, 10],
+  peak: [0.95, 0, 1, 0.01],
+  /* When the logo appears relative to the last pulse ending. */
+  wordmarkOffsetMs: [-200, -2000, 2000, 10],
+};
+
 const INTRO = {
-  markDelayMs: [500, 0, 3000, 10],
   markMs: [1100, 100, 3000, 10],
   letterStaggerMs: [90, 0, 400, 5],
   letterMs: [900, 100, 3000, 10],
   letterDrift: [-26, -120, 60, 1],
   letterBlur: [10, 0, 30, 0.5],
-  taglineDelayMs: [1900, 0, 5000, 10],
-  ctaDelayMs: [2500, 0, 6000, 10],
+  /* Both measured from the moment the mark starts drawing. */
+  taglineAfterMs: [1400, 0, 5000, 10],
+  ctaAfterMs: [2000, 0, 6000, 10],
 };
 
 const SCREEN = {
@@ -84,19 +101,38 @@ function breathAt(sec, br) {
   return 0;
 }
 
-/* The glow's level getter. VoiceBeam samples it every frame, so none of this
-   re-renders React. `swell()` takes one deep breath up to full and resolves at
-   the top of it. */
-function useBreath(br) {
-  const cfg = useRef(br);
-  cfg.current = br;
+/* Where the last pulse lands, in ms from the start of the intro. */
+const pulseEndMs = (p) => p.startMs + p.count * (p.riseMs + p.fallMs) + (p.count - 1) * p.gapMs;
+
+/* One pulse train in 0–1: rest until startMs, then rise → fall → gap, `count` times. */
+function pulseAt(ms, p) {
+  const t = ms - p.startMs;
+  if (t < 0) return 0;
+  const cycle = p.riseMs + p.fallMs + p.gapMs;
+  const x = t % cycle;
+  if (x < p.riseMs) return ease(x / p.riseMs);
+  if (x < p.riseMs + p.fallMs) return 1 - ease((x - p.riseMs) / p.fallMs);
+  return 0;
+}
+
+/* The glow's level getter: pulse train, then breathing from the moment it ends.
+   VoiceBeam samples it every frame, so none of this re-renders React.
+   `swell()` takes one deep breath up to full and resolves at the top of it. */
+function useGlow(br, pulse) {
+  const cfg = useRef({ br, pulse });
+  cfg.current = { br, pulse };
   const start = useRef(performance.now());
   const swellFrom = useRef(null);
 
   const getLevel = useCallback(() => {
-    const c = cfg.current;
+    const { br: c, pulse: p } = cfg.current;
     const now = performance.now();
-    const base = c.low + (c.high - c.low) * breathAt((now - start.current) / 1000, c);
+    const ms = now - start.current;
+    const end = pulseEndMs(p);
+    const base =
+      ms < end
+        ? c.low + (p.peak - c.low) * pulseAt(ms, p)
+        : c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
     if (swellFrom.current === null) return base;
     const k = Math.min(1, (now - swellFrom.current) / (c.swellSec * 1000));
     return base + (1 - base) * ease(k);
@@ -106,7 +142,7 @@ function useBreath(br) {
     () =>
       new Promise((done) => {
         swellFrom.current = performance.now();
-        setTimeout(done, cfg.current.swellSec * 1000);
+        setTimeout(done, cfg.current.br.swellSec * 1000);
       }),
     [],
   );
@@ -152,6 +188,7 @@ function Welcome() {
   const s = useDialKit('Screen', SCREEN, { id: 'welcome-screen' });
   const brand = useDialKit('Brand', BRAND, { id: 'welcome-brand' });
   const br = useDialKit('Breath', BREATH, { id: 'welcome-breath' });
+  const pulse = useDialKit('Beam pulse', PULSE, { id: 'welcome-pulse' });
   const intro = useDialKit(
     'Intro',
     { ...INTRO, replay: { type: 'action', label: 'Replay intro' } },
@@ -159,12 +196,13 @@ function Welcome() {
   );
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
 
-  const breath = useBreath(br);
+  const glow = useGlow(br, pulse);
+  const markDelay = Math.max(0, pulseEndMs(pulse) + pulse.wordmarkOffsetMs);
   const [run, setRun] = useState(0);
   const [leaving, setLeaving] = useState(false);
 
   function replayIntro() {
-    breath.replay();
+    glow.replay();
     setLeaving(false);
     setRun((n) => n + 1);
   }
@@ -172,7 +210,7 @@ function Welcome() {
   async function getStarted() {
     if (leaving) return;
     setLeaving(true);
-    await breath.swell();
+    await glow.swell();
     window.location.href = `/${s.nextPage}`;
   }
 
@@ -197,7 +235,7 @@ function Welcome() {
           }}
         >
           {framed && <div className="screen-fill" style={{ height: screenH, background: s.screenColor }} />}
-          <VoiceBeam className="beam-host" level={breath.getLevel} {...beamProps(b)}>
+          <VoiceBeam className="beam-host" level={glow.getLevel} {...beamProps(b)}>
             <section
               key={run}
               className="voice-screen welcome"
@@ -211,15 +249,15 @@ function Welcome() {
                 '--group-y': `${brand.groupY * 100}%`,
                 '--tagline-color': brand.taglineColor,
                 '--tagline-size': `${brand.taglineSize}px`,
-                '--mark-delay': `${intro.markDelayMs}ms`,
+                '--mark-delay': `${markDelay}ms`,
                 '--mark-ms': `${intro.markMs}ms`,
-                '--letter-delay': `${intro.markDelayMs + intro.markMs * 0.45}ms`,
+                '--letter-delay': `${markDelay + intro.markMs * 0.45}ms`,
                 '--letter-stagger': `${intro.letterStaggerMs}ms`,
                 '--letter-ms': `${intro.letterMs}ms`,
                 '--letter-drift': `${intro.letterDrift}px`,
                 '--letter-blur': `${intro.letterBlur}px`,
-                '--tagline-delay': `${intro.taglineDelayMs}ms`,
-                '--cta-delay': `${intro.ctaDelayMs}ms`,
+                '--tagline-delay': `${markDelay + intro.taglineAfterMs}ms`,
+                '--cta-delay': `${markDelay + intro.ctaAfterMs}ms`,
               }}
             >
               <div className="w-brand">
