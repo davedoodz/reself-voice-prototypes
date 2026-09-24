@@ -24,6 +24,12 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
  *            the script carries on where it left off
  *    ignore  speaker keeps talking; the card fades after lingerMs
  *
+ *  GUIDED mode — a framework's prompts, one step at a time (no AI):
+ *    step    prompt shows above; the user answers; the answer holds on screen
+ *    Next    primary button turns into an arrow; the next prompt arrives and
+ *            the transcript starts fresh; restart redoes only this answer
+ *    last    primary button is a stop (Finish) → processing → saved
+ *
  *  STOP    bottom controls leave, staggered (exit.*); transcript fades (fadeOutMs)
  *  +gap    after the slower of the two: label shimmers, beam sweeps (durationMs)
  *  done    saved; record button returns
@@ -280,10 +286,194 @@ const PROMPTS = {
 /* Freeform scripts have no marks, so only the timing fields are ever read. */
 const NO_PROMPTS = { pauseMs: 0, lingerMs: 0, answerDelayMs: 0 };
 
+/* Guided mode: a proven framework, one prompt per step, no AI. The user answers
+   each prompt out loud, taps Next, and the last step's stop saves the entry.
+   `answer` is only the simulated speaker's reply for this prototype. */
+const FRAMEWORKS = [
+  {
+    id: 'gross',
+    name: 'Gross model',
+    domain: 'Emotion regulation',
+    steps: [
+      {
+        label: 'Situation',
+        question: 'What happened?',
+        hint: 'Describe the situation: where you were, who was there, what was said.',
+        answer:
+          "My manager moved my presentation to next week in front of the whole team, without asking me first. I'd been preparing it for days and I just nodded and said okay.",
+      },
+      {
+        label: 'Response',
+        question: 'How were you feeling in that moment?',
+        hint: 'Name the emotions, what you noticed in your body, and what you did next.',
+        answer:
+          'Embarrassed, mostly. My face went hot and my chest felt tight. Then I got kind of angry, and I spent the rest of the afternoon replaying it instead of working.',
+      },
+      {
+        label: 'Cause',
+        question: 'Why might it have affected you that way?',
+        hint: 'Look for the belief, need, or pressure underneath the reaction.',
+        answer:
+          "I think I took it as a sign she doesn't trust my work. I've been worried about that since the reorg, so it hit something that was already sore.",
+      },
+      {
+        label: 'Perspective',
+        question: 'Is there another way to see what happened?',
+        hint: "Consider a different explanation, or what you'd tell a friend in your place.",
+        answer:
+          'Maybe it had nothing to do with me. She mentioned the client call moved, so she was probably just juggling the schedule. I could ask her tomorrow instead of guessing.',
+      },
+    ],
+  },
+  {
+    id: 'abcde',
+    name: 'ABCDE',
+    domain: 'Unhelpful thoughts',
+    steps: [
+      {
+        label: 'Activating event',
+        question: 'What happened just before you felt upset?',
+        hint: 'Stick to the facts, as a camera would have seen it.',
+        answer: "A friend didn't reply to my message all weekend, even though I could see she'd been online.",
+      },
+      {
+        label: 'Belief',
+        question: 'What went through your mind about it?',
+        hint: 'The thought, rule, or story you told yourself.',
+        answer: "That she's pulling away from me. That I probably said something wrong and she's too polite to tell me.",
+      },
+      {
+        label: 'Consequence',
+        question: 'How did that belief make you feel and act?',
+        hint: 'Emotions, urges, and what you actually did.',
+        answer: 'Anxious and a bit hurt. I kept checking my phone, and I almost sent a second message apologising for nothing.',
+      },
+      {
+        label: 'Dispute',
+        question: "What's the evidence for and against that belief?",
+        hint: 'Question the thought the way a fair friend would.',
+        answer:
+          "Honestly, she's been busy with the move. She replied warmly last week. I don't have any real sign she's upset with me.",
+      },
+      {
+        label: 'Effective belief',
+        question: "What's a more balanced way to see it?",
+        hint: 'A thought that fits the evidence and helps you act.',
+        answer: "A slow reply is just a slow reply. If something is wrong, she'll tell me, and I can ask her when we talk.",
+      },
+    ],
+  },
+  {
+    id: 'woop',
+    name: 'WOOP',
+    domain: 'Goals and habits',
+    steps: [
+      {
+        label: 'Wish',
+        question: 'What do you want to work toward this week?',
+        hint: 'Something challenging but possible.',
+        answer: 'I want to get back into running. Three short runs before Sunday.',
+      },
+      {
+        label: 'Outcome',
+        question: 'What would be the best result? Picture it.',
+        hint: 'Imagine it as vividly as you can.',
+        answer: 'Feeling clear-headed in the mornings again. Sleeping better, and being proud I kept a promise to myself.',
+      },
+      {
+        label: 'Obstacle',
+        question: 'What in you is most likely to get in the way?',
+        hint: 'A habit, feeling, or belief, not the weather.',
+        answer: "When I wake up tired I talk myself out of it. I tell myself I'll go tonight, and tonight never happens.",
+      },
+      {
+        label: 'Plan',
+        question: 'If that obstacle shows up, what will you do?',
+        hint: 'Say it as: if … then I will …',
+        answer: "If I wake up and want to skip, then I'll put my shoes on and just walk to the corner. That's the whole deal.",
+      },
+    ],
+  },
+  {
+    id: 'gibbs',
+    name: 'Gibbs cycle',
+    domain: 'Learning from experience',
+    steps: [
+      {
+        label: 'Description',
+        question: 'What happened?',
+        hint: 'Set the scene briefly.',
+        answer: 'I led my first workshop today. Twelve people, ninety minutes, and the projector died halfway through.',
+      },
+      {
+        label: 'Feelings',
+        question: 'What were you thinking and feeling?',
+        hint: 'Before, during, and after.',
+        answer: 'Nervous at the start, then panicked when the screen went black. After a minute I felt oddly calm.',
+      },
+      {
+        label: 'Evaluation',
+        question: 'What went well, and what didn’t?',
+        hint: 'Be honest about both sides.',
+        answer: 'The discussion was great once the slides were gone. The first half felt rushed and too scripted.',
+      },
+      {
+        label: 'Analysis',
+        question: 'What sense can you make of it?',
+        hint: 'Why did things go the way they did?',
+        answer: 'People engaged more when I stopped presenting and started asking questions. The slides were a crutch for me.',
+      },
+      {
+        label: 'Conclusion',
+        question: 'What else could you have done?',
+        hint: 'What did you learn?',
+        answer: 'I could have planned more discussion from the start, and kept the slides as a backup, not the backbone.',
+      },
+      {
+        label: 'Action plan',
+        question: 'If it happened again, what would you do?',
+        hint: 'One or two concrete changes.',
+        answer: "Next time I'll open with a question, cut the deck in half, and test the room the day before.",
+      },
+    ],
+  },
+];
+
+const GUIDE = {
+  /* Demo only: move on by itself once the simulated answer ends. */
+  autoAdvance: false,
+  advanceAfterMs: [2500, 0, 10000, 100],
+  header: {
+    top: [100, 40, 400, 1],
+    sidePadding: [32, 12, 80, 1],
+    questionSize: [26, 16, 38, 0.5],
+    questionColor: '#1f2a2e',
+    showHint: true,
+    hintSize: [15, 11, 22, 0.5],
+    hintColor: '#8a9aa0',
+    labelColor: '#5fb3b8',
+  },
+  progress: {
+    show: true,
+    height: [3, 1, 8, 0.5],
+    gap: [6, 0, 16, 1],
+    activeColor: '#5fb3b8',
+    trackColor: '#dde6e8',
+  },
+  /* A new prompt arriving. */
+  motion: {
+    inMs: [560, 0, 2000, 10],
+    offsetY: [10, -40, 40, 1],
+    blur: [8, 0, 24, 0.5],
+  },
+};
+
 /* Each page is one variant; DialKit gets a stable config object per variant. */
 const VARIANTS = {
-  freeform: { modeLabel: 'Freeform', text: FREEFORM_TEXT, prompts: false },
-  dynamic: { modeLabel: 'Dynamic', text: DYNAMIC_TEXT, prompts: true },
+  freeform: { modeLabel: 'Freeform', text: FREEFORM_TEXT, prompts: false, guided: false },
+  dynamic: { modeLabel: 'Dynamic', text: DYNAMIC_TEXT, prompts: true, guided: false },
+  /* The script comes from the chosen framework, so the Transcript text field is unused. */
+  guided: { modeLabel: 'Guided', text: FREEFORM_TEXT, prompts: false, guided: true },
 };
 for (const v of Object.values(VARIANTS)) {
   v.screen = { ...SCREEN, modeLabel: v.modeLabel };
@@ -311,9 +501,12 @@ const spoken = (tok) => tok.kind === 'word' || tok.kind === 'question';
 
 /* The simulated take: a clock that only runs while recording, a level
    getter for VoiceBeam, and the handful of values React renders.
-   status: idle → recording ⇄ paused → processing → stopped */
-function useRecorder(s, t, ctl, pr) {
+   status: idle → recording ⇄ paused → processing → stopped
+   `guide` (Guided mode) splits the take into steps, one answer per prompt:
+   the text holds after each answer until Next, and the last step's stop saves. */
+function useRecorder(s, t, ctl, pr, guide) {
   const [status, setStatus] = useState('idle');
+  const [step, setStep] = useState(0);
   const [items, setItems] = useState([]);
   const [visible, setVisible] = useState(0);
   const [clearing, setClearing] = useState(false);
@@ -325,12 +518,18 @@ function useRecorder(s, t, ctl, pr) {
   const clock = useRef({ t: 0, rec: 0, proc: 0, last: 0 });
   const statusRef = useRef(status);
   statusRef.current = status;
-  const params = useRef({ s, t, ctl, pr });
-  params.current = { s, t, ctl, pr };
+  const stepRef = useRef(0);
+  const params = useRef({ s, t, ctl, pr, guide });
+  params.current = { s, t, ctl, pr, guide };
   /* The take as it unfolds: the parsed script with any answers spliced in.
      Each token's `start` is laid out every frame, so timing sliders apply live;
      `dur` overrides a token's length when a tap cuts it short. */
   const take = useRef({ text: null, seq: [], playhead: -1, offered: null, seen: new Set() });
+
+  const scriptNow = () => {
+    const { t: tp, guide: g } = params.current;
+    return g ? g.answers[stepRef.current] : tp.text;
+  };
 
   const resetTake = useCallback((text) => {
     const seq = parseScript(text);
@@ -342,8 +541,28 @@ function useRecorder(s, t, ctl, pr) {
 
   const beginProcessing = useCallback(() => {
     clock.current.proc = 0;
+    statusRef.current = 'processing';
     setStatus('processing');
   }, []);
+
+  /* Starts `to`'s answer from silence; the session timer keeps running. */
+  const goToStep = useCallback((to) => {
+    stepRef.current = to;
+    setStep(to);
+    clock.current.t = 0;
+    resetTake(scriptNow());
+  }, [resetTake]);
+
+  /* Guided: move to the next prompt, or save after the last one. */
+  const next = useCallback(() => {
+    const g = params.current.guide;
+    if (!g || stepRef.current >= g.answers.length - 1) {
+      beginProcessing();
+      return;
+    }
+    goToStep(stepRef.current + 1);
+    setStatus('recording');
+  }, [beginProcessing, goToStep]);
 
   useEffect(() => {
     let raf;
@@ -352,8 +571,9 @@ function useRecorder(s, t, ctl, pr) {
       const c = clock.current;
       const dt = c.last ? Math.min(64, now - c.last) : 0;
       c.last = now;
-      const { s: sp, t: tp, ctl: cp, pr: pv } = params.current;
-      if (take.current.text !== tp.text) resetTake(tp.text);
+      const { s: sp, t: tp, ctl: cp, pr: pv, guide: g } = params.current;
+      const text = scriptNow();
+      if (take.current.text !== text) resetTake(text);
       const { startDelayMs, wordMs, holdMs, clearMs } = tp.timing;
       const lengthOf = (tok) =>
         tok.dur ?? (tok.kind === 'word' ? wordMs : tok.kind === 'question' ? pv.answerDelayMs : pv.pauseMs);
@@ -370,16 +590,17 @@ function useRecorder(s, t, ctl, pr) {
       if (recording) {
         c.t += dt;
         c.rec += dt;
-        if (c.t >= total) {
+        if (g) {
+          // Guided answers hold on screen until Next.
+          if (g.autoAdvance && c.t >= speakEnd + g.advanceAfterMs) next();
+        } else if (c.t >= total) {
           if (sp.simulation.loop) {
             c.t = 0;
             c.rec = 0;
-            resetTake(tp.text);
+            resetTake(text);
           } else {
             c.t = speakEnd + holdMs;
-            c.proc = 0;
-            statusRef.current = 'processing';
-            setStatus('processing');
+            beginProcessing();
           }
         }
       }
@@ -431,21 +652,25 @@ function useRecorder(s, t, ctl, pr) {
 
       // State only changes when a word lands, the take clears, a phase flips, or a second passes.
       setVisible(shown);
-      setClearing(c.t > speakEnd + holdMs);
+      setClearing(!g && c.t > speakEnd + holdMs);
       setSeconds(Math.floor(c.rec / 1000));
       setThinking(isThinking);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [resetTake]);
+  }, [resetTake, beginProcessing, next]);
 
-  /* Record and restart both begin a fresh take. */
+  /* Record begins a fresh take (Guided: from the first prompt). */
   const record = useCallback(() => {
-    clock.current.t = 0;
     clock.current.rec = 0;
-    resetTake(params.current.t.text);
+    goToStep(0);
     setStatus('recording');
-  }, [resetTake]);
+  }, [goToStep]);
+  /* Restart: Freeform/Dynamic redo the whole take; Guided redoes the current answer. */
+  const restart = useCallback(() => {
+    if (params.current.guide) goToStep(stepRef.current);
+    else record();
+  }, [goToStep, record]);
   const togglePause = useCallback(
     () => setStatus((st) => (st === 'recording' ? 'paused' : st === 'paused' ? 'recording' : st)),
     [],
@@ -473,10 +698,13 @@ function useRecorder(s, t, ctl, pr) {
   const live = status === 'recording' || status === 'paused';
   // Once stopped, the take's text stays hidden until the next recording.
   const hideText = clearing || status === 'processing' || status === 'stopped';
+  // The primary button: record, then stop — or, mid-framework, Next.
+  const steps = guide?.answers.length ?? 1;
+  const primary = !live ? 'record' : step < steps - 1 ? 'next' : 'stop';
 
   return {
-    status, live, items, visible, hideText, thinking, seconds, prompt,
-    record, togglePause, stop: beginProcessing, answer, getLevel,
+    status, live, step, primary, guided: !!guide, items, visible, hideText, thinking, seconds, prompt,
+    record, restart, next, togglePause, stop: beginProcessing, answer, getLevel,
   };
 }
 
@@ -489,6 +717,10 @@ const PauseIcon = () => icon(<><path d="M9 6v12" /><path d="M15 6v12" /></>);
 const PlayIcon = () => icon(<path className="fill" d="M8 5.5v13l10.5-6.5z" />);
 const RestartIcon = () => icon(<><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v4h4" /></>);
 const SparkIcon = () => icon(<path className="fill" d="M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z" />);
+const NextIcon = () => icon(<><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></>);
+const Chevron = () => (
+  <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 5 6 7.5 8.5 5" /></svg>
+);
 
 /* Only interactive while a take is live. `order` staggers outward from the record
    button; `dir` is 1 when the record button sits after this one, −1 when before,
@@ -520,7 +752,7 @@ function ModePill({ label }) {
   return (
     <button type="button" className="mode-pill" data-exit>
       {label}
-      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 5 6 7.5 8.5 5" /></svg>
+      <Chevron />
     </button>
   );
 }
@@ -549,7 +781,7 @@ function RestartButton({ rec, size, withLabel, order = 1, dir = 1 }) {
         type="button"
         className={`ctl ${size || ''} ${withLabel ? 'labeled' : ''}`}
         aria-label="Restart recording"
-        onClick={rec.record}
+        onClick={rec.restart}
       >
         <RestartIcon />
         {withLabel && <span>Restart</span>}
@@ -558,20 +790,33 @@ function RestartButton({ rec, size, withLabel, order = 1, dir = 1 }) {
   );
 }
 
-/* Record before and after a take; stop during one. The glyph morphs dot ↔ square. */
+/* Record before a take; stop during one — or, mid-framework in Guided, Next.
+   The glyph morphs dot ↔ square; Next swaps in an arrow. */
+const PRIMARY = {
+  record: { label: 'Record', aria: 'Start recording' },
+  next: { label: 'Next', aria: 'Next prompt' },
+  stop: { label: 'Stop', aria: 'Stop and save entry' },
+  finish: { label: 'Finish', aria: 'Finish and save entry' },
+};
 function RecordButton({ rec, size, withLabel }) {
+  const kind = rec.primary === 'stop' && rec.guided ? 'finish' : rec.primary;
+  const { label, aria } = PRIMARY[kind];
   return (
     <button
       type="button"
       className={`ctl stop ${size || ''} ${withLabel ? 'labeled' : ''}`}
       data-exit
       data-record
-      aria-label={rec.live ? 'Stop and save entry' : 'Start recording'}
+      aria-label={aria}
       disabled={rec.status === 'processing'}
-      onClick={rec.live ? rec.stop : rec.record}
+      onClick={rec.primary === 'record' ? rec.record : rec.primary === 'next' ? rec.next : rec.stop}
     >
-      <span className="rec-glyph" data-mode={rec.live ? 'stop' : 'record'} aria-hidden="true" />
-      {withLabel && <span>{rec.live ? 'Stop' : 'Record'}</span>}
+      {rec.primary === 'next' ? (
+        <span className="next-glyph" aria-hidden="true"><NextIcon /></span>
+      ) : (
+        <span className="rec-glyph" data-mode={rec.live ? 'stop' : 'record'} aria-hidden="true" />
+      )}
+      {withLabel && <span>{label}</span>}
     </button>
   );
 }
@@ -641,6 +886,90 @@ function PromptCard({ rec, p, bottom }) {
       <span className="prompt-question">{card.question}</span>
       {p.card.showLinger && <span className="prompt-linger" aria-hidden="true" />}
     </button>
+  );
+}
+
+/* Guided mode's header: framework picker, step progress, and the current prompt.
+   The framework can only change between takes. */
+function GuideHeader({ rec, fw, g, onPick }) {
+  const [open, setOpen] = useState(false);
+  const menuOpen = open && !rec.live;
+  const done = rec.status === 'processing' || rec.status === 'stopped';
+  const step = fw.steps[rec.step];
+  const n = fw.steps.length;
+  return (
+    <div
+      className="guide"
+      style={{
+        top: `calc(${g.header.top}px + var(--safe-top, 0px))`,
+        left: g.header.sidePadding,
+        right: g.header.sidePadding,
+        '--guide-q-size': `${g.header.questionSize}px`,
+        '--guide-q-color': g.header.questionColor,
+        '--guide-hint-size': `${g.header.hintSize}px`,
+        '--guide-hint-color': g.header.hintColor,
+        '--guide-label': g.header.labelColor,
+        '--guide-bar-h': `${g.progress.height}px`,
+        '--guide-bar-gap': `${g.progress.gap}px`,
+        '--guide-bar-on': g.progress.activeColor,
+        '--guide-bar-off': g.progress.trackColor,
+        '--guide-in': `${g.motion.inMs}ms`,
+        '--guide-y': `${g.motion.offsetY}px`,
+        '--guide-blur': `${g.motion.blur}px`,
+      }}
+    >
+      <button
+        type="button"
+        className="guide-framework"
+        aria-haspopup="listbox"
+        aria-expanded={menuOpen}
+        disabled={rec.live || rec.status === 'processing'}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {fw.domain} · {fw.name}
+        <Chevron />
+      </button>
+      {menuOpen && (
+        <div className="guide-menu" role="listbox" aria-label="Framework">
+          {FRAMEWORKS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              role="option"
+              aria-selected={f.id === fw.id}
+              onClick={() => {
+                onPick(f.id);
+                setOpen(false);
+              }}
+            >
+              <span className="guide-menu-name">{f.domain} · {f.name}</span>
+              <span className="guide-menu-steps">{f.steps.map((st) => st.label).join(' → ')}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {g.progress.show && (
+        <div className="guide-progress" aria-hidden="true">
+          {fw.steps.map((st, i) => (
+            <span key={st.label} data-state={done || i < rec.step ? 'done' : i === rec.step && rec.live ? 'current' : undefined} />
+          ))}
+        </div>
+      )}
+      <div className="guide-step" key={done ? 'done' : `${fw.id}-${rec.step}`} aria-live="polite">
+        {done ? (
+          <>
+            <span className="guide-label">All {n} steps</span>
+            <p className="guide-question">{rec.status === 'stopped' ? 'Entry saved.' : 'That’s the whole reflection.'}</p>
+          </>
+        ) : (
+          <>
+            <span className="guide-label">{rec.step + 1} of {n} · {step.label}</span>
+            <p className="guide-question">{step.question}</p>
+            {g.header.showHint && <p className="guide-hint">{step.hint}</p>}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -803,8 +1132,16 @@ export function VoiceRecorder({ variant = 'freeform' }) {
   const t = useDialKit('Transcript', v.transcript, { id: 'voice-transcript' });
   // `variant` is fixed for a page's lifetime, so this hook's call order never changes.
   const pr = v.prompts ? useDialKit('Prompts', PROMPTS, { id: 'voice-prompts' }) : NO_PROMPTS;
+  const g = v.guided ? useDialKit('Guide', GUIDE, { id: 'voice-guide' }) : null;
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
-  const rec = useRecorder(s, t, c, pr);
+  const [frameworkId, setFrameworkId] = useState(FRAMEWORKS[0].id);
+  const fw = FRAMEWORKS.find((f) => f.id === frameworkId);
+  const guide = g && {
+    answers: fw.steps.map((st) => st.answer),
+    autoAdvance: g.autoAdvance,
+    advanceAfterMs: g.advanceAfterMs,
+  };
+  const rec = useRecorder(s, t, c, pr, guide);
   const framed = s.deviceFrame;
   const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
   const deviceW = framed ? FRAME.w * FRAME_K : 390;
@@ -958,6 +1295,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
               {v.prompts && (
                 <PromptCard key={rec.prompt?.id} rec={rec} p={pr} bottom={t.type.textY + textBoxH + pr.card.gap} />
               )}
+              {g && <GuideHeader rec={rec} fw={fw} g={g} onPick={setFrameworkId} />}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
