@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         voice: resolve(import.meta.dirname, 'voice.html'),
+        voiceDynamic: resolve(import.meta.dirname, 'voice-dynamic.html'),
       },
     },
   },
