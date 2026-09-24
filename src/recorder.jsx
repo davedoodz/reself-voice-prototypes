@@ -1139,6 +1139,8 @@ function useRecorder(s, t, ctl, pr, guide) {
   return {
     status, live, step, primary, guided: !!guide, items, visible, hideText, thinking, seconds, prompt,
     record, restart, next, togglePause, stop: beginProcessing, answer, getLevel,
+    /* Guided: skip the card without answering; same move as Next (Finish on the last card). */
+    skip: guide ? next : undefined,
   };
 }
 
@@ -1864,6 +1866,11 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           </div>
         )}
         <div className="guide-card guide-front" data-panel={panel.show ? panel.shape : undefined}>
+          {rec.skip && rec.live && (
+            <button type="button" className="guide-skip" onClick={rec.skip} aria-label="Skip this question">
+              Skip
+            </button>
+          )}
           {at('prompt-top')}
           <div className="guide-step" key={`${fw.id}-${rec.step}`} aria-live="polite">
             {stepContent(rec.step)}

@@ -58,7 +58,7 @@ function GuideCardsPreview() {
   // A new framework starts from its first card.
   useEffect(() => setStep(0), [v.framework]);
 
-  const rec = { status: 'recording', live: true, step: Math.min(step, n - 1) };
+  const rec = { status: 'recording', live: true, step: Math.min(step, n - 1), skip: advance };
 
   return (
     <main className="stage" style={{ background: v.pageColor }}>
