@@ -3,7 +3,17 @@ import { createRoot } from 'react-dom/client';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import './logo-motion.css';
-import { MARK_H, MARK_PATH, MARK_W } from './unwind-mark.js';
+import {
+  MARK_H,
+  MARK_PATH,
+  MARK_W,
+  UNWIND_DIALS,
+  clamp01,
+  smooth,
+  spring,
+  unwindFrame,
+  warpPath,
+} from './unwind-mark.js';
 
 /* ─────────────────────────────────────────────────────────
  * UNWIND — five opening animations for the logo mark
@@ -21,31 +31,7 @@ import { MARK_H, MARK_PATH, MARK_W } from './unwind-mark.js';
  * ───────────────────────────────────────────────────────── */
 
 const CY = MARK_H / 2;
-const clamp01 = (v) => Math.min(1, Math.max(0, v));
-const smooth = (v) => v * v * (3 - 2 * v);
 const easeOut = (v) => 1 - (1 - v) ** 3;
-
-/* 0 → 1 with `bounce` oscillations around 1 as it settles; ~0.25% off at p = 1. */
-const spring = (p, bounce) => 1 - Math.exp(-6 * p) * Math.cos(2 * Math.PI * bounce * p);
-
-/* Parse once: numbers become points, everything else is kept verbatim. */
-const TOKENS = MARK_PATH.match(/[A-Za-z]|-?\d*\.?\d+/g);
-const POINTS = [];
-for (let i = 0; i < TOKENS.length; i++) {
-  if (/[A-Za-z]/.test(TOKENS[i])) continue;
-  POINTS.push([i, +TOKENS[i], +TOKENS[i + 1]]);
-  i++;
-}
-
-function warpPath(fn) {
-  const out = TOKENS.slice();
-  for (const [i, x, y] of POINTS) {
-    const [nx, ny] = fn(x, y);
-    out[i] = nx.toFixed(3);
-    out[i + 1] = ny.toFixed(3);
-  }
-  return out.join(' ');
-}
 
 /* Each option: its DialKit folder, and a frame(p, c) → { d, opacity } or columns. */
 const OPTIONS = [
@@ -86,17 +72,9 @@ const OPTIONS = [
     key: 'unwind',
     name: 'Unwind',
     line: 'Starts coiled tight and uncoils to its full width.',
-    dials: {
-      durationMs: [1600, 300, 5000, 10],
-      startWidth: [0.2, 0.02, 0.9, 0.01],
-      bounce: [0.5, 0, 2, 0.05],
-      anchor: { type: 'select', options: ['left', 'center'], default: 'left' },
-    },
-    frame: (p, c) => {
-      const sx = c.startWidth + (1 - c.startWidth) * spring(p, c.bounce);
-      const ax = c.anchor === 'center' ? MARK_W / 2 : 0;
-      return { opacity: smooth(clamp01(p / 0.12)), d: warpPath((x, y) => [ax + (x - ax) * sx, y]) };
-    },
+    /* The chosen opening; defaults and motion shared with welcome.html. */
+    dials: UNWIND_DIALS,
+    frame: unwindFrame,
   },
   {
     key: 'columns',

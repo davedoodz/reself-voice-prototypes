@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { VoiceBeam } from 'voice-glow';
 import { DialRoot, useDialKit } from 'dialkit';
@@ -7,7 +7,7 @@ import './voice.css';
 import './welcome.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from './recorder.jsx';
-import { MARK_H, MARK_PATH, MARK_W } from './unwind-mark.js';
+import { MARK_PATH, MARK_W, MARK_H, UNWIND_DIALS, clamp01, unwindFrame } from './unwind-mark.js';
 
 /* ─────────────────────────────────────────────────────────
  * UNWIND — first-run welcome
@@ -23,7 +23,7 @@ import { MARK_H, MARK_PATH, MARK_W } from './unwind-mark.js';
  *    0ms   screen empty, glow at rest (Breath › low)
  *  +start  the glow pulses `count` times: rise → fall → gap (Beam pulse)
  *  +end    last pulse lands; breathing begins with its first inhale
- *  +offset the logo mark is drawn left → right, like a gust
+ *  +offset the logo mark uncoils from a sliver to full width (Logo opening)
  *          (negative offset = the mark arrives while the last pulse falls)
  *  +word   the letters of "unwind" are blown in, one by one
  *  +line   tagline settles (Intro › taglineAfterMs after the mark)
@@ -68,7 +68,8 @@ const PULSE = {
 };
 
 const INTRO = {
-  markMs: [1100, 100, 3000, 10],
+  /* The letters start this far into the logo's opening (0 = with it, 1 = after). */
+  lettersAt: [0.45, 0, 1, 0.01],
   letterStaggerMs: [90, 0, 400, 5],
   letterMs: [900, 100, 3000, 10],
   letterDrift: [-26, -120, 60, 1],
@@ -158,19 +159,47 @@ function useGlow(br, pulse) {
 
 /* ── Brand ─────────────────────────────────────────────── */
 
-/* Paper: 53×53 box, path offset (3.134, 13.107). Cropped here to the path itself. */
-function Mark() {
+/* The "Unwind" opening (logo-motion.html option 03): the mark starts coiled to a
+   sliver and uncoils to full width, once, then holds the exact Paper path.
+   Every frame rewrites the path's points; no tilt, shine or colour change. */
+function Mark({ o, delayMs }) {
+  const path = useRef(null);
+  const cfg = useRef(o);
+  cfg.current = o;
+
+  useLayoutEffect(() => {
+    const el = path.current;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const t0 = performance.now() + delayMs;
+    let raf;
+    const tick = (now) => {
+      const p = (now - t0) / cfg.current.durationMs;
+      if (p >= 1) {
+        el.setAttribute('d', MARK_PATH);
+        el.style.opacity = '';
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+      const f = unwindFrame(clamp01(p), cfg.current);
+      el.setAttribute('d', f.d);
+      el.style.opacity = p < 0 ? '0' : String(f.opacity);
+    };
+    /* First frame before paint, so the finished logo never flashes. */
+    tick(performance.now());
+    return () => cancelAnimationFrame(raf);
+  }, [delayMs]);
+
   return (
     <svg className="w-mark" viewBox={`0 0 ${MARK_W} ${MARK_H}`} aria-hidden="true">
-      <path d={MARK_PATH} fill="currentColor" />
+      <path ref={path} d={MARK_PATH} fill="currentColor" />
     </svg>
   );
 }
 
-function Wordmark() {
+function Wordmark(markProps) {
   return (
     <h1 className="w-logo" aria-label="Unwind">
-      <Mark />
+      <Mark {...markProps} />
       <span className="w-word" aria-hidden="true">
         {WORDMARK.map(({ ch, italic }, i) => (
           <span key={i} className="w-letter" data-italic={italic || undefined} style={{ '--i': i }}>
@@ -193,6 +222,7 @@ function Welcome() {
     { ...INTRO, replay: { type: 'action', label: 'Replay intro' } },
     { id: 'welcome-intro', onAction: () => replayIntro() },
   );
+  const logo = useDialKit('Logo opening', UNWIND_DIALS, { id: 'welcome-logo' });
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
 
   const glow = useGlow(br, pulse);
@@ -248,9 +278,7 @@ function Welcome() {
                 '--group-y': `${brand.groupY * 100}%`,
                 '--tagline-color': brand.taglineColor,
                 '--tagline-size': `${brand.taglineSize}px`,
-                '--mark-delay': `${markDelay}ms`,
-                '--mark-ms': `${intro.markMs}ms`,
-                '--letter-delay': `${markDelay + intro.markMs * 0.45}ms`,
+                '--letter-delay': `${markDelay + logo.durationMs * intro.lettersAt}ms`,
                 '--letter-stagger': `${intro.letterStaggerMs}ms`,
                 '--letter-ms': `${intro.letterMs}ms`,
                 '--letter-drift': `${intro.letterDrift}px`,
@@ -260,7 +288,7 @@ function Welcome() {
               }}
             >
               <div className="w-brand">
-                <Wordmark />
+                <Wordmark o={logo} delayMs={markDelay} />
                 <p className="w-tagline">{brand.tagline}</p>
               </div>
 
