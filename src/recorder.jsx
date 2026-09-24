@@ -470,6 +470,19 @@ export const PROMPTS = {
     textColor: '#2a3438',
     accent: '#61A8FD',
   },
+  /* Swipe left or right to ignore the card. */
+  swipe: {
+    enabled: true,
+    /* How far to drag before letting go ignores it. */
+    distance: [90, 30, 200, 1],
+    /* A quick flick ignores it even if short (px per ms). */
+    flickSpeed: [0.6, 0.1, 2, 0.05],
+    /* Turn at full distance, and how much it fades while dragged. */
+    tilt: [8, 0, 30, 0.5],
+    fade: [0.4, 0, 1, 0.01],
+    flyDistance: [420, 150, 800, 10],
+    flyMs: [320, 80, 1000, 10],
+  },
   /* The countdown before an untouched card fades, and the star's motion. */
   timer: CARD_TIMER,
   star: STAR,
@@ -1178,6 +1191,13 @@ function useRecorder(s, t, ctl, pr, guide) {
     setItems(tk.seq.filter(spoken));
     setPrompt((p) => p && { ...p, phase: 'taken' });
   }, []);
+  /* Swiping the card away ignores it now instead of waiting out lingerMs. */
+  const dismiss = useCallback((id, dir) => {
+    const tk = take.current;
+    if (tk.offered?.id !== id) return;
+    tk.offered = null;
+    setPrompt((p) => p && { ...p, phase: 'swiped', dir });
+  }, []);
   const getLevel = useCallback(() => level.current, []);
   const live = status === 'recording' || status === 'paused';
   // Once stopped, the take's text stays hidden until the next recording.
@@ -1188,7 +1208,7 @@ function useRecorder(s, t, ctl, pr, guide) {
 
   return {
     status, live, step, primary, guided: !!guide, items, visible, hideText, thinking, seconds, prompt,
-    record, restart, next, togglePause, stop: beginProcessing, answer, getLevel,
+    record, restart, next, togglePause, stop: beginProcessing, answer, dismiss, getLevel,
     /* Guided: skip the card without answering; same move as Next (Finish on the last card). */
     skip: guide ? next : undefined,
   };
@@ -1565,8 +1585,41 @@ function CardTimer({ t }) {
    far in, and `timerFrozen` holds the countdown still while the star keeps moving. */
 export function PromptCard({ rec, p, bottom, timerAt = 0, timerFrozen = false }) {
   const card = rec.prompt;
+  /* Swipe to ignore: the card follows the finger; past swipe.distance (or a
+     quick flick) it flies off that side, otherwise it springs back. A drag
+     never counts as a tap. */
+  const [dragX, setDragX] = useState(0);
+  const drag = useRef(null);
   if (!card) return null;
   const phase = rec.live ? card.phase : 'faded';
+  const sw = p.swipe;
+  const onPointerDown = (e) => {
+    if (!sw.enabled || phase !== 'offered') return;
+    drag.current = { x: e.clientX, t: performance.now(), moved: false };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) > 6) d.moved = true;
+    if (d.moved) setDragX(dx);
+  };
+  const onPointerUp = (e) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    const speed = Math.abs(dx) / Math.max(1, performance.now() - d.t);
+    if (d.moved && (Math.abs(dx) > sw.distance || speed > sw.flickSpeed)) {
+      rec.dismiss(card.id, dx < 0 ? -1 : 1);
+    } else if (!d.moved) {
+      rec.answer(card.id);
+    }
+    setDragX(0);
+  };
+  const dragging = dragX !== 0;
+  const pull = Math.min(1, Math.abs(dragX) / sw.distance);
   const paused = rec.status === 'paused';
   const t = p.timer;
   return (
@@ -1577,10 +1630,22 @@ export function PromptCard({ rec, p, bottom, timerAt = 0, timerFrozen = false })
       data-paused={paused || timerFrozen || undefined}
       data-timer={t.style}
       inert={phase !== 'offered'}
-      aria-label={`Answer: ${card.question}`}
-      onClick={() => rec.answer(card.id)}
+      data-dragging={dragging || undefined}
+      data-dir={card.dir}
+      aria-label={`Answer: ${card.question}. Swipe left or right to ignore.`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => { drag.current = null; setDragX(0); }}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), rec.answer(card.id))}
       style={{
         bottom,
+        '--drag-x': `${dragX}px`,
+        '--drag-tilt': `${(dragX / sw.distance) * sw.tilt}deg`,
+        '--drag-fade': 1 - pull * sw.fade,
+        '--swipe-ms': `${sw.flyMs}ms`,
+        '--swipe-fly': `${sw.flyDistance}px`,
+        '--swipe-tilt': `${sw.tilt * 1.6}deg`,
         '--prompt-width': `${p.card.width}px`,
         '--prompt-radius': `${p.card.radius}px`,
         '--prompt-glass': p.card.glass,

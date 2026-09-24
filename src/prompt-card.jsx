@@ -74,8 +74,9 @@ function PromptCardPreview() {
   const rec = {
     live: true,
     status: 'recording',
-    prompt: { id: run, question: v.question, phase },
+    prompt: { id: run, question: v.question, phase: phase.name ?? phase, dir: phase.dir },
     answer: () => setPhase('taken'),
+    dismiss: (id, dir) => setPhase({ name: 'swiped', dir }),
   };
   const level = v.glowLevel;
 

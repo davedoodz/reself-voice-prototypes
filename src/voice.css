@@ -755,3 +755,17 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-info-select { flex-shrink: 0; }
 /* With the picker or an info card open, the prompt deck steps out of the way. */
 .guide[data-overlay] .guide-prompt { opacity: 0; filter: blur(4px); pointer-events: none; transition: opacity 0.2s ease, filter 0.2s ease; }
+
+/* Dynamic: swipe the prompt card left or right to ignore it. */
+.prompt-card { touch-action: pan-y; user-select: none; }
+.prompt-card[data-dragging] {
+  transform: translateX(var(--drag-x)) rotate(var(--drag-tilt));
+  opacity: var(--drag-fade);
+  transition: none;
+}
+.prompt-card[data-phase='swiped'] {
+  transform: translateX(calc(var(--swipe-fly) * var(--dir-sign, 1))) rotate(calc(var(--swipe-tilt) * var(--dir-sign, 1)));
+  filter: none;
+  transition: transform var(--swipe-ms, 320ms) cubic-bezier(0.3, 0, 0.8, 0.4), opacity var(--swipe-ms, 320ms) ease-in;
+}
+.prompt-card[data-dir='-1'] { --dir-sign: -1; }
