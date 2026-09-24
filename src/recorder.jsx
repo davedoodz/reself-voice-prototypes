@@ -886,7 +886,7 @@ export const COMPOSITION = {
     align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
     panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
     deck: { show: true },
-    chip: { size: 13, x: 29, y: -4 },
+    chip: { size: 13, y: -4 },
     progress: { style: 'dots', placement: 'prompt-bottom', size: 7 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },

@@ -707,3 +707,9 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .mode-menu a:focus-visible { outline: 2px solid #61A8FD; outline-offset: -2px; }
 @keyframes mode-menu-in { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
 @media (prefers-reduced-motion: reduce) { .mode-menu { animation: none; } }
+
+/* The framework chip is always centred on screen, whatever the composition's
+   alignment; on the chip's row the progress sits at the far right. */
+.guide .guide-head > .guide-framework { align-self: center; }
+.guide .guide-head[data-row] { justify-content: center; }
+.guide .guide-head[data-row] > .guide-progress { position: absolute; right: 0; }
