@@ -20,11 +20,7 @@ import {
   House,
   Moon,
   Palette,
-  Pause,
-  Play,
   Smartphone,
-  Sparkle,
-  Sparkles,
   Sprout,
   Sun,
   Sunrise,
@@ -43,6 +39,13 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SAFE_TOP, FRAMED_SCREEN_H } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
 import { ENTRIES } from './entries-data.js';
+import starUrl from './assets/blue-stars.png';
+import playUrl from './assets/blue-play.png';
+import pauseUrl from './assets/blue-pause.png';
+import circleUrl from './assets/blue-circle.png';
+
+/* The blue stars PNG stands in for every star, in both icon styles. */
+const STAR = 'star';
 
 /* ─────────────────────────────────────────────────────────
  * UNWIND — journal entries
@@ -72,10 +75,10 @@ const ICONS = {
   calendar: [CalendarDays, '📅'],
   clock: [Clock, '🕗'],
   freeform: [AudioLines, '🎙️'],
-  dynamic: [Sparkle, '💬'],
+  dynamic: [STAR, '💬'],
   guided: [Compass, '🧭'],
-  prompt: [Sparkle, '✨'],
-  insights: [Sparkles, '✨'],
+  prompt: [STAR, STAR],
+  insights: [STAR, STAR],
   work: [Briefcase, '💼'],
   confidence: [Sprout, '🌱'],
   movement: [Footprints, '👟'],
@@ -130,7 +133,7 @@ const SCREEN = {
 
 /* Which icon set, and which groups of icons show at all. */
 const ICON_DIALS = {
-  style: { type: 'select', options: ['flat', 'emoji'], default: 'flat' },
+  style: { type: 'select', options: ['flat', 'emoji'], default: 'emoji' },
   time: true,
   duration: true,
   mode: true,
@@ -142,7 +145,7 @@ const RECORD = {
   background: '#1c1c1e',
   textColor: '#ffffff',
   dot: true,
-  dotColor: '#ff453a',
+  dotSize: [18, 8, 36, 1],
   height: [56, 36, 84, 1],
   fontSize: [16, 12, 22, 0.5],
   paddingX: [24, 10, 56, 1],
@@ -169,6 +172,29 @@ const TRANSITION = {
   edgeSwipe: true,
 };
 
+/* AI insights: the round button's fill and rim, and the tint of the insight
+   cards in its sheet. Rim colours run round the edge in order A → D. */
+const AI = {
+  button: {
+    background: '#141a1c',
+    rim: true,
+    rimWidth: [2.5, 0.5, 8, 0.1],
+    rimA: '#80dcf7',
+    rimB: '#a8b6ff',
+    rimC: '#f1b6e4',
+    rimD: '#ffe0b0',
+    spin: true,
+    glow: [0.6, 0, 1, 0.01],
+  },
+  cards: {
+    from: '#80dcf7',
+    via: '#a8b6ff',
+    to: '#f1b6e4',
+    strength: [0.15, 0, 1, 0.01],
+    text: '#1f2a2e',
+  },
+};
+
 /* The player's wave. `style` picks the drawing; each drawing has its own
    folder. followVoice 0 = even wave, 1 = follows the recording's loudness. */
 const WAVE_STYLES = ['ribbon', 'sine', 'bars', 'dots', 'mirror'];
@@ -176,11 +202,13 @@ const PLAYER = {
   style: { type: 'select', options: WAVE_STYLES, default: 'ribbon' },
   layout: {
     card: true,
-    playSize: [34, 24, 56, 1],
+    playSize: [42, 24, 64, 1],
     showTime: true,
     showSpeed: true,
   },
   color: {
+    /* The pill behind the play button and wave. */
+    bar: '#ffffff',
     played: '#80DCF7',
     track: '#dde6e9',
     playhead: false,
@@ -294,14 +322,17 @@ const IconCtx = createContext({ style: 'flat', time: true, duration: true, mode:
 function Ico({ k, group }) {
   const ic = useContext(IconCtx);
   if (group && !ic[group]) return null;
-  const [Flat, emoji] = ICONS[k];
-  return ic.style === 'emoji' ? (
-    <span className="j-emoji" aria-hidden="true">
-      {emoji}
-    </span>
-  ) : (
-    <Flat aria-hidden="true" />
-  );
+  const [flat, emoji] = ICONS[k];
+  const icon = ic.style === 'emoji' ? emoji : flat;
+  if (icon === STAR) return <img className="j-png" src={starUrl} alt="" draggable={false} />;
+  if (ic.style === 'emoji')
+    return (
+      <span className="j-emoji" aria-hidden="true">
+        {emoji}
+      </span>
+    );
+  const Flat = flat;
+  return <Flat aria-hidden="true" />;
 }
 
 /* ── Playback ──────────────────────────────────────────── */
@@ -582,7 +613,7 @@ function List({ months, total, onOpen, recordHref, rec }) {
       </div>
 
       <a className="j-record" href={recordHref}>
-        {rec.dot && <span className="j-record-dot" aria-hidden="true" />}
+        {rec.dot && <img className="j-record-dot" src={circleUrl} alt="" draggable={false} />}
         {rec.label}
       </a>
     </>
@@ -609,10 +640,10 @@ function Player({ e, pb, p }) {
       className="j-player"
       data-card={p.layout.card || undefined}
       aria-label="Recording"
-      style={{ '--play-size': `${p.layout.playSize}px` }}
+      style={{ '--play-size': `${p.layout.playSize}px`, '--bar-bg': p.color.bar }}
     >
       <button type="button" className="j-play" onClick={pb.toggle} aria-label={pb.playing ? 'Pause' : 'Play'}>
-        {pb.playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+        <img className="j-png" src={pb.playing ? pauseUrl : playUrl} alt="" draggable={false} />
       </button>
       <div
         ref={waveRef}
@@ -746,7 +777,7 @@ function InsightsSheet({ e, open, onClose, onOpenEntry }) {
         <div className="j-sheet-grab" aria-hidden="true" />
         <header className="j-sheet-head">
           <span className="j-ai-badge">
-            <Ico k="insights" />
+            <img className="j-png" src={starUrl} alt="" draggable={false} />
             AI insights
           </span>
           <button type="button" className="ctl j-sheet-close" onClick={onClose} aria-label="Close" tabIndex={open ? 0 : -1}>
@@ -845,7 +876,7 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
       </div>
 
       <button type="button" className="j-ai" onClick={() => setInsights(true)} aria-label="AI insights">
-        <Ico k="insights" />
+        <img className="j-png" src={starUrl} alt="" draggable={false} />
       </button>
 
       <InsightsSheet e={e} open={insights} onClose={() => setInsights(false)} onOpenEntry={onOpenEntry} />
@@ -859,6 +890,7 @@ function Entries() {
   const icons = useDialKit('Icons', ICON_DIALS, { id: 'entries-icons' });
   const rec = useDialKit('Record button', RECORD, { id: 'entries-record' });
   const p = useDialKit('Player', PLAYER, { id: 'entries-player' });
+  const ai = useDialKit('AI insights', AI, { id: 'entries-ai' });
   const tr = useDialKit('Transition', TRANSITION, { id: 'entries-transition', defaultCollapsed: true });
 
   const months = useMemo(() => group(ENTRIES), []);
@@ -935,6 +967,8 @@ function Entries() {
           <IconCtx.Provider value={icons}>
             <section
               className="voice-screen journal"
+              data-ai-rim={ai.button.rim || undefined}
+              data-ai-spin={ai.button.spin || undefined}
               data-icons={icons.style}
               aria-label="Journal entries"
               style={{
@@ -943,7 +977,19 @@ function Entries() {
                 '--screen-bg': s.screenColor,
                 '--rec-bg': rec.background,
                 '--rec-fg': rec.textColor,
-                '--rec-dot': rec.dotColor,
+                '--rec-dot-size': `${rec.dotSize}px`,
+                '--ai-bg': ai.button.background,
+                '--ai-rim-w': `${ai.button.rimWidth}px`,
+                '--ai-rim-a': ai.button.rimA,
+                '--ai-rim-b': ai.button.rimB,
+                '--ai-rim-c': ai.button.rimC,
+                '--ai-rim-d': ai.button.rimD,
+                '--ai-glow': ai.button.glow,
+                '--ai-card-a': ai.cards.from,
+                '--ai-card-b': ai.cards.via,
+                '--ai-card-c': ai.cards.to,
+                '--ai-card-o': `${Math.round(ai.cards.strength * 100)}%`,
+                '--ai-card-text': ai.cards.text,
                 '--rec-h': `${rec.height}px`,
                 '--rec-font': `${rec.fontSize}px`,
                 '--rec-pad': `${rec.paddingX}px`,
