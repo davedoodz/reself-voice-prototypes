@@ -3,6 +3,7 @@ import { VoiceBeam } from 'voice-glow';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
 import './voice.css';
+import './unwind-fonts.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 
 /* ─────────────────────────────────────────────────────────
@@ -533,6 +534,17 @@ const LABEL_FORMATS = {
 const move = ({ show = true, x = 0, y = 0 }) => ({ show, x: [x, -200, 200, 1], y: [y, -400, 400, 1] });
 const select = (options, value) => ({ type: 'select', options, default: value });
 
+/* Every text element can use the app's font or Test Family (Klim trial, Regular + Italic). */
+const TEST_FAMILY = "'Unwind Family', 'Test Family', serif";
+const FONTS = [
+  { value: 'current', label: 'Current (Inter)' },
+  { value: 'test-family', label: 'Test Family' },
+  { value: 'test-family-italic', label: 'Test Family Italic' },
+];
+const font = (value = 'current') => select(FONTS, value);
+const fontStyle = (e) =>
+  e.font === 'current' ? {} : { fontFamily: TEST_FAMILY, fontStyle: e.font === 'test-family-italic' ? 'italic' : 'normal' };
+
 function compositionConfig(d) {
   return {
     _collapsed: true,
@@ -551,7 +563,7 @@ function compositionConfig(d) {
       radius: [d.panel.radius, 0, 40, 1],
       padding: [d.panel.padding, 0, 40, 1],
     },
-    chip: { ...move(d.chip), size: [d.chip.size, 10, 18, 0.5] },
+    chip: { ...move(d.chip), font: font(d.chip.font), size: [d.chip.size, 10, 18, 0.5] },
     progress: {
       ...move(d.progress),
       style: select(['bars', 'dots', 'steps', 'fraction'], d.progress.style),
@@ -559,20 +571,24 @@ function compositionConfig(d) {
       placement: select(['header', 'header-row', 'prompt-top', 'prompt-bottom'], d.progress.placement),
       /* Bar height, dot size, or font size, depending on style. */
       size: [d.progress.size, 1, 20, 0.5],
+      /* Applies to the text styles (steps, fraction). */
+      font: font(d.progress.font),
     },
     label: {
       ...move(d.label),
       format: select(Object.keys(LABEL_FORMATS), d.label.format),
+      font: font(d.label.font),
       size: [d.label.size, 9, 60, 0.5],
       color: d.label.color,
     },
     question: {
       ...move(d.question),
+      font: font(d.question.font),
       size: [d.question.size, 12, 44, 0.5],
       weight: [d.question.weight, 300, 700, 10],
       color: d.question.color,
     },
-    hint: { ...move(d.hint), size: [d.hint.size, 10, 24, 0.5], color: d.hint.color },
+    hint: { ...move(d.hint), font: font(d.hint.font), size: [d.hint.size, 10, 24, 0.5], color: d.hint.color },
   };
 }
 
@@ -614,7 +630,7 @@ const COMPOSITION = {
     align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
     panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
     chip: { size: 13 },
-    progress: { style: 'fraction', placement: 'header-row', size: 13 },
+    progress: { style: 'dots', placement: 'header-row', size: 7 },
     label: { format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
@@ -629,6 +645,48 @@ const COMPOSITION = {
     hint: { show: false, size: 14, color: MUTED },
   }),
 };
+
+/* Guided copy: every text the upper portion shows, editable per framework and
+   step. Shared by all five compositions; the simulated answers aren't here. */
+const camel = (s) => s.toLowerCase().replace(/[^a-z0-9]+(.)/g, (_, c) => c.toUpperCase());
+const text = (value) => ({ type: 'text', default: value });
+const COPY = {
+  finished: {
+    _collapsed: true,
+    label: text('All {n} steps'),
+    processing: text('That’s the whole reflection.'),
+    saved: text('Entry saved.'),
+  },
+  ...Object.fromEntries(
+    FRAMEWORKS.map((f, i) => [
+      f.id,
+      {
+        _collapsed: i > 0,
+        domain: text(f.domain),
+        name: text(f.name),
+        ...Object.fromEntries(
+          f.steps.map((st) => [
+            camel(st.label),
+            { _collapsed: true, label: text(st.label), question: text(st.question), hint: text(st.hint) },
+          ]),
+        ),
+      },
+    ]),
+  ),
+};
+
+/* FRAMEWORKS with the Copy panel's edits applied. */
+function withCopy(copy) {
+  return FRAMEWORKS.map((f) => {
+    const c = copy[f.id];
+    return {
+      ...f,
+      domain: c.domain,
+      name: c.name,
+      steps: f.steps.map((st) => ({ ...st, ...c[camel(st.label)] })),
+    };
+  });
+}
 
 /* Each page is one variant; DialKit gets a stable config object per variant. */
 const VARIANTS = {
@@ -1056,7 +1114,7 @@ const nudge = (e) => (e.x || e.y ? { transform: `translate(${e.x}px, ${e.y}px)` 
 
 function GuideProgress({ fw, rec, done, p }) {
   const n = fw.steps.length;
-  const style = { ...nudge(p), '--p-size': `${p.size}px` };
+  const style = { ...nudge(p), ...fontStyle(p), '--p-size': `${p.size}px` };
   if (p.style === 'fraction') {
     return (
       <div className="guide-progress" data-style="fraction" style={style}>
@@ -1067,7 +1125,7 @@ function GuideProgress({ fw, rec, done, p }) {
   return (
     <div className="guide-progress" data-style={p.style} style={style} aria-hidden="true">
       {fw.steps.map((st, i) => (
-        <span key={st.label} data-state={done || i < rec.step ? 'done' : i === rec.step && rec.live ? 'current' : undefined}>
+        <span key={i} data-state={done || i < rec.step ? 'done' : i === rec.step && rec.live ? 'current' : undefined}>
           {p.style === 'steps' ? st.label : null}
         </span>
       ))}
@@ -1077,7 +1135,7 @@ function GuideProgress({ fw, rec, done, p }) {
 
 /* Guided mode's screen: framework picker, step progress, and the current prompt,
    arranged by the active composition. The framework can only change between takes. */
-function GuideScreen({ rec, fw, g, comp, onPick }) {
+function GuideScreen({ rec, fw, frameworks, copy, g, comp, onPick }) {
   const [open, setOpen] = useState(false);
   const menuOpen = open && !rec.live;
   const done = rec.status === 'processing' || rec.status === 'stopped';
@@ -1114,7 +1172,7 @@ function GuideScreen({ rec, fw, g, comp, onPick }) {
             aria-expanded={menuOpen}
             disabled={rec.live || rec.status === 'processing'}
             onClick={() => setOpen((o) => !o)}
-            style={{ ...nudge(comp.chip), fontSize: comp.chip.size }}
+            style={{ ...nudge(comp.chip), ...fontStyle(comp.chip), fontSize: comp.chip.size }}
           >
             {fw.domain} · {fw.name}
             <Chevron />
@@ -1122,7 +1180,7 @@ function GuideScreen({ rec, fw, g, comp, onPick }) {
         )}
         {menuOpen && (
           <div className="guide-menu" role="listbox" aria-label="Framework">
-            {FRAMEWORKS.map((f) => (
+            {frameworks.map((f) => (
               <button
                 key={f.id}
                 type="button"
@@ -1156,20 +1214,26 @@ function GuideScreen({ rec, fw, g, comp, onPick }) {
         {at('prompt-top')}
         <div className="guide-step" key={done ? 'done' : `${fw.id}-${rec.step}`} aria-live="polite">
           {label.show && (
-            <span className="guide-label" style={{ ...nudge(label), fontSize: label.size, color: label.color }}>
-              {done ? `All ${n} steps` : LABEL_FORMATS[label.format](rec.step, n, step.label)}
+            <span className="guide-label" style={{ ...nudge(label), ...fontStyle(label), fontSize: label.size, color: label.color }}>
+              {done ? copy.finished.label.replace('{n}', n) : LABEL_FORMATS[label.format](rec.step, n, step.label)}
             </span>
           )}
           {question.show && (
             <p
               className="guide-question"
-              style={{ ...nudge(question), fontSize: question.size, fontWeight: question.weight, color: question.color }}
+              style={{
+                ...nudge(question),
+                ...fontStyle(question),
+                fontSize: question.size,
+                fontWeight: question.weight,
+                color: question.color,
+              }}
             >
-              {done ? (rec.status === 'stopped' ? 'Entry saved.' : 'That’s the whole reflection.') : step.question}
+              {done ? (rec.status === 'stopped' ? copy.finished.saved : copy.finished.processing) : step.question}
             </p>
           )}
           {hint.show && !done && (
-            <p className="guide-hint" style={{ ...nudge(hint), fontSize: hint.size, color: hint.color }}>
+            <p className="guide-hint" style={{ ...nudge(hint), ...fontStyle(hint), fontSize: hint.size, color: hint.color }}>
               {step.hint}
             </p>
           )}
@@ -1341,10 +1405,12 @@ export function VoiceRecorder({ variant = 'freeform' }) {
   const pr = v.prompts ? useDialKit('Prompts', PROMPTS, { id: 'voice-prompts' }) : NO_PROMPTS;
   const g = v.guided ? useDialKit('Guide', GUIDE, { id: 'voice-guide' }) : null;
   const gc = v.guided ? useDialKit('Composition', COMPOSITION, { id: 'voice-composition' }) : null;
+  const copy = v.guided ? useDialKit('Copy', COPY, { id: 'voice-copy', defaultCollapsed: true }) : null;
   const comp = gc && gc[gc.active];
   const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
   const [frameworkId, setFrameworkId] = useState(FRAMEWORKS[0].id);
-  const fw = FRAMEWORKS.find((f) => f.id === frameworkId);
+  const frameworks = copy ? withCopy(copy) : FRAMEWORKS;
+  const fw = frameworks.find((f) => f.id === frameworkId);
   const guide = g && {
     answers: fw.steps.map((st) => st.answer),
     autoAdvance: g.autoAdvance,
@@ -1462,7 +1528,17 @@ export function VoiceRecorder({ variant = 'freeform' }) {
               {v.prompts && (
                 <PromptCard key={rec.prompt?.id} rec={rec} p={pr} bottom={t.type.textY + textBoxH + pr.card.gap} />
               )}
-              {comp && <GuideScreen rec={rec} fw={fw} g={g} comp={comp} onPick={setFrameworkId} />}
+              {comp && (
+                <GuideScreen
+                  rec={rec}
+                  fw={fw}
+                  frameworks={frameworks}
+                  copy={copy}
+                  g={g}
+                  comp={comp}
+                  onPick={setFrameworkId}
+                />
+              )}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
