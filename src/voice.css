@@ -304,24 +304,27 @@ button { font: inherit; color: inherit; }
 .guide-ghost {
   z-index: calc(-1 * var(--d));
   opacity: calc(1 - var(--d) * var(--deck-fade, 0.3));
-  transform: translateY(calc(var(--d) * var(--deck-offset, 10px))) scale(calc(1 - var(--d) * var(--deck-scale, 0.05)));
-  transition: transform var(--deck-ms, 640ms) cubic-bezier(0.22, 1, 0.36, 1), opacity var(--deck-ms, 640ms) ease;
+  transform: translate(calc(var(--d) * var(--fan-x, 0px)), calc(var(--d) * var(--deck-offset, 10px)))
+    rotate(calc(var(--d) * var(--fan-tilt, 0deg))) scale(calc(1 - var(--d) * var(--deck-scale, 0.05)));
+  transition: transform var(--stack-ms, 640ms) var(--stack-ease, cubic-bezier(0.22, 1, 0.36, 1)), opacity var(--stack-ms, 640ms) ease;
 }
-/* Next: the answered card lifts and tilts, then tucks behind the deck and fades. */
-.guide-leaving { z-index: 3; pointer-events: none; animation: deck-shuffle var(--deck-ms, 640ms) cubic-bezier(0.45, 0, 0.2, 1) forwards; }
-@keyframes deck-shuffle {
-  45% { z-index: 3; transform: translateY(calc(-1 * var(--deck-lift, 46px))) rotate(var(--deck-tilt, -4deg)) scale(0.97); }
-  55% { z-index: -9; }
-  to {
-    z-index: -9;
-    opacity: 0;
-    transform: translateY(calc(var(--back) * var(--deck-offset, 10px))) scale(calc(1 - var(--back) * var(--deck-scale, 0.05)));
-  }
+/* Next: the answered card lifts and tilts, then tucks behind the deck and fades.
+   The keyframes (deck-shuffle-tuned) are written inline by GuideScreen. */
+.guide-leaving {
+  z-index: 3;
+  pointer-events: none;
+  animation: deck-shuffle-tuned var(--deck-ms, 640ms) var(--leave-ease, cubic-bezier(0.45, 0, 0.2, 1)) forwards;
 }
 /* …while the card that was underneath rises into the front. */
-.guide-prompt[data-shuffling] .guide-front { animation: deck-rise var(--deck-ms, 640ms) cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.guide-prompt[data-shuffling] .guide-front {
+  animation: deck-rise var(--rise-ms, 640ms) var(--rise-ease, cubic-bezier(0.22, 1, 0.36, 1)) var(--rise-delay, 0ms) backwards;
+}
 @keyframes deck-rise {
-  from { opacity: calc(1 - var(--deck-fade, 0.3)); transform: translateY(var(--deck-offset, 10px)) scale(calc(1 - var(--deck-scale, 0.05))); }
+  from {
+    opacity: var(--rise-opacity, 0.7);
+    filter: blur(var(--rise-blur, 0px));
+    transform: translateY(var(--rise-y, 10px)) scale(var(--rise-scale, 0.95));
+  }
 }
 
 /* Framework chip: icon + creator-named title picks the framework; ⓘ opens its info card. */

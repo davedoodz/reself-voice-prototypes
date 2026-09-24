@@ -740,6 +740,25 @@ const font = (value = 'current') => select(FONTS, value);
 const fontStyle = (e) =>
   e.font === 'current' ? {} : { fontFamily: TEST_FAMILY, fontStyle: e.font === 'test-family-italic' ? 'italic' : 'normal' };
 
+/* Deck motion curves. 'spring' swings past the target by the deck's overshoot. */
+const DECK_CURVES = [
+  { value: 'smooth', label: 'Smooth (in-out)' },
+  { value: 'out', label: 'Ease out' },
+  { value: 'in', label: 'Ease in' },
+  { value: 'spring', label: 'Spring' },
+  { value: 'snap', label: 'Snap' },
+  { value: 'linear', label: 'Linear' },
+];
+const deckCurve = (name, overshoot) =>
+  ({
+    smooth: 'cubic-bezier(0.45, 0, 0.2, 1)',
+    out: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    in: 'cubic-bezier(0.55, 0, 1, 0.45)',
+    spring: `cubic-bezier(0.34, ${overshoot}, 0.64, 1)`,
+    snap: 'cubic-bezier(0.8, 0, 0.1, 1)',
+    linear: 'linear',
+  })[name];
+
 function compositionConfig(d) {
   return {
     _collapsed: true,
@@ -769,6 +788,35 @@ function compositionConfig(d) {
       shuffleMs: [640, 0, 2000, 10],
       lift: [46, 0, 160, 1],
       tilt: [-4, -20, 20, 0.5],
+      /* How the move feels. The answered card leaves on `leave`; the next one
+         comes forward on `rise`; the waiting cards fan and settle on `stack`. */
+      leave: {
+        curve: select(DECK_CURVES, 'smooth'),
+        /* When the lift peaks and the card slips behind (share of shuffleMs). */
+        peakAt: [0.45, 0.1, 0.9, 0.01],
+        driftX: [0, -160, 160, 1],
+        liftScale: [0.97, 0.7, 1.15, 0.01],
+        endOpacity: [0, 0, 1, 0.01],
+        blur: [0, 0, 16, 0.5],
+      },
+      rise: {
+        curve: select(DECK_CURVES, 'out'),
+        durationMs: [640, 0, 2000, 10],
+        delayMs: [0, 0, 1000, 10],
+        fromY: [10, -40, 80, 1],
+        fromScale: [0.95, 0.7, 1.1, 0.005],
+        fromOpacity: [0.7, 0, 1, 0.01],
+        blur: [0, 0, 16, 0.5],
+      },
+      stack: {
+        curve: select(DECK_CURVES, 'out'),
+        settleMs: [640, 0, 2000, 10],
+        /* Per card of depth: sideways shift and turn, for a fanned deck. */
+        fanX: [0, -30, 30, 0.5],
+        fanTilt: [0, -8, 8, 0.25],
+      },
+      /* Spring curves: how far past the target they swing (1 = none). */
+      overshoot: [1.4, 1, 2.6, 0.01],
     },
     chip: { ...move(d.chip), font: font(d.chip.font), size: [d.chip.size, 10, 18, 0.5] },
     progress: {
@@ -1717,7 +1765,8 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
     prevStep.current = rec.step;
     if (!stacked || rec.step !== from + 1 || deck.shuffleMs === 0 || reducedMotion()) return;
     setLeaving({ step: from, key: `${fw.id}-${from}-out` });
-    const id = setTimeout(() => setLeaving(null), deck.shuffleMs);
+    // Keep the leaving card until the slower of the leave and the rise has played.
+    const id = setTimeout(() => setLeaving(null), Math.max(deck.shuffleMs, deck.rise.delayMs + deck.rise.durationMs));
     return () => clearTimeout(id);
   }, [rec.step]);
   const stepContent = (i) => (
@@ -1849,11 +1898,35 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           '--deck-ms': `${deck.shuffleMs}ms`,
           '--deck-lift': `${deck.lift}px`,
           '--deck-tilt': `${deck.tilt}deg`,
+          '--leave-ease': deckCurve(deck.leave.curve, deck.overshoot),
+          '--leave-x': `${deck.leave.driftX}px`,
+          '--leave-scale': deck.leave.liftScale,
+          '--leave-opacity': deck.leave.endOpacity,
+          '--leave-blur': `${deck.leave.blur}px`,
+          '--rise-ease': deckCurve(deck.rise.curve, deck.overshoot),
+          '--rise-ms': `${deck.rise.durationMs}ms`,
+          '--rise-delay': `${deck.rise.delayMs}ms`,
+          '--rise-y': `${deck.rise.fromY}px`,
+          '--rise-scale': deck.rise.fromScale,
+          '--rise-opacity': deck.rise.fromOpacity,
+          '--rise-blur': `${deck.rise.blur}px`,
+          '--stack-ease': deckCurve(deck.stack.curve, deck.overshoot),
+          '--stack-ms': `${deck.stack.settleMs}ms`,
+          '--fan-x': `${deck.stack.fanX}px`,
+          '--fan-tilt': `${deck.stack.fanTilt}deg`,
         }}
       >
         {Array.from({ length: ghosts }, (_, k) => (
           <div key={rec.step + k + 1} className="guide-card guide-ghost" data-panel={panel.shape} style={{ '--d': k + 1 }} />
         ))}
+        {leaving && (
+          /* Keyframe stops can't read CSS variables, so the peak timing is written here. */
+          <style>{`@keyframes deck-shuffle-tuned {
+  ${deck.leave.peakAt * 100}% { z-index: 3; transform: translate(calc(var(--leave-x) * 0.5), calc(-1 * var(--deck-lift))) rotate(var(--deck-tilt)) scale(var(--leave-scale)); }
+  ${Math.min(99, deck.leave.peakAt * 100 + 10)}% { z-index: -9; }
+  to { z-index: -9; opacity: var(--leave-opacity); filter: blur(var(--leave-blur)); transform: translate(var(--leave-x), calc(var(--back) * var(--deck-offset))) scale(calc(1 - var(--back) * var(--deck-scale))); }
+}`}</style>
+        )}
         {leaving && (
           <div
             key={leaving.key}
