@@ -77,6 +77,8 @@ const BRAND = {
   },
 };
 
+const WELCOME_BACKDROP = { width: 700, height: 750, radius: 0, fill: '../bg-images/day-park.png', color: '#bcc8d5' };
+
 const BREATH = {
   inhaleSec: [4, 1, 10, 0.1],
   holdSec: [1, 0, 6, 0.1],
@@ -116,10 +118,10 @@ const WELCOME_BEAM = {
 
 const INTRO = {
   /* The wordmark starts this far into the logo's opening (0 = with it, 1 = after). */
-  lettersAt: [0.24, 0, 1, 0.01],
+  lettersAt: [0.45, 0, 1, 0.01],
   letterMs: [1810, 100, 3000, 10],
-  letterDrift: [-35, -120, 60, 1],
-  letterBlur: [11.5, 0, 30, 0.5],
+  letterDrift: [-29, -120, 60, 1],
+  letterBlur: [13, 0, 30, 0.5],
   /* Both measured from the moment the mark starts drawing. */
   taglineAfterMs: [1190, 0, 5000, 10],
   ctaAfterMs: [2000, 0, 6000, 10],
@@ -409,7 +411,7 @@ function Welcome() {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
-      <Backdrop />
+      <Backdrop defaults={WELCOME_BACKDROP} />
       <div className="device" style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}>
         <div
           className="device-scaler"

@@ -17,8 +17,19 @@ const BACKDROP = {
   fit: { type: 'select', options: ['cover', 'contain'], default: 'cover' },
 };
 
-export function Backdrop() {
-  const b = useDialKit('Backdrop', BACKDROP, { id: 'backdrop', defaultCollapsed: true });
+/* `defaults` overrides the starting values for one page (e.g. welcome). */
+export function Backdrop({ defaults }) {
+  const config = defaults
+    ? {
+        ...BACKDROP,
+        width: [defaults.width, 200, 1600, 1],
+        height: [defaults.height, 200, 1400, 1],
+        radius: [defaults.radius, 0, 200, 1],
+        fill: { ...BACKDROP.fill, default: defaults.fill },
+        color: defaults.color,
+      }
+    : BACKDROP;
+  const b = useDialKit('Backdrop', config, { id: defaults ? 'backdrop-welcome' : 'backdrop', defaultCollapsed: true });
   if (!b.show) return null;
   const image = b.fill !== 'color' && IMAGES[b.fill];
   return (
