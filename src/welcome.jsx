@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { VoiceBeam } from 'voice-glow';
 import { DialRoot, useDialKit } from 'dialkit';
@@ -10,6 +10,7 @@ import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from 
 import { StatusBar } from './status-bar.jsx';
 import { UNWIND_DIALS } from './unwind-mark.js';
 import waveLogo from './icons/wave.png';
+import { WAVE_H, WAVE_PATH, WAVE_W } from './wave-path.js';
 import wordLogo from './icons/unwind.png';
 
 /* ─────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ const BRAND = {
   logo: {
     /* The word: the blue PNG, or flat Test Family text ("un" upright, "wind" italic). */
     word: { type: 'select', options: [{ value: 'png', label: 'Blue PNG' }, { value: 'text', label: 'Flat text' }], default: 'text' },
-    textColor: '#8e98a6',
+    textColor: '#72bdfa',
     /* Flat text: "un" in italic like "wind", or upright. */
     italicUn: false,
     /* The word stays centred on screen; the mark sits to its left or above it. */
@@ -56,7 +57,7 @@ const BRAND = {
   },
   tagline: 'Talk it out. Find clarity.',
   taglineColor: '#8e98a6',
-  taglineSize: [20.5, 14, 28, 0.5],
+  taglineSize: [19.5, 14, 28, 0.5],
   taglineFont: {
     type: 'select',
     options: [
@@ -64,7 +65,7 @@ const BRAND = {
       { value: 'test-italic', label: 'Test Family Italic' },
       { value: 'inter', label: 'Inter' },
     ],
-    default: 'test',
+    default: 'inter',
   },
   button: {
     background: '#72bdfa',
@@ -208,41 +209,134 @@ function useGlow(br, pulse) {
 
 /* ── Brand ─────────────────────────────────────────────── */
 
-/* The logo is two blue PNGs from blue-icons/: the wave mark and the "unwind"
-   wordmark. The mark still plays the "Unwind" opening (logo-motion.html option
-   03): it starts squeezed to a sliver and springs out to full width, once. The
-   wordmark then sweeps in from the left on the wind, blurred, settling. */
+/* The logo is two parts: the blue wave mark (src/icons/wave.png) and the
+   "unwind" wordmark. The mark opens with one of five styles (Logo opening ›
+   style). The draw styles reveal the PNG through a mask stroked along the
+   wave's traced centreline, so it is painted left to right following its curves:
+ *   squeeze  starts squeezed to a sliver and springs out to full width
+ *   pen      a crisp pen stroke traces the wave
+ *   brush    a soft, feathered brush paints it in
+ *   comet    the brush with a bright head leading the stroke
+ *   ink      traces in, then the finished mark gives a small settle
+ * The wordmark then sweeps in from the left on the wind, blurred, settling. */
+const MARK_STYLES = [
+  { value: 'squeeze', label: '1 · Squeeze' },
+  { value: 'pen', label: '2 · Pen' },
+  { value: 'brush', label: '3 · Brush' },
+  { value: 'comet', label: '4 · Comet' },
+  { value: 'ink', label: '5 · Ink settle' },
+];
+const LOGO_DIALS = {
+  style: { type: 'select', options: MARK_STYLES, default: 'brush' },
+  ...UNWIND_DIALS,
+  /* Draw styles: stroke width over the wave's thickness, feather, and the curve. */
+  strokePad: [1.5, 1, 3, 0.05],
+  softness: [6, 0, 20, 0.5],
+  drawEase: {
+    type: 'select',
+    options: [
+      { value: 'smooth', label: 'Smooth (in-out)' },
+      { value: 'out', label: 'Ease out' },
+      { value: 'linear', label: 'Linear' },
+    ],
+    default: 'smooth',
+  },
+  headGlow: [0.9, 0, 1, 0.01],
+};
+const EASES = {
+  smooth: (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2),
+  out: (t) => 1 - (1 - t) ** 3,
+  linear: (t) => t,
+};
+
 function Mark({ o, delayMs }) {
-  const img = useRef(null);
+  const root = useRef(null);
+  const stroke = useRef(null);
+  const head = useRef(null);
   const cfg = useRef(o);
   cfg.current = o;
+  const id = useId().replace(/[^a-z0-9]/gi, '');
+  const drawn = o.style !== 'squeeze';
 
   useLayoutEffect(() => {
-    const el = img.current;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const el = root.current;
+    const path = stroke.current;
+    const dot = head.current;
+    const len = path?.getTotalLength();
+    if (path) path.style.strokeDasharray = `${len} ${len}`;
+    const done = () => {
+      el.style.transform = '';
+      el.style.opacity = '';
+      path?.style.setProperty('stroke-dashoffset', '0');
+      if (dot) dot.style.opacity = '0';
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
     const t0 = performance.now() + delayMs;
     let raf;
     const tick = (now) => {
-      const p = (now - t0) / cfg.current.durationMs;
-      if (p >= 1) {
-        el.style.transform = '';
-        el.style.opacity = '';
+      const c = cfg.current;
+      const p = (now - t0) / c.durationMs;
+      if (p >= 1) return done();
+      raf = requestAnimationFrame(tick);
+      const q = Math.min(1, Math.max(0, p));
+      if (c.style === 'squeeze') {
+        const sx = c.startWidth + (1 - c.startWidth) * springOut(q, c.bounce);
+        el.style.transformOrigin = c.anchor === 'center' ? '50% 50%' : '0 50%';
+        el.style.transform = `scaleX(${sx})`;
+        el.style.opacity = p < 0 ? '0' : String(Math.min(1, q / 0.12));
         return;
       }
-      raf = requestAnimationFrame(tick);
-      const c = cfg.current;
-      const q = Math.min(1, Math.max(0, p));
-      const sx = c.startWidth + (1 - c.startWidth) * springOut(q, c.bounce);
-      el.style.transformOrigin = c.anchor === 'center' ? '50% 50%' : '0 50%';
-      el.style.transform = `scaleX(${sx})`;
-      el.style.opacity = p < 0 ? '0' : String(Math.min(1, q / 0.12));
+      // Draw styles: ink draws in 80% of the time, then settles.
+      const drawP = c.style === 'ink' ? Math.min(1, q / 0.8) : q;
+      const e = EASES[c.drawEase](drawP);
+      el.style.opacity = p < 0 ? '0' : '1';
+      path.style.strokeDashoffset = String(len * (1 - e));
+      if (c.style === 'ink') {
+        const s = q < 0.8 ? 1 : 1 + 0.06 * c.bounce * 5 * Math.sin(((q - 0.8) / 0.2) * Math.PI);
+        el.style.transform = `scale(${s})`;
+      }
+      if (dot) {
+        const pt = path.getPointAtLength(len * e);
+        dot.setAttribute('cx', pt.x);
+        dot.setAttribute('cy', pt.y);
+        dot.style.opacity = String(c.headGlow * Math.min(1, e * 8, (1 - e) * 8));
+      }
     };
     /* First frame before paint, so the finished logo never flashes. */
     tick(performance.now());
     return () => cancelAnimationFrame(raf);
-  }, [delayMs]);
+  }, [delayMs, o.style]);
 
-  return <img ref={img} className="w-mark" src={waveLogo} alt="" draggable={false} />;
+  if (!drawn) return <img ref={root} className="w-mark" src={waveLogo} alt="" draggable={false} />;
+  const soft = o.style === 'pen' ? 0 : o.softness;
+  return (
+    <svg ref={root} className="w-mark" viewBox={`0 0 ${WAVE_W} ${WAVE_H}`} style={{ aspectRatio: `${WAVE_W} / ${WAVE_H}`, overflow: 'visible' }} aria-hidden="true">
+      <defs>
+        <filter id={`f${id}`} x="-20%" y="-50%" width="140%" height="200%">
+          <feGaussianBlur stdDeviation={soft} />
+        </filter>
+        <mask id={`m${id}`} maskUnits="userSpaceOnUse" x="-40" y="-40" width={WAVE_W + 80} height={WAVE_H + 80}>
+          <path
+            ref={stroke}
+            d={WAVE_PATH}
+            fill="none"
+            stroke="#fff"
+            strokeWidth={42 * o.strokePad}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter={soft ? `url(#f${id})` : undefined}
+          />
+        </mask>
+        <radialGradient id={`g${id}`}>
+          <stop offset="0" stopColor="#fff" />
+          <stop offset="0.4" stopColor="#bfe0ff" />
+          <stop offset="1" stopColor="#61A8FD" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <image href={waveLogo} width={WAVE_W} height={WAVE_H} mask={`url(#m${id})`} />
+      {o.style === 'comet' && <circle ref={head} r="26" fill={`url(#g${id})`} style={{ mixBlendMode: 'screen' }} />}
+    </svg>
+  );
 }
 
 /* 0 → 1 with a damped overshoot; bounce 0 is a plain ease-out. */
@@ -281,7 +375,7 @@ function Welcome() {
     { ...INTRO, replay: { type: 'action', label: 'Replay intro' } },
     { id: 'welcome-intro', onAction: () => replayIntro() },
   );
-  const logo = useDialKit('Logo opening', UNWIND_DIALS, { id: 'welcome-logo' });
+  const logo = useDialKit('Logo opening', LOGO_DIALS, { id: 'welcome-logo' });
   const b = useDialKit('Voice beam', WELCOME_BEAM, { id: 'welcome-beam', defaultCollapsed: true });
 
   const glow = useGlow(br, pulse);
