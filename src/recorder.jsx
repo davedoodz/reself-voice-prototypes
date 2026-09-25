@@ -685,9 +685,9 @@ export const GUIDE = {
   stepDelayMs: [250, 0, 2000, 10],
   colors: {
     accent: '#61A8FD',
-    track: '#e4eff2',
+    track: '#e4eff2a3',
     /* The dot for the step being answered right now. */
-    current: '#b0d4fe',
+    current: '#bedbfb9e',
   },
   /* A new prompt arriving. */
   motion: {
