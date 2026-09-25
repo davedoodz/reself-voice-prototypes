@@ -681,6 +681,8 @@ export const GUIDE = {
   /* Demo only: move on by itself once the simulated answer ends. */
   autoAdvance: false,
   advanceAfterMs: [2500, 0, 10000, 100],
+  /* After Next, a short beat before the new answer's words start (on top of Transcript › startDelayMs). */
+  stepDelayMs: [250, 0, 2000, 10],
   colors: {
     accent: '#61A8FD',
     track: '#e4eff2',
@@ -1080,7 +1082,9 @@ function useRecorder(s, t, ctl, pr, guide) {
       const { s: sp, t: tp, ctl: cp, pr: pv, guide: g } = params.current;
       const text = scriptNow();
       if (take.current.text !== text) resetTake(text);
-      const { startDelayMs, wordMs, holdMs, clearMs } = tp.timing;
+      const { wordMs, holdMs, clearMs } = tp.timing;
+      // Guided: from step 2 on, the new card lands before its words start.
+      const startDelayMs = tp.timing.startDelayMs + (g && stepRef.current > 0 ? g.stepDelayMs : 0);
       const lengthOf = (tok) =>
         tok.dur ?? (tok.kind === 'word' ? wordMs : tok.kind === 'question' ? pv.answerDelayMs : pv.pauseMs);
 
@@ -2322,6 +2326,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
     answers: fw.steps.map((st) => st.answer),
     autoAdvance: g.autoAdvance,
     advanceAfterMs: g.advanceAfterMs,
+    stepDelayMs: g.stepDelayMs,
   };
   const rec = useRecorder(s, t, c, pr, guide);
   const framed = s.deviceFrame;
