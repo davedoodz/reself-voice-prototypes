@@ -141,8 +141,47 @@ const ICON_DIALS = {
   themes: true,
 };
 
+/* The entries header copy. {count} and {time} fill in from the entries. */
+const HEADER = {
+  eyebrow: { type: 'text', default: 'Your journal' },
+  title: { type: 'text', default: 'Entries' },
+  stats: { type: 'text', default: '{count} entries, {time} of talking it out' },
+};
+
+/* Which parts of an entry card show. Hidden parts take no space, so cards shrink. */
+const CARD = {
+  time: true,
+  duration: true,
+  title: true,
+  summary: true,
+  quote: true,
+  mode: true,
+  themes: true,
+};
+
+/* The welcome screen's two button looks, shared by Record entry and the AI
+   button: primary = Get started, glass = I already have an account. */
+const BUTTON_LOOKS = { type: 'select', options: ['dark', 'primary', 'glass'], default: 'dark' };
+const BUTTON_STYLES = {
+  primary: {
+    background: '#72bdfa',
+    text: '#ffffff',
+    strokeColor: '#ffffff',
+    strokeOpacity: [0.72, 0, 1, 0.01],
+    strokeWidth: [1, 0, 6, 0.5],
+  },
+  glass: {
+    background: '#ffffff',
+    opacity: [0.42, 0, 1, 0.01],
+    text: '#1f1f1f',
+    borderOpacity: [0.6, 0, 1, 0.01],
+    blur: [12, 0, 40, 1],
+  },
+};
+
 const RECORD = {
   label: { type: 'text', default: 'Record entry' },
+  look: BUTTON_LOOKS,
   background: '#1c1c1e',
   textColor: '#ffffff',
   dot: true,
@@ -176,7 +215,9 @@ const TRANSITION = {
 /* AI insights: the round button's fill and rim, and the tint of the insight
    cards in its sheet. Rim colours run round the edge in order A → D. */
 const AI = {
+  title: { type: 'text', default: 'AI insights' },
   button: {
+    look: BUTTON_LOOKS,
     background: '#141a1c',
     rim: true,
     rimWidth: [2.5, 0.5, 8, 0.1],
@@ -280,10 +321,10 @@ const dayPart = (d) => {
 const promptCount = (e) => e.transcript.filter((s) => s.kind === 'prompt' || s.kind === 'step').length;
 
 function modeLine(e) {
-  if (e.mode === 'guided') return `Guided · ${e.framework}`;
+  if (e.mode === 'guided') return `Guided\u2002${e.framework}`;
   if (e.mode === 'dynamic') {
     const n = e.transcript.filter((s) => s.kind === 'prompt' && s.answered).length;
-    return `Dynamic · ${n} ${n === 1 ? 'prompt' : 'prompts'}`;
+    return `Dynamic\u2002${n} ${n === 1 ? 'prompt' : 'prompts'}`;
   }
   return 'Freeform';
 }
@@ -529,24 +570,32 @@ function ThemeIcons({ themes }) {
   );
 }
 
-function EntryCard({ e, onOpen, index }) {
+function EntryCard({ e, onOpen, index, show }) {
   const d = at(e);
+  const top = show.time || show.duration;
+  const foot = show.mode || show.themes;
   return (
     <button type="button" className="j-card" onClick={() => onOpen(e.id)} style={{ '--i': index }}>
-      <span className="j-card-top">
-        <span className="j-time">
-          <Ico k={dayPart(d)} group="time" />
-          {timeOfDay(d)}
+      {top && (
+        <span className="j-card-top">
+          {show.time && (
+            <span className="j-time">
+              <Ico k={dayPart(d)} group="time" />
+              {timeOfDay(d)}
+            </span>
+          )}
+          {show.duration && <Duration sec={e.duration} />}
         </span>
-        <Duration sec={e.duration} />
-      </span>
-      <span className="j-title">{e.title}</span>
-      <span className="j-summary">{e.summary}</span>
-      <span className="j-snippet">“{e.snippet}”</span>
-      <span className="j-card-foot">
-        <ModeChip e={e} />
-        <ThemeIcons themes={e.themes} />
-      </span>
+      )}
+      {show.title && <span className="j-title">{e.title}</span>}
+      {show.summary && <span className="j-summary">{e.summary}</span>}
+      {show.quote && <span className="j-snippet">“{e.snippet}”</span>}
+      {foot && (
+        <span className="j-card-foot">
+          {show.mode && <ModeChip e={e} />}
+          {show.themes && <ThemeIcons themes={e.themes} />}
+        </span>
+      )}
     </button>
   );
 }
@@ -572,7 +621,7 @@ function useStuckMonth(scrollRef, barRef) {
   return month;
 }
 
-function List({ months, total, onOpen, recordHref, rec }) {
+function List({ months, total, onOpen, recordHref, rec, show, head }) {
   const scrollRef = useRef(null);
   const barRef = useRef(null);
   const stuck = useStuckMonth(scrollRef, barRef);
@@ -585,11 +634,13 @@ function List({ months, total, onOpen, recordHref, rec }) {
       </div>
       <div className="j-scroll" ref={scrollRef}>
         <header className="j-head">
-          <p className="j-eyebrow">Your journal</p>
-          <h1 className="j-large-title">Entries</h1>
-          <p className="j-stats">
-            {ENTRIES.length} entries · {totalSpoken(total)} of talking it out
-          </p>
+          {head.eyebrow && <p className="j-eyebrow">{head.eyebrow}</p>}
+          {head.title && <h1 className="j-large-title">{head.title}</h1>}
+          {head.stats && (
+            <p className="j-stats">
+              {head.stats.replaceAll('{count}', ENTRIES.length).replaceAll('{time}', totalSpoken(total))}
+            </p>
+          )}
         </header>
 
         {months.map((m) => (
@@ -603,7 +654,7 @@ function List({ months, total, onOpen, recordHref, rec }) {
                 </div>
                 <div className="j-day-cards">
                   {day.entries.map((e) => (
-                    <EntryCard key={e.id} e={e} onOpen={onOpen} index={index++} />
+                    <EntryCard key={e.id} e={e} onOpen={onOpen} index={index++} show={show} />
                   ))}
                 </div>
               </div>
@@ -707,7 +758,7 @@ function Prompts({ e, onJump }) {
   return (
     <section className="j-section">
       <h3 className="j-section-label">
-        {guided ? `${e.framework} · ${items.length} steps` : `Prompts offered · ${items.length}`}
+        {guided ? `${e.framework}\u2002${items.length} steps` : `Prompts offered\u2002${items.length}`}
       </h3>
       <ol className="j-prompts" data-guided={guided || undefined}>
         {items.map((s, n) => (
@@ -753,7 +804,7 @@ function Transcript({ e, pb, segRefs }) {
               <p className="j-seg-q">
                 <Ico k="prompt" group="mode" />
                 {s.text}
-                {s.answered === false && <em> · faded, not answered</em>}
+                {s.answered === false && <em>{'\u2002'}faded, not answered</em>}
               </p>
             )}
             {s.kind === 'step' && (
@@ -769,17 +820,17 @@ function Transcript({ e, pb, segRefs }) {
   );
 }
 
-function InsightsSheet({ e, open, onClose, onOpenEntry }) {
+function InsightsSheet({ e, open, onClose, onOpenEntry, title }) {
   const links = e.insights.links.map((id) => ENTRIES.find((x) => x.id === id)).filter(Boolean);
   return (
     <div className="j-sheet-host" data-open={open || undefined} aria-hidden={!open}>
       <button type="button" className="j-scrim" onClick={onClose} tabIndex={-1} aria-label="Close insights" />
-      <section className="j-sheet" role="dialog" aria-label="AI insights">
+      <section className="j-sheet" role="dialog" aria-label={title}>
         <div className="j-sheet-grab" aria-hidden="true" />
         <header className="j-sheet-head">
           <span className="j-ai-badge">
             <img className="j-png" src={starUrl} alt="" draggable={false} />
-            AI insights
+            {title}
           </span>
           <button type="button" className="ctl j-sheet-close" onClick={onClose} aria-label="Close" tabIndex={open ? 0 : -1}>
             <X aria-hidden="true" />
@@ -807,7 +858,7 @@ function InsightsSheet({ e, open, onClose, onOpenEntry }) {
   );
 }
 
-function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
+function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef, aiTitle }) {
   const [insights, setInsights] = useState(false);
   const segRefs = useRef([]);
   const ic = useContext(IconCtx);
@@ -830,7 +881,7 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
           <ChevronLeft aria-hidden="true" />
         </button>
         <span className="j-nav-title">
-          {d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {timeOfDay(d)}
+          {d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{'\u2002'}{timeOfDay(d)}
         </span>
         <span aria-hidden="true" />
       </nav>
@@ -849,7 +900,7 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
             <div>
               <dt>{ic.time ? <Ico k="clock" /> : 'Time'}</dt>
               <dd>
-                {timeOfDay(d)} <span className="j-meta-soft">· {longDuration(e.duration)} spoken</span>
+                {timeOfDay(d)}{'\u2002'}<span className="j-meta-soft">{longDuration(e.duration)} spoken</span>
               </dd>
             </div>
           </dl>
@@ -871,16 +922,16 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
         <Prompts e={e} onJump={jump} />
         <Transcript e={e} pb={pb} segRefs={segRefs} />
         <p className="j-end">
-          {promptCount(e) ? `${modeLine(e)} · ` : ''}
+          {promptCount(e) ? `${modeLine(e)}\u2002` : ''}
           {longDuration(e.duration)}
         </p>
       </div>
 
-      <button type="button" className="j-ai" onClick={() => setInsights(true)} aria-label="AI insights">
+      <button type="button" className="j-ai" onClick={() => setInsights(true)} aria-label={aiTitle}>
         <img className="j-png" src={starUrl} alt="" draggable={false} />
       </button>
 
-      <InsightsSheet e={e} open={insights} onClose={() => setInsights(false)} onOpenEntry={onOpenEntry} />
+      <InsightsSheet e={e} open={insights} onClose={() => setInsights(false)} onOpenEntry={onOpenEntry} title={aiTitle} />
     </>
   );
 }
@@ -889,6 +940,9 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef }) {
 function Entries() {
   const s = useDialKit('Screen', SCREEN, { id: 'entries-screen' });
   const icons = useDialKit('Icons', ICON_DIALS, { id: 'entries-icons' });
+  const head = useDialKit('Header', HEADER, { id: 'entries-header' });
+  const show = useDialKit('Entry card', CARD, { id: 'entries-card' });
+  const bs = useDialKit('Button styles', BUTTON_STYLES, { id: 'entries-button-styles' });
   const rec = useDialKit('Record button', RECORD, { id: 'entries-record' });
   const p = useDialKit('Player', PLAYER, { id: 'entries-player' });
   const ai = useDialKit('AI insights', AI, { id: 'entries-ai' });
@@ -970,6 +1024,8 @@ function Entries() {
               className="voice-screen journal"
               data-ai-rim={ai.button.rim || undefined}
               data-ai-spin={ai.button.spin || undefined}
+              data-rec-look={rec.look}
+              data-ai-look={ai.button.look}
               data-icons={icons.style}
               aria-label="Journal entries"
               style={{
@@ -997,6 +1053,14 @@ function Entries() {
                 '--rec-radius': `${rec.radius}px`,
                 '--rec-x': `${rec.x}px`,
                 '--rec-bottom': `${rec.bottom}px`,
+                '--btn-p-bg': bs.primary.background,
+                '--btn-p-fg': bs.primary.text,
+                '--btn-p-stroke': `color-mix(in srgb, ${bs.primary.strokeColor} ${bs.primary.strokeOpacity * 100}%, transparent)`,
+                '--btn-p-stroke-w': `${bs.primary.strokeWidth}px`,
+                '--btn-g-bg': `color-mix(in srgb, ${bs.glass.background} ${bs.glass.opacity * 100}%, transparent)`,
+                '--btn-g-fg': bs.glass.text,
+                '--btn-g-border': `rgba(255, 255, 255, ${bs.glass.borderOpacity})`,
+                '--btn-g-blur': `${bs.glass.blur}px`,
               }}
             >
               <div
@@ -1017,10 +1081,10 @@ function Entries() {
                 }}
               >
                 <div className="j-layer j-list" inert={view === 'detail' || undefined}>
-                  <List months={months} total={total} onOpen={open} recordHref={`/${s.recordPage}`} rec={rec} />
+                  <List months={months} total={total} onOpen={open} recordHref={`/${s.recordPage}`} rec={rec} show={show} head={head} />
                 </div>
                 <div className="j-layer j-detail" inert={view === 'list' || undefined}>
-                  <Detail e={entry} pb={pb} p={p} onBack={back} onOpenEntry={open} scrollRef={detailScroll} />
+                  <Detail e={entry} pb={pb} p={p} onBack={back} onOpenEntry={open} scrollRef={detailScroll} aiTitle={ai.title} />
                 </div>
               </div>
               <HeaderWave />

@@ -400,6 +400,26 @@
     conic-gradient(from var(--ai-turn), var(--ai-rim-a), var(--ai-rim-b), var(--ai-rim-c), var(--ai-rim-d), var(--ai-rim-a)) border-box;
   border: var(--ai-rim-w, 2.5px) solid transparent;
 }
+
+/* Button looks from welcome.html (Record button › look, AI insights › button › look).
+   primary = Get started, glass = I already have an account. Colours: Button styles. */
+.journal[data-rec-look='primary'] .j-record,
+.journal[data-ai-look='primary'] .j-ai {
+  border: 0;
+  background: var(--btn-p-bg);
+  color: var(--btn-p-fg);
+  box-shadow: inset 0 0 0 var(--btn-p-stroke-w) var(--btn-p-stroke), 0 6px 18px rgba(0, 40, 70, 0.16);
+}
+.journal[data-rec-look='glass'] .j-record,
+.journal[data-ai-look='glass'] .j-ai {
+  border: 1px solid var(--btn-g-border);
+  background: var(--btn-g-bg);
+  color: var(--btn-g-fg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  -webkit-backdrop-filter: blur(var(--btn-g-blur));
+  backdrop-filter: blur(var(--btn-g-blur));
+}
+.journal[data-ai-spin][data-ai-look]:not([data-ai-look='dark']) .j-ai { animation: none; }
 .journal[data-ai-spin] .j-ai { animation: ai-turn 6s linear infinite; }
 .j-ai:active { transform: scale(0.94); }
 .j-ai .j-png { width: 34px; height: 34px; }
