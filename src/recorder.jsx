@@ -787,6 +787,8 @@ function compositionConfig(d) {
       headerTop: [d.headerTop, 40, 300, 1],
       /* Prompt block distance from the top. */
       promptTop: [d.promptTop, 80, 420, 1],
+      /* Dots under the stack (placement below-deck): fixed distance from the prompt top, so they never move. */
+      belowDeckY: [d.belowDeckY ?? 190, 40, 500, 1],
     },
     panel: {
       show: d.panel.show,
@@ -2108,7 +2110,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           {at('prompt-bottom')}
         </div>
         </div>
-        {at('below-deck') && <div className="guide-below-deck" style={{ marginTop: ghosts * deck.offset + 14 }}>{at('below-deck')}</div>}
+        {at('below-deck') && <div className="guide-below-deck" style={{ top: L.belowDeckY }}>{at('below-deck')}</div>}
       </div>
     </div>
   );

@@ -779,3 +779,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .stage > .device { z-index: 1; }
 .guide-below-deck { display: flex; justify-content: center; align-self: stretch; }
 .guide-deck { position: relative; display: flex; flex-direction: column; align-items: inherit; align-self: stretch; isolation: isolate; }
+.guide-below-deck { position: absolute; right: 0; left: 0; }
+/* While a card leaves, the prompt deck rises above the framework chip. */
+.guide .guide-prompt[data-shuffling] { z-index: 3; }
