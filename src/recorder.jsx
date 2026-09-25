@@ -2305,7 +2305,7 @@ function Transcript({ items, rec, t, rightInset, questionStyle }) {
 
 /* Per-page backdrop and header-logo defaults; pages not listed use the shared ones. */
 const PAGE_BACKDROP = {
-  freeform: { width: 700, height: 750, radius: 0, fill: '../bg-images/evening-apartment.png', color: '#eef1f4' },
+  freeform: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
   guided: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
 };
 const STILL_HEADER = new Set(['freeform', 'guided']);
