@@ -2257,8 +2257,12 @@ function Transcript({ items, rec, t, rightInset, questionStyle }) {
   );
 }
 
-/* voice.html's own backdrop; Dynamic and Guided keep the shared one. */
-const FREEFORM_BACKDROP = { width: 700, height: 750, radius: 0, fill: '../bg-images/evening-apartment.png', color: '#eef1f4' };
+/* Per-page backdrop and header-logo defaults; pages not listed use the shared ones. */
+const PAGE_BACKDROP = {
+  freeform: { width: 700, height: 750, radius: 0, fill: '../bg-images/evening-apartment.png', color: '#eef1f4' },
+  guided: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
+};
+const STILL_HEADER = new Set(['freeform', 'guided']);
 
 export function VoiceRecorder({ variant = 'freeform' }) {
   const v = VARIANTS[variant];
@@ -2311,8 +2315,8 @@ export function VoiceRecorder({ variant = 'freeform' }) {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
-      {variant === 'freeform' ? (
-        <Backdrop defaults={FREEFORM_BACKDROP} id="backdrop-freeform" />
+      {PAGE_BACKDROP[variant] ? (
+        <Backdrop defaults={PAGE_BACKDROP[variant]} id={`backdrop-${variant}`} />
       ) : (
         <Backdrop />
       )}
@@ -2405,8 +2409,8 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 />
               )}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
-              {variant === 'freeform' ? (
-                <HeaderWave defaults={{ animate: false, loop: false }} id="header-logo-freeform" />
+              {STILL_HEADER.has(variant) ? (
+                <HeaderWave defaults={{ animate: false, loop: false }} id={`header-logo-${variant}`} />
               ) : (
                 <HeaderWave />
               )}
