@@ -704,7 +704,7 @@ export const GUIDE = {
       ],
       'drip',
     ),
-    durationMs: [500, 100, 3000, 10],
+    durationMs: [600, 100, 3000, 10],
     gap: [6, 0, 24, 0.5],
     /* How far the goo reaches, in dot radii; 0 turns merging off. */
     goo: [0.29, 0, 1.5, 0.01],
@@ -918,7 +918,7 @@ export const COMPOSITION = {
     deck: { show: true, depth: 4, offset: 7, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1, shadow: { opacity: 0.07, blur: 12, spread: -10 } },
     chip: { size: 13, y: -4 },
     /* Dots sit centred under the card stack. */
-    progress: { style: 'dots', placement: 'below-deck', size: 7.5, y: -37 },
+    progress: { style: 'dots', placement: 'below-deck', size: 8.5, y: -37 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
