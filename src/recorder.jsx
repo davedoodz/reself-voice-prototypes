@@ -1903,12 +1903,22 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
   useEffect(() => {
     const from = prevStep.current;
     prevStep.current = rec.step;
-    if (!stacked || rec.step !== from + 1 || deck.shuffleMs === 0 || reducedMotion()) return;
+    // Any step change mid-take plays the leave (including a wrap back to step 1).
+    if (!stacked || rec.step === from || rec.status === 'idle' || deck.shuffleMs === 0 || reducedMotion()) return;
     setLeaving({ step: from, key: `${fw.id}-${from}-out` });
     // Keep the leaving card until the slower of the leave and the rise has played.
     const id = setTimeout(() => setLeaving(null), Math.max(deck.shuffleMs, deck.rise.delayMs + deck.rise.durationMs));
     return () => clearTimeout(id);
   }, [rec.step]);
+  const prevDone = useRef(done);
+  useEffect(() => {
+    const was = prevDone.current;
+    prevDone.current = done;
+    if (!stacked || !done || was || deck.shuffleMs === 0 || reducedMotion()) return;
+    setLeaving({ step: rec.step, key: `${fw.id}-${rec.step}-done` });
+    const id = setTimeout(() => setLeaving(null), deck.shuffleMs);
+    return () => clearTimeout(id);
+  }, [done]);
   const stepContent = (i) => (
     <>
       {label.show && (
@@ -2049,7 +2059,8 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
 
       <div
         className="guide-prompt"
-        data-hidden={done || undefined}
+        data-hidden={(done && !leaving) || undefined}
+        data-done={done || undefined}
         data-shuffling={leaving ? '' : undefined}
         style={{
           top: `calc(${L.promptTop}px + var(--safe-top, 0px))`,
@@ -2104,7 +2115,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
             style={{ '--back': ghosts + 1 }}
             aria-hidden="true"
           >
-            {stepContent(leaving.step)}
+            <div className="guide-step">{stepContent(leaving.step)}</div>
           </div>
         )}
         <div className="guide-card guide-front" data-panel={panel.show ? panel.shape : undefined}>

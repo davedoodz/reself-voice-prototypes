@@ -787,3 +787,4 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-step-sizer { visibility: hidden; animation: none; }
 .guide:has(.guide-prompt[data-shuffling]) { z-index: 9; }
 .guide-deck .guide-card[data-panel] { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), var(--deck-shadow, 0 12px 32px rgba(0, 50, 70, 0.08)); }
+.guide-prompt[data-done] .guide-front, .guide-prompt[data-done] .guide-below-deck { opacity: 0; transition: opacity 0.3s ease; }
