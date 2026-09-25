@@ -18,7 +18,7 @@ const BACKDROP = {
 };
 
 /* `defaults` overrides the starting values for one page (e.g. welcome). */
-export function Backdrop({ defaults }) {
+export function Backdrop({ defaults, id = 'backdrop' }) {
   const config = defaults
     ? {
         ...BACKDROP,
@@ -29,7 +29,7 @@ export function Backdrop({ defaults }) {
         color: defaults.color,
       }
     : BACKDROP;
-  const b = useDialKit('Backdrop', config, { id: defaults ? 'backdrop-welcome' : 'backdrop', defaultCollapsed: true });
+  const b = useDialKit('Backdrop', config, { id, defaultCollapsed: true });
   if (!b.show) return null;
   const image = b.fill !== 'color' && IMAGES[b.fill];
   return (

@@ -2257,6 +2257,9 @@ function Transcript({ items, rec, t, rightInset, questionStyle }) {
   );
 }
 
+/* voice.html's own backdrop; Dynamic and Guided keep the shared one. */
+const FREEFORM_BACKDROP = { width: 700, height: 750, radius: 0, fill: '../bg-images/evening-apartment.png', color: '#eef1f4' };
+
 export function VoiceRecorder({ variant = 'freeform' }) {
   const v = VARIANTS[variant];
   const s = useDialKit('Screen', v.screen, { id: 'voice-screen' });
@@ -2308,7 +2311,11 @@ export function VoiceRecorder({ variant = 'freeform' }) {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
-      <Backdrop />
+      {variant === 'freeform' ? (
+        <Backdrop defaults={FREEFORM_BACKDROP} id="backdrop-freeform" />
+      ) : (
+        <Backdrop />
+      )}
       <div
         className="device"
         style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}
@@ -2398,7 +2405,11 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 />
               )}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
-              <HeaderWave />
+              {variant === 'freeform' ? (
+                <HeaderWave defaults={{ animate: false, loop: false }} id="header-logo-freeform" />
+              ) : (
+                <HeaderWave />
+              )}
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>

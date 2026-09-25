@@ -411,7 +411,7 @@ function Welcome() {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
-      <Backdrop defaults={WELCOME_BACKDROP} />
+      <Backdrop defaults={WELCOME_BACKDROP} id="backdrop-welcome" />
       <div className="device" style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}>
         <div
           className="device-scaler"

@@ -23,8 +23,10 @@ const HEADER_WAVE = {
 
 const easeOut = (t) => 1 - (1 - t) ** 3;
 
-export function HeaderWave() {
-  const h = useDialKit('Header logo', HEADER_WAVE, { id: 'header-logo', defaultCollapsed: true });
+/* `defaults` overrides starting values for one page; its own `id` keeps them apart. */
+export function HeaderWave({ defaults, id: panelId = 'header-logo' }) {
+  const config = defaults ? { ...HEADER_WAVE, ...defaults } : HEADER_WAVE;
+  const h = useDialKit('Header logo', config, { id: panelId, defaultCollapsed: true });
   const root = useRef(null);
   const stroke = useRef(null);
   const cfg = useRef(h);
