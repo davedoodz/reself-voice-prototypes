@@ -17,6 +17,7 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import sparkBigUrl from './assets/spark-big.png';
 import sparkSmallUrl from './assets/spark-small.png';
 import { StatusBar } from './status-bar.jsx';
+import { Backdrop } from './backdrop.jsx';
 import { HeaderWave } from './header-wave.jsx';
 
 /* ─────────────────────────────────────────────────────────
@@ -2307,6 +2308,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
+      <Backdrop />
       <div
         className="device"
         style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}

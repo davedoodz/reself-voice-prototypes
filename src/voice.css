@@ -772,3 +772,8 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 
 /* Header wave: centred at the top of the screen, under the status bar. */
 .header-wave { position: absolute; top: calc(var(--hw-y, 52px) + var(--safe-top, 0px)); left: 50%; z-index: 8; height: auto; overflow: visible; translate: calc(-50% + var(--hw-x, 0px)) -50%; pointer-events: none; }
+
+/* Backdrop: centred behind the phone at any size, even past the viewport. */
+.stage { position: relative; overflow: hidden; }
+.backdrop { position: absolute; top: 50%; left: 50%; z-index: 0; flex-shrink: 0; translate: -50% -50%; pointer-events: none; }
+.stage > .device { z-index: 1; }

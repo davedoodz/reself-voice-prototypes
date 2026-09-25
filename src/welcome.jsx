@@ -8,6 +8,7 @@ import './welcome.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { BEAM, FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SCREEN_H, beamProps } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
+import { Backdrop } from './backdrop.jsx';
 import { UNWIND_DIALS } from './unwind-mark.js';
 import waveLogo from './icons/wave.png';
 import { WAVE_H, WAVE_PATH, WAVE_W } from './wave-path.js';
@@ -408,6 +409,7 @@ function Welcome() {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
+      <Backdrop />
       <div className="device" style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}>
         <div
           className="device-scaler"

@@ -6,6 +6,7 @@ import 'dialkit/styles.css';
 import './voice.css';
 import { BEAM, PROMPTS, PromptCard, beamProps } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
+import { Backdrop } from './backdrop.jsx';
 import { HeaderWave } from './header-wave.jsx';
 
 /* ─────────────────────────────────────────────────────────
@@ -83,6 +84,7 @@ function PromptCardPreview() {
 
   return (
     <main className="stage" style={{ background: v.pageColor }}>
+      <Backdrop />
       <div className="device" style={{ width: SCREEN_W * v.previewScale, height: SCREEN_H * v.previewScale }}>
         <div
           className="device-scaler"

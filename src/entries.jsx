@@ -38,6 +38,7 @@ import './entries.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SAFE_TOP, FRAMED_SCREEN_H } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
+import { Backdrop } from './backdrop.jsx';
 import { HeaderWave } from './header-wave.jsx';
 import { ENTRIES } from './entries-data.js';
 import starUrl from './assets/blue-stars.png';
@@ -1004,6 +1005,7 @@ function Entries() {
 
   return (
     <main className="stage" style={{ background: s.pageColor }}>
+      <Backdrop />
       <div className="device" style={{ width: deviceW * s.previewScale, height: deviceH * s.previewScale }}>
         <div
           className="device-scaler"
