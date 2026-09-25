@@ -70,6 +70,9 @@ const BRAND = {
   button: {
     background: '#72bdfa',
     text: '#ffffff',
+    strokeColor: '#ffffff',
+    strokeOpacity: [0.6, 0, 1, 0.01],
+    strokeWidth: [1, 0, 6, 0.5],
   },
 };
 
@@ -239,7 +242,7 @@ const LOGO_DIALS = {
       { value: 'out', label: 'Ease out' },
       { value: 'linear', label: 'Linear' },
     ],
-    default: 'smooth',
+    default: 'out',
   },
   headGlow: [0.9, 0, 1, 0.01],
 };
@@ -438,6 +441,8 @@ function Welcome() {
                 '--mark-y': `${brand.logo.markY}px`,
                 '--cta-bg': brand.button.background,
                 '--cta-fg': brand.button.text,
+                '--cta-stroke': `color-mix(in srgb, ${brand.button.strokeColor} ${brand.button.strokeOpacity * 100}%, transparent)`,
+                '--cta-stroke-w': `${brand.button.strokeWidth}px`,
                 '--letter-delay': `${markDelay + logo.durationMs * intro.lettersAt}ms`,
                 '--letter-ms': `${intro.letterMs}ms`,
                 '--letter-drift': `${intro.letterDrift}px`,
