@@ -785,8 +785,8 @@ function compositionConfig(d) {
       sidePadding: [d.sidePadding, 12, 80, 1],
       /* Framework chip (and header progress) distance from the top. */
       headerTop: [d.headerTop, 40, 300, 1],
-      /* Prompt block distance from the top. */
-      promptTop: [d.promptTop, 80, 420, 1],
+      /* Space between the framework chip (30px tall) and the cards. */
+      cardGap: [d.promptTop - d.headerTop - 30, -40, 300, 1],
       /* Dots under the stack (placement below-deck): fixed distance from the prompt top, so they never move. */
       belowDeckY: [d.belowDeckY ?? 190, 40, 500, 1],
     },
@@ -2063,7 +2063,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
         data-done={done || undefined}
         data-shuffling={leaving ? '' : undefined}
         style={{
-          top: `calc(${L.promptTop}px + var(--safe-top, 0px))`,
+          top: `calc(${L.headerTop + 30 + L.cardGap}px + var(--safe-top, 0px))`,
           '--panel-glass': panel.glass,
           '--panel-radius': `${panel.radius}px`,
           '--panel-pad': `${panel.padding}px`,
