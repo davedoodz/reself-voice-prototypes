@@ -837,6 +837,14 @@ function compositionConfig(d) {
         fanX: [0, -30, 30, 0.5],
         fanTilt: [0, -8, 8, 0.25],
       },
+      /* The drop shadow under every card in the deck. */
+      shadow: {
+        color: '#003246',
+        opacity: [0.08, 0, 0.5, 0.01],
+        y: [12, -20, 60, 1],
+        blur: [32, 0, 120, 1],
+        spread: [0, -30, 30, 1],
+      },
       /* Spring curves: how far past the target they swing (1 = none). */
       overshoot: [k.overshoot ?? 1.4, 1, 2.6, 0.01],
     },
@@ -2052,6 +2060,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           '--deck-scale': deck.scale,
           '--deck-fade': deck.fade,
           '--deck-depth': deck.depth,
+          '--deck-shadow': `0 ${deck.shadow.y}px ${deck.shadow.blur}px ${deck.shadow.spread}px color-mix(in srgb, ${deck.shadow.color} ${deck.shadow.opacity * 100}%, transparent)`,
           '--deck-ms': `${deck.shuffleMs}ms`,
           '--deck-lift': `${deck.lift}px`,
           '--deck-tilt': `${deck.tilt}deg`,
