@@ -686,6 +686,8 @@ export const GUIDE = {
   colors: {
     accent: '#61A8FD',
     track: '#e4eff2',
+    /* The dot for the step being answered right now. */
+    current: '#b0d4fe',
   },
   /* A new prompt arriving. */
   motion: {
@@ -1752,7 +1754,7 @@ function GooDots({ n, filled, live, size, d, style }) {
   const w = 2 * pad + n * size + (n - 1) * d.gap;
   const h = 2 * pad + size;
   const on = 'var(--guide-bar-on, #61A8FD)';
-  const current = 'color-mix(in srgb, var(--guide-bar-on, #61A8FD) 45%, var(--guide-bar-off, #dde6e8))';
+  const current = 'var(--guide-bar-current, #b0d4fe)';
   const frontier = live ? current : on;
 
   const { from, to, t } = anim;
@@ -1956,6 +1958,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
         '--guide-pad': `${L.sidePadding}px`,
         '--guide-bar-on': g.colors.accent,
         '--guide-bar-off': g.colors.track,
+        '--guide-bar-current': g.colors.current,
         '--guide-in': `${g.motion.inMs}ms`,
         '--guide-y': `${g.motion.offsetY}px`,
         '--guide-blur': `${g.motion.blur}px`,
