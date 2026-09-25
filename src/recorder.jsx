@@ -17,6 +17,7 @@ import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import sparkBigUrl from './assets/spark-big.png';
 import sparkSmallUrl from './assets/spark-small.png';
 import { StatusBar } from './status-bar.jsx';
+import { HeaderWave } from './header-wave.jsx';
 
 /* ─────────────────────────────────────────────────────────
  * VOICE JOURNAL RECORDER — simulated take
@@ -2395,6 +2396,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 />
               )}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
+              <HeaderWave />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>

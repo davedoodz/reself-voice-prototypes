@@ -5,6 +5,7 @@ import 'dialkit/styles.css';
 import './voice.css';
 import { COMPOSITION, FRAMEWORKS, GUIDE, GuideScreen } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
+import { HeaderWave } from './header-wave.jsx';
 
 /* ─────────────────────────────────────────────────────────
  * Guided mode's prompt cards, on their own, so the card motion can be tuned
@@ -72,6 +73,7 @@ function GuideCardsPreview() {
             aria-label="Guided card motion preview"
             style={{ height: SCREEN_H, background: v.screenColor, overflow: 'hidden', '--safe-top': '0px' }}
           >
+            <HeaderWave />
             <GuideScreen rec={rec} fw={fw} frameworks={FRAMEWORKS} g={g} comp={comp} onPick={() => {}} />
           </section>
           <StatusBar height={SCREEN_H} />

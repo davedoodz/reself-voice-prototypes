@@ -6,6 +6,7 @@ import 'dialkit/styles.css';
 import './voice.css';
 import { BEAM, PROMPTS, PromptCard, beamProps } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
+import { HeaderWave } from './header-wave.jsx';
 
 /* ─────────────────────────────────────────────────────────
  * Dynamic mode's question card, on its own, so every slider can be tuned
@@ -99,6 +100,7 @@ function PromptCardPreview() {
                 timerAt={scrub ? v.at : 0}
                 timerFrozen={scrub}
               />
+              <HeaderWave />
             </section>
           </VoiceBeam>
           <StatusBar height={SCREEN_H} />

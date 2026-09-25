@@ -38,8 +38,8 @@ import wordLogo from './icons/unwind.png';
  * ───────────────────────────────────────────────────────── */
 
 const BRAND = {
-  wordSize: [48, 32, 72, 1],
-  groupY: [0.4, 0.2, 0.6, 0.005],
+  wordSize: [50, 32, 72, 1],
+  groupY: [0.395, 0.2, 0.6, 0.005],
   logo: {
     /* The word: the blue PNG, or flat Test Family text ("un" upright, "wind" italic). */
     word: { type: 'select', options: [{ value: 'png', label: 'Blue PNG' }, { value: 'text', label: 'Flat text' }], default: 'text' },
@@ -49,11 +49,11 @@ const BRAND = {
     /* The word stays centred on screen; the mark sits to its left or above it. */
     markPlace: { type: 'select', options: [{ value: 'left', label: 'Left of word' }, { value: 'above', label: 'Above word' }], default: 'left' },
     markGap: [7, -20, 60, 1],
-    markScale: [1.16, 0.4, 2.5, 0.01],
+    markScale: [1.03, 0.4, 2.5, 0.01],
     markX: [0, -120, 120, 1],
     markY: [2, -120, 120, 1],
-    wordX: [40, -150, 150, 1],
-    wordY: [3, -200, 200, 1],
+    wordX: [41, -150, 150, 1],
+    wordY: [6, -200, 200, 1],
   },
   tagline: 'Talk it out. Find clarity.',
   taglineColor: '#8e98a6',
@@ -71,7 +71,7 @@ const BRAND = {
     background: '#72bdfa',
     text: '#ffffff',
     strokeColor: '#ffffff',
-    strokeOpacity: [0.6, 0, 1, 0.01],
+    strokeOpacity: [0.72, 0, 1, 0.01],
     strokeWidth: [1, 0, 6, 0.5],
   },
 };
@@ -115,10 +115,10 @@ const WELCOME_BEAM = {
 
 const INTRO = {
   /* The wordmark starts this far into the logo's opening (0 = with it, 1 = after). */
-  lettersAt: [0.16, 0, 1, 0.01],
-  letterMs: [1610, 100, 3000, 10],
-  letterDrift: [-52, -120, 60, 1],
-  letterBlur: [10, 0, 30, 0.5],
+  lettersAt: [0.24, 0, 1, 0.01],
+  letterMs: [1810, 100, 3000, 10],
+  letterDrift: [-35, -120, 60, 1],
+  letterBlur: [11.5, 0, 30, 0.5],
   /* Both measured from the moment the mark starts drawing. */
   taglineAfterMs: [1190, 0, 5000, 10],
   ctaAfterMs: [2000, 0, 6000, 10],
@@ -232,9 +232,11 @@ const MARK_STYLES = [
 const LOGO_DIALS = {
   style: { type: 'select', options: MARK_STYLES, default: 'brush' },
   ...UNWIND_DIALS,
+  durationMs: [2140, 300, 5000, 10],
+  bounce: [0.55, 0, 2, 0.05],
   /* Draw styles: stroke width over the wave's thickness, feather, and the curve. */
   strokePad: [1.5, 1, 3, 0.05],
-  softness: [6, 0, 20, 0.5],
+  softness: [15.5, 0, 30, 0.5],
   drawEase: {
     type: 'select',
     options: [

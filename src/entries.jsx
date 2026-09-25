@@ -38,6 +38,7 @@ import './entries.css';
 import iphoneFrameUrl from '../iphone_asset/iPhone - Silver.png';
 import { FRAME, FRAME_K, FRAMED_RADIUS, FRAMED_SAFE_TOP, FRAMED_SCREEN_H } from './recorder.jsx';
 import { StatusBar } from './status-bar.jsx';
+import { HeaderWave } from './header-wave.jsx';
 import { ENTRIES } from './entries-data.js';
 import starUrl from './assets/blue-stars.png';
 import playUrl from './assets/blue-play.png';
@@ -1022,6 +1023,7 @@ function Entries() {
                   <Detail e={entry} pb={pb} p={p} onBack={back} onOpenEntry={open} scrollRef={detailScroll} />
                 </div>
               </div>
+              <HeaderWave />
             </section>
           </IconCtx.Provider>
           <StatusBar height={screenH} />
