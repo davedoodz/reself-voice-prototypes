@@ -43,6 +43,8 @@ const BRAND = {
     /* The word: the blue PNG, or flat Test Family text ("un" upright, "wind" italic). */
     word: { type: 'select', options: [{ value: 'png', label: 'Blue PNG' }, { value: 'text', label: 'Flat text' }], default: 'text' },
     textColor: '#8e98a6',
+    /* Flat text: "un" in italic like "wind", or upright. */
+    italicUn: false,
     /* The word stays centred on screen; the mark sits to its left or above it. */
     markPlace: { type: 'select', options: [{ value: 'left', label: 'Left of word' }, { value: 'above', label: 'Above word' }], default: 'left' },
     markGap: [7, -20, 60, 1],
@@ -55,6 +57,15 @@ const BRAND = {
   tagline: 'Talk it out. Find clarity.',
   taglineColor: '#8e98a6',
   taglineSize: [20.5, 14, 28, 0.5],
+  taglineFont: {
+    type: 'select',
+    options: [
+      { value: 'test', label: 'Test Family' },
+      { value: 'test-italic', label: 'Test Family Italic' },
+      { value: 'inter', label: 'Inter' },
+    ],
+    default: 'test',
+  },
   button: {
     background: '#72bdfa',
     text: '#ffffff',
@@ -240,7 +251,7 @@ function springOut(t, bounce) {
   return e + bounce * Math.sin(Math.PI * t) * (1 - t);
 }
 
-const WORD_LETTERS = [...'unwind'].map((ch, i) => ({ ch, italic: i >= 2 }));
+const WORD_LETTERS = [...'unwind'].map((ch, i) => ({ ch, un: i < 2 }));
 
 function Wordmark({ lg, ...markProps }) {
   return (
@@ -250,8 +261,8 @@ function Wordmark({ lg, ...markProps }) {
         <img className="w-word" src={wordLogo} alt="" draggable={false} />
       ) : (
         <span className="w-word w-word-text" aria-hidden="true" style={{ color: lg.textColor }}>
-          {WORD_LETTERS.map(({ ch, italic }, i) => (
-            <span key={i} data-italic={italic || undefined}>{ch}</span>
+          {WORD_LETTERS.map(({ ch, un }, i) => (
+            <span key={i} data-italic={!un || lg.italicUn || undefined}>{ch}</span>
           ))}
         </span>
       )}
@@ -343,7 +354,16 @@ function Welcome() {
             >
               <div className="w-brand">
                 <Wordmark lg={brand.logo} o={logo} delayMs={markDelay} />
-                <p className="w-tagline">{brand.tagline}</p>
+                <p
+                  className="w-tagline"
+                  style={
+                    brand.taglineFont === 'inter'
+                      ? { fontFamily: 'Inter, -apple-system, system-ui, sans-serif', fontStyle: 'normal' }
+                      : { fontStyle: brand.taglineFont === 'test-italic' ? 'italic' : 'normal' }
+                  }
+                >
+                  {brand.tagline}
+                </p>
               </div>
 
               <div className="w-actions">
