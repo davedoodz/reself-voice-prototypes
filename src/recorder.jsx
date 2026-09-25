@@ -777,6 +777,7 @@ const deckCurve = (name, overshoot) =>
   })[name];
 
 function compositionConfig(d) {
+  const k = d.deck ?? {};
   return {
     _collapsed: true,
     layout: {
@@ -798,13 +799,15 @@ function compositionConfig(d) {
        Next shuffles the front card to the back and the one beneath comes forward. */
     deck: {
       show: d.deck?.show ?? false,
-      depth: [2, 0, 4, 1],
-      offset: [10, 0, 40, 1],
+      depth: [k.depth ?? 2, 0, 4, 1],
+      offset: [k.offset ?? 10, 0, 40, 1],
       scale: [0.05, 0, 0.2, 0.005],
-      fade: [0.3, 0, 1, 0.01],
-      shuffleMs: [640, 0, 2000, 10],
-      lift: [46, 0, 160, 1],
-      tilt: [-4, -20, 20, 0.5],
+      fade: [k.fade ?? 0.3, 0, 1, 0.01],
+      shuffleMs: [k.shuffleMs ?? 640, 0, 2000, 10],
+      lift: [k.lift ?? 46, 0, 160, 1],
+      tilt: [k.tilt ?? -4, -20, 20, 0.5],
+      /* Where the answered card goes: tucked to the back, or away off the top. */
+      leaveTo: select(['away', 'back'], k.leaveTo ?? 'away'),
       /* How the move feels. The answered card leaves on `leave`; the next one
          comes forward on `rise`; the waiting cards fan and settle on `stack`. */
       leave: {
@@ -814,7 +817,7 @@ function compositionConfig(d) {
         driftX: [0, -160, 160, 1],
         liftScale: [0.97, 0.7, 1.15, 0.01],
         endOpacity: [0, 0, 1, 0.01],
-        blur: [0, 0, 16, 0.5],
+        blur: [k.leaveBlur ?? 0, 0, 16, 0.5],
       },
       rise: {
         curve: select(DECK_CURVES, 'out'),
@@ -827,20 +830,20 @@ function compositionConfig(d) {
       },
       stack: {
         curve: select(DECK_CURVES, 'out'),
-        settleMs: [640, 0, 2000, 10],
+        settleMs: [k.settleMs ?? 640, 0, 2000, 10],
         /* Per card of depth: sideways shift and turn, for a fanned deck. */
         fanX: [0, -30, 30, 0.5],
         fanTilt: [0, -8, 8, 0.25],
       },
       /* Spring curves: how far past the target they swing (1 = none). */
-      overshoot: [1.4, 1, 2.6, 0.01],
+      overshoot: [k.overshoot ?? 1.4, 1, 2.6, 0.01],
     },
     chip: { ...move(d.chip), font: font(d.chip.font), size: [d.chip.size, 10, 18, 0.5] },
     progress: {
       ...move(d.progress),
       style: select(['bars', 'dots', 'steps', 'fraction'], d.progress.style),
       /* header-row puts the progress on the chip's row, at the far side. */
-      placement: select(['header', 'header-row', 'prompt-top', 'prompt-bottom'], d.progress.placement),
+      placement: select(['header', 'header-row', 'prompt-top', 'prompt-bottom', 'below-deck'], d.progress.placement),
       /* Bar height, dot size, or font size, depending on style. */
       size: [d.progress.size, 1, 20, 0.5],
       /* Applies to the text styles (steps, fraction). */
@@ -902,9 +905,10 @@ export const COMPOSITION = {
   bubble: compositionConfig({
     align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
     panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
-    deck: { show: true },
+    deck: { show: true, depth: 4, offset: 8, fade: 0, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 2.6 },
     chip: { size: 13, y: -4 },
-    progress: { style: 'dots', placement: 'prompt-bottom', size: 7 },
+    /* Dots sit centred under the card stack. */
+    progress: { style: 'dots', placement: 'below-deck', size: 7 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
@@ -2066,6 +2070,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           '--fan-tilt': `${deck.stack.fanTilt}deg`,
         }}
       >
+        <div className="guide-deck">
         {Array.from({ length: ghosts }, (_, k) => (
           <div key={rec.step + k + 1} className="guide-card guide-ghost" data-panel={panel.shape} style={{ '--d': k + 1 }} />
         ))}
@@ -2073,8 +2078,10 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           /* Keyframe stops can't read CSS variables, so the peak timing is written here. */
           <style>{`@keyframes deck-shuffle-tuned {
   ${deck.leave.peakAt * 100}% { z-index: 3; transform: translate(calc(var(--leave-x) * 0.5), calc(-1 * var(--deck-lift))) rotate(var(--deck-tilt)) scale(var(--leave-scale)); }
-  ${Math.min(99, deck.leave.peakAt * 100 + 10)}% { z-index: -9; }
-  to { z-index: -9; opacity: var(--leave-opacity); filter: blur(var(--leave-blur)); transform: translate(var(--leave-x), calc(var(--back) * var(--deck-offset))) scale(calc(1 - var(--back) * var(--deck-scale))); }
+  ${deck.leaveTo === 'back'
+    ? `${Math.min(99, deck.leave.peakAt * 100 + 10)}% { z-index: -9; }
+  to { z-index: -9; opacity: var(--leave-opacity); filter: blur(var(--leave-blur)); transform: translate(var(--leave-x), calc(var(--back) * var(--deck-offset))) scale(calc(1 - var(--back) * var(--deck-scale))); }`
+    : `to { z-index: 3; opacity: var(--leave-opacity); filter: blur(var(--leave-blur)); transform: translate(var(--leave-x), calc(-2 * var(--deck-lift))) rotate(calc(var(--deck-tilt) * 1.5)) scale(var(--leave-scale)); }`}
 }`}</style>
         )}
         {leaving && (
@@ -2100,6 +2107,8 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           </div>
           {at('prompt-bottom')}
         </div>
+        </div>
+        {at('below-deck') && <div className="guide-below-deck" style={{ marginTop: ghosts * deck.offset + 14 }}>{at('below-deck')}</div>}
       </div>
     </div>
   );

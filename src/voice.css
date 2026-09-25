@@ -777,3 +777,5 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .stage { position: relative; overflow: hidden; }
 .backdrop { position: absolute; top: 50%; left: 50%; z-index: 0; flex-shrink: 0; translate: -50% -50%; pointer-events: none; }
 .stage > .device { z-index: 1; }
+.guide-below-deck { display: flex; justify-content: center; align-self: stretch; }
+.guide-deck { position: relative; display: flex; flex-direction: column; align-items: inherit; align-self: stretch; isolation: isolate; }
