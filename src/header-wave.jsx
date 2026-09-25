@@ -70,16 +70,16 @@ export function HeaderWave() {
       aria-hidden="true"
     >
       <defs>
-        <filter id={`f${id}`} x="-20%" y="-50%" width="140%" height="200%">
+        <filter id={`f${id}`} filterUnits="userSpaceOnUse" x="-80" y="-80" width={WAVE_W + 160} height={WAVE_H + 160}>
           <feGaussianBlur stdDeviation={h.softness} />
         </filter>
-        <mask id={`m${id}`} maskUnits="userSpaceOnUse" x="-40" y="-40" width={WAVE_W + 80} height={WAVE_H + 80}>
+        <mask id={`m${id}`} maskUnits="userSpaceOnUse" x="-80" y="-80" width={WAVE_W + 160} height={WAVE_H + 160}>
           <path
             ref={stroke}
             d={WAVE_PATH}
             fill="none"
             stroke="#fff"
-            strokeWidth={42 * h.strokePad}
+            strokeWidth={42 * h.strokePad + 3 * h.softness}
             strokeLinecap="round"
             strokeLinejoin="round"
             filter={h.softness ? `url(#f${id})` : undefined}

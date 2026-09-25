@@ -317,16 +317,16 @@ function Mark({ o, delayMs }) {
   return (
     <svg ref={root} className="w-mark" viewBox={`0 0 ${WAVE_W} ${WAVE_H}`} style={{ aspectRatio: `${WAVE_W} / ${WAVE_H}`, overflow: 'visible' }} aria-hidden="true">
       <defs>
-        <filter id={`f${id}`} x="-20%" y="-50%" width="140%" height="200%">
+        <filter id={`f${id}`} filterUnits="userSpaceOnUse" x="-80" y="-80" width={WAVE_W + 160} height={WAVE_H + 160}>
           <feGaussianBlur stdDeviation={soft} />
         </filter>
-        <mask id={`m${id}`} maskUnits="userSpaceOnUse" x="-40" y="-40" width={WAVE_W + 80} height={WAVE_H + 80}>
+        <mask id={`m${id}`} maskUnits="userSpaceOnUse" x="-80" y="-80" width={WAVE_W + 160} height={WAVE_H + 160}>
           <path
             ref={stroke}
             d={WAVE_PATH}
             fill="none"
             stroke="#fff"
-            strokeWidth={42 * o.strokePad}
+            strokeWidth={42 * o.strokePad + 3 * soft}
             strokeLinecap="round"
             strokeLinejoin="round"
             filter={soft ? `url(#f${id})` : undefined}
