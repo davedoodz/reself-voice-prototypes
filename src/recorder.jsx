@@ -840,10 +840,10 @@ function compositionConfig(d) {
       /* The drop shadow under every card in the deck. */
       shadow: {
         color: '#003246',
-        opacity: [0.08, 0, 0.5, 0.01],
+        opacity: [k.shadow?.opacity ?? 0.08, 0, 0.5, 0.01],
         y: [12, -20, 60, 1],
-        blur: [32, 0, 120, 1],
-        spread: [0, -30, 30, 1],
+        blur: [k.shadow?.blur ?? 32, 0, 120, 1],
+        spread: [k.shadow?.spread ?? 0, -30, 30, 1],
       },
       /* Spring curves: how far past the target they swing (1 = none). */
       overshoot: [k.overshoot ?? 1.4, 1, 2.6, 0.01],
@@ -915,10 +915,10 @@ export const COMPOSITION = {
   bubble: compositionConfig({
     align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
     panel: { show: true, shape: 'bubble', glass: 0.62, radius: 24, padding: 18 },
-    deck: { show: true, depth: 4, offset: 10, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1 },
+    deck: { show: true, depth: 4, offset: 7, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1, shadow: { opacity: 0.07, blur: 12, spread: -10 } },
     chip: { size: 13, y: -4 },
     /* Dots sit centred under the card stack. */
-    progress: { style: 'dots', placement: 'below-deck', size: 7.5, y: -23 },
+    progress: { style: 'dots', placement: 'below-deck', size: 7.5, y: -37 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
