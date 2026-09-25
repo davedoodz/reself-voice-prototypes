@@ -704,17 +704,17 @@ export const GUIDE = {
       ],
       'drip',
     ),
-    durationMs: [440, 100, 3000, 10],
+    durationMs: [500, 100, 3000, 10],
     gap: [6, 0, 24, 0.5],
     /* How far the goo reaches, in dot radii; 0 turns merging off. */
-    goo: [0.6, 0, 1.5, 0.01],
-    overshoot: [2.16, 1, 3, 0.01],
+    goo: [0.29, 0, 1.5, 0.01],
+    overshoot: [2.1, 1, 3, 0.01],
     /* Travelling droplet size (drip, hop) as a share of a dot. */
-    drop: [0.8, 0.2, 1.2, 0.01],
+    drop: [0.58, 0.2, 1.2, 0.01],
     /* Hop height, in dot sizes. */
-    hop: [0.9, 0, 4, 0.05],
+    hop: [0.8, 0, 4, 0.05],
     /* Bridge thickness (bridge) as a share of a dot. */
-    bridge: [0.24, 0.1, 1, 0.01],
+    bridge: [0.26, 0.1, 1, 0.01],
   },
 };
 
@@ -906,11 +906,11 @@ export const COMPOSITION = {
   }),
   bubble: compositionConfig({
     align: 'left', sidePadding: 24, headerTop: 100, promptTop: 156,
-    panel: { show: true, shape: 'bubble', glass: 0.85, radius: 24, padding: 18 },
-    deck: { show: true, depth: 4, offset: 8, fade: 0, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 2.6 },
+    panel: { show: true, shape: 'bubble', glass: 0.62, radius: 24, padding: 18 },
+    deck: { show: true, depth: 4, offset: 10, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1 },
     chip: { size: 13, y: -4 },
     /* Dots sit centred under the card stack. */
-    progress: { style: 'dots', placement: 'below-deck', size: 7 },
+    progress: { style: 'dots', placement: 'below-deck', size: 7.5, y: -23 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
@@ -2051,6 +2051,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           '--deck-offset': `${deck.offset}px`,
           '--deck-scale': deck.scale,
           '--deck-fade': deck.fade,
+          '--deck-depth': deck.depth,
           '--deck-ms': `${deck.shuffleMs}ms`,
           '--deck-lift': `${deck.lift}px`,
           '--deck-tilt': `${deck.tilt}deg`,

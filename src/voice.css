@@ -303,7 +303,7 @@ button { font: inherit; color: inherit; }
 .guide-leaving { position: absolute; inset: 0; transform-origin: 50% 100%; }
 .guide-ghost {
   z-index: calc(-1 * var(--d));
-  opacity: calc(1 - var(--d) * var(--deck-fade, 0.3));
+  opacity: calc(1 - var(--d) / (var(--deck-depth, 2) + 1) * var(--deck-fade, 0.3));
   transform: translate(calc(var(--d) * var(--fan-x, 0px)), calc(var(--d) * var(--deck-offset, 10px)))
     rotate(calc(var(--d) * var(--fan-tilt, 0deg))) scale(calc(1 - var(--d) * var(--deck-scale, 0.05)));
   transition: transform var(--stack-ms, 640ms) var(--stack-ease, cubic-bezier(0.22, 1, 0.36, 1)), opacity var(--stack-ms, 640ms) ease;
