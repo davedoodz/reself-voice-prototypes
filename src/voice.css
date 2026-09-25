@@ -352,7 +352,6 @@ button { font: inherit; color: inherit; }
 .guide-framework-info svg { width: 15px; height: 15px; }
 /* Locked for the length of a take; the info card stays available. */
 .guide-framework-pick:disabled { cursor: default; opacity: 0.55; }
-.guide-framework-pick:disabled > svg:last-child { display: none; }
 .guide-framework button:focus-visible, .guide-menu button:focus-visible, .guide-info button:focus-visible { outline: 2px solid #61A8FD; outline-offset: 2px; }
 
 /* Lucide icon in a soft accent tile, used in the menu and the info card. */
