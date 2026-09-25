@@ -782,3 +782,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-below-deck { position: absolute; right: 0; left: 0; }
 /* While a card leaves, the prompt deck rises above the framework chip. */
 .guide .guide-prompt[data-shuffling] { z-index: 3; }
+.guide-step-cell { display: grid; align-self: stretch; }
+.guide-step-cell > * { grid-area: 1 / 1; }
+.guide-step-sizer { visibility: hidden; animation: none; }

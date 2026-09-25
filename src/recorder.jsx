@@ -2104,8 +2104,15 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
             </button>
           )}
           {at('prompt-top')}
-          <div className="guide-step" key={`${fw.id}-${rec.step}`} aria-live="polite">
-            {stepContent(rec.step)}
+          {/* Every step's text sits invisibly in the same cell, so the card is
+              always as tall as the longest question and never resizes. */}
+          <div className="guide-step-cell">
+            {fw.steps.map((_, i) => (
+              <div key={i} className="guide-step guide-step-sizer" aria-hidden="true">{stepContent(i)}</div>
+            ))}
+            <div className="guide-step" key={`${fw.id}-${rec.step}`} aria-live="polite">
+              {stepContent(rec.step)}
+            </div>
           </div>
           {at('prompt-bottom')}
         </div>
