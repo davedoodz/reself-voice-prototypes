@@ -728,9 +728,9 @@ export const GUIDE = {
   },
   colors: {
     accent: '#61A8FD',
-    track: '#e4eff2a3',
+    track: '#e4eff2',
     /* The dot for the step being answered right now. */
-    current: '#bedbfb9e',
+    current: '#bedbfbd6',
   },
   /* A new prompt arriving. */
   motion: {
@@ -946,7 +946,7 @@ export const COMPOSITION = {
     deck: { show: true, depth: 4, offset: 7, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1, shadow: { opacity: 0.07, blur: 12, spread: -10 } },
     chip: { size: 13, y: -4 },
     /* Dots sit centred under the card stack. */
-    progress: { style: 'dots', placement: 'below-deck', size: 7, y: -55 },
+    progress: { style: 'dots', placement: 'below-deck', size: 8, y: -43 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
