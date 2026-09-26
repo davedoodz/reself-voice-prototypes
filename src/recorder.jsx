@@ -685,7 +685,7 @@ export const GUIDE = {
   stepDelayMs: [250, 0, 2000, 10],
   /* The framework info card: distance below the chip (negative moves it up over the chip) and its height. */
   infoCard: {
-    y: [38, -140, 200, 1],
+    y: [10, -140, 200, 1],
     height: [500, 280, 700, 1],
   },
   colors: {
