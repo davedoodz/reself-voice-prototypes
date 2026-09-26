@@ -2429,8 +2429,9 @@ export function VoiceRecorder({ variant = 'freeform' }) {
           <VoiceBeam
             className="beam-host"
             level={rec.getLevel}
-            // No beam before recording, or on a Guided step with no spoken answer.
-            active={rec.status !== 'stopped' && rec.status !== 'idle' && !(rec.live && guide?.answers[rec.step] === '')}
+            // The glow only comes on once words are showing, so it reads as the voice;
+            // it stays on through processing for the sweep.
+            active={rec.status === 'processing' || (rec.live && rec.visible > 0)}
             {...beamProps(b)}
             processing={rec.thinking}
             processingDuration={c.processing.beam.passSeconds}
