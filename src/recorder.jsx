@@ -1046,6 +1046,8 @@ function useRecorder(s, t, ctl, pr, guide) {
   const [clearing, setClearing] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [thinking, setThinking] = useState(false);
+  /* True while the answer's words are still being spoken. */
+  const [speaking, setSpeaking] = useState(false);
   /* The card on screen: { id, question, phase: 'offered' | 'faded' | 'taken' }. */
   const [prompt, setPrompt] = useState(null);
   const level = useRef(0);
@@ -1196,6 +1198,7 @@ function useRecorder(s, t, ctl, pr, guide) {
       // State only changes when a word lands, the take clears, a phase flips, or a second passes.
       setVisible(shown);
       setClearing(!g && c.t > speakEnd + holdMs);
+      setSpeaking(recording && c.t < speakEnd + 250);
       setSeconds(Math.floor(c.rec / 1000));
       setThinking(isThinking);
     };
@@ -1253,7 +1256,7 @@ function useRecorder(s, t, ctl, pr, guide) {
   const primary = !live ? 'record' : step < steps - 1 ? 'next' : 'stop';
 
   return {
-    status, live, step, primary, guided: !!guide, items, visible, hideText, thinking, seconds, prompt,
+    status, live, step, primary, guided: !!guide, items, visible, hideText, thinking, speaking, seconds, prompt,
     record, restart, next, togglePause, stop: beginProcessing, answer, dismiss, getLevel,
     /* Guided: skip the card without answering; same move as Next (Finish on the last card). */
     skip: guide ? next : undefined,
@@ -2429,9 +2432,9 @@ export function VoiceRecorder({ variant = 'freeform' }) {
           <VoiceBeam
             className="beam-host"
             level={rec.getLevel}
-            // The glow only comes on once words are showing, so it reads as the voice;
+            // The glow is the voice: on from the first word, fading out once the answer ends;
             // it stays on through processing for the sweep.
-            active={rec.status === 'processing' || (rec.live && rec.visible > 0)}
+            active={rec.status === 'processing' || (rec.live && rec.visible > 0 && rec.speaking)}
             {...beamProps(b)}
             processing={rec.thinking}
             processingDuration={c.processing.beam.passSeconds}
