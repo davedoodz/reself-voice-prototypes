@@ -605,19 +605,19 @@ export const FRAMEWORKS = [
         label: 'Wish',
         question: 'What do you want to work toward this week?',
         hint: 'Something challenging but possible.',
-        answer: 'I want to get back into running. Three short runs before Sunday.',
+        answer: 'I want to read before bed instead of scrolling.',
       },
       {
         label: 'Outcome',
         question: 'What would be the best result? Picture it.',
         hint: 'Imagine it as vividly as you can.',
-        answer: 'Feeling clear-headed in the mornings again. Sleeping better, and being proud I kept a promise to myself.',
+        answer: 'Falling asleep calmer, and finishing a book this month.',
       },
       {
         label: 'Obstacle',
         question: 'What in you is most likely to get in the way?',
         hint: 'A habit, feeling, or belief, not the weather.',
-        answer: "When I wake up tired I talk myself out of it. I tell myself I'll go tonight, and tonight never happens.",
+        answer: "I grab my phone the second I get into bed.",
       },
       {
         label: 'Plan',
