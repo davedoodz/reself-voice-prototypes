@@ -67,7 +67,7 @@ const EXIT_CURVES = {
 const EXIT_COUNT = 4;
 
 const FREEFORM_TEXT =
-  'Yeah so today felt slower in a good way. I finally took the long walk by the river and noticed how quiet my head got later. I want to remember that feeling, and protect one free hour every morning this week.';
+  'Yeah so today felt slower in a good way. I finally took the long walk by the river this morning and noticed how calm I was for the rest of the day.';
 
 /* Written for someone who stalls without a nudge: short, flat statements that
    open up once a question lands. [Question | Answer] marks where Dynamic mode
@@ -2336,7 +2336,7 @@ function Transcript({ items, rec, t, rightInset, questionStyle, leaving }) {
 
 /* Per-page backdrop and header-logo defaults; pages not listed use the shared ones. */
 const PAGE_BACKDROP = {
-  freeform: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
+  freeform: { width: 500, height: 750, radius: 0, fill: '../bg-images/evening-apartment.png', color: '#61a8fd12' },
   guided: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
 };
 const STILL_HEADER = new Set(['freeform', 'guided']);
