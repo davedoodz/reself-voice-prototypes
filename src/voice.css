@@ -788,3 +788,7 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-deck .guide-card[data-panel] { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), var(--deck-shadow, 0 12px 32px rgba(0, 50, 70, 0.08)); }
 .guide-prompt[data-done] .guide-front, .guide-prompt[data-done] .guide-below-deck { opacity: 0; transition: opacity 0.3s ease; }
 .guide-info { top: var(--info-y, 38px); }
+/* Guided: the previous answer fades out on Next; its words don't replay. */
+.transcript[data-leaving] { animation: text-leave var(--text-leave-ms, 450ms) ease forwards; pointer-events: none; }
+.transcript[data-leaving] .word { animation: none; }
+@keyframes text-leave { to { opacity: 0; filter: blur(4px); } }

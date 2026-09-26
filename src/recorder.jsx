@@ -623,7 +623,8 @@ export const FRAMEWORKS = [
         label: 'Plan',
         question: 'If that obstacle shows up, what will you do?',
         hint: 'Say it as: if … then I will …',
-        answer: "If I wake up and want to skip, then I'll put my shoes on and just walk to the corner. That's the whole deal.",
+        /* Left empty on purpose: this step shows no transcript text. */
+        answer: '',
       },
     ],
   },
@@ -683,6 +684,8 @@ export const GUIDE = {
   advanceAfterMs: [2500, 0, 10000, 100],
   /* After Next, a short beat before the new answer's words start (on top of Transcript › startDelayMs). */
   stepDelayMs: [250, 0, 2000, 10],
+  /* On Next, the previous answer's words fade out over this long. */
+  textFadeMs: [450, 0, 2000, 10],
   /* The framework info card: distance below the chip (negative moves it up over the chip) and its height. */
   infoCard: {
     y: [10, -140, 200, 1],
@@ -2236,7 +2239,7 @@ function Layout({ layout, rec, s }) {
 }
 
 /* ── Transcript ────────────────────────────────────────── */
-function Transcript({ items, rec, t, rightInset, questionStyle }) {
+function Transcript({ items, rec, t, rightInset, questionStyle, leaving }) {
   const { overflow: o, words: w, type: ty } = t;
   const n = Math.min(rec.visible, items.length);
   let start = 0;
@@ -2268,6 +2271,7 @@ function Transcript({ items, rec, t, rightInset, questionStyle }) {
     <div
       className="transcript"
       data-clearing={rec.hideText || undefined}
+      data-leaving={leaving || undefined}
       style={{
         left: ty.sidePadding,
         right: ty.sidePadding + rightInset,
@@ -2339,6 +2343,19 @@ export function VoiceRecorder({ variant = 'freeform' }) {
     stepDelayMs: g.stepDelayMs,
   };
   const rec = useRecorder(s, t, c, pr, guide);
+  /* Guided: on Next, the answer just spoken fades out instead of vanishing. */
+  const [ghost, setGhost] = useState(null);
+  const lastTake = useRef({ step: 0, items: [], visible: 0 });
+  useEffect(() => {
+    const prev = lastTake.current;
+    if (!g || prev.step === rec.step || !rec.live || prev.visible === 0) return;
+    setGhost({ key: prev.step, items: prev.items.slice(0, prev.visible) });
+    const id = setTimeout(() => setGhost(null), g.textFadeMs);
+    return () => clearTimeout(id);
+  }, [rec.step]);
+  useEffect(() => {
+    lastTake.current = { step: rec.step, items: rec.items, visible: rec.visible };
+  });
   const framed = s.deviceFrame;
   const screenH = framed ? FRAMED_SCREEN_H : s.screenHeight;
   const deviceW = framed ? FRAME.w * FRAME_K : 390;
@@ -2433,6 +2450,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 '--button-color': c.record.buttonColor,
                 '--text-fade-ms': `${rec.status === 'processing' ? c.processing.fadeOutMs : 450}ms`,
                 '--morph-ms': `${c.record.morphMs}ms`,
+                '--text-leave-ms': `${g ? g.textFadeMs : 450}ms`,
                 '--exit-ms': `${c.exit.durationMs}ms`,
                 '--exit-stagger': `${c.exit.staggerMs}ms`,
                 '--exit-ease': EXIT_CURVES[c.exit.curve],
@@ -2442,6 +2460,16 @@ export function VoiceRecorder({ variant = 'freeform' }) {
               }}
             >
               {/* The thumb rail sits at the right edge, so the text keeps clear of it. */}
+              {ghost && (
+                <Transcript
+                  key={`ghost-${ghost.key}`}
+                  items={ghost.items}
+                  rec={{ ...rec, visible: ghost.items.length, hideText: false }}
+                  t={t}
+                  rightInset={s.layout === 'rail' ? 40 : 0}
+                  leaving
+                />
+              )}
               <Transcript
                 items={rec.items}
                 rec={rec}
