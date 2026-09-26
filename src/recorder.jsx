@@ -240,8 +240,8 @@ const CONTROLS = {
     /* Distance from the screen's bottom edge; lower = further down. */
     bottomInset: [44, 0, 140, 1],
     /* Nudge the pill or the button cluster on its own; positive = down. */
-    pillShiftY: [12, -40, 40, 1],
-    buttonsShiftY: [12, -40, 40, 1],
+    pillShiftY: [-7, -40, 40, 1],
+    buttonsShiftY: [-7, -40, 40, 1],
   },
   record: {
     buttonColor: '#292931',
