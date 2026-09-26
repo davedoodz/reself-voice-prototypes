@@ -713,14 +713,14 @@ export const GUIDE = {
         { value: 'sink', label: '4 · Sink' },
         { value: 'shrink', label: '5 · Shrink' },
       ],
-      'blur',
+      'shrink',
     ),
-    durationMs: [450, 0, 2000, 10],
-    curve: select(DECK_CURVES, 'out'),
+    durationMs: [2000, 0, 2000, 10],
+    curve: select(DECK_CURVES, 'snap'),
     /* How strong the preset's move is: blur px, drift px, or shrink amount. */
-    blur: [4, 0, 24, 0.5],
-    distance: [14, 0, 80, 1],
-    scale: [0.94, 0.6, 1, 0.01],
+    blur: [24, 0, 24, 0.5],
+    distance: [0, 0, 80, 1],
+    scale: [0.6, 0.6, 1, 0.01],
   },
   /* The framework info card: distance below the chip (negative moves it up over the chip) and its height. */
   infoCard: {
@@ -2273,7 +2273,8 @@ function Transcript({ items, rec, t, rightInset, questionStyle, leaving }) {
     const h = el.offsetHeight;
     const delta = h - prevHeight.current;
     prevHeight.current = h;
-    if (delta <= 0 || o.scrollEaseMs === 0) return;
+    // The fading copy of a finished answer stays exactly where it was.
+    if (leaving || delta <= 0 || o.scrollEaseMs === 0) return;
     el.style.transition = 'none';
     el.style.transform = `translateY(${delta}px)`;
     el.getBoundingClientRect();
