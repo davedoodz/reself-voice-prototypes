@@ -704,7 +704,7 @@ export const GUIDE = {
   stepDelayMs: [250, 0, 2000, 10],
   /* Extra up/down nudge for the progress dots, per framework (added to the layout's Y). */
   dotsY: {
-    gross: [0, -120, 120, 1],
+    gross: [18, -120, 120, 1],
     abcde: [0, -120, 120, 1],
     woop: [0, -120, 120, 1],
     gibbs: [0, -120, 120, 1],
