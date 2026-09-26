@@ -702,6 +702,13 @@ export const GUIDE = {
   advanceAfterMs: [2500, 0, 10000, 100],
   /* After Next, a short beat before the new answer's words start (on top of Transcript › startDelayMs). */
   stepDelayMs: [250, 0, 2000, 10],
+  /* Extra up/down nudge for the progress dots, per framework (added to the layout's Y). */
+  dotsY: {
+    gross: [0, -120, 120, 1],
+    abcde: [0, -120, 120, 1],
+    woop: [0, -120, 120, 1],
+    gibbs: [0, -120, 120, 1],
+  },
   /* On Next, how the previous answer leaves. */
   textOut: {
     preset: select(
@@ -2174,7 +2181,7 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
           {at('prompt-bottom')}
         </div>
         </div>
-        {at('below-deck') && <div className="guide-below-deck" style={{ top: L.belowDeckY }}>{at('below-deck')}</div>}
+        {at('below-deck') && <div className="guide-below-deck" style={{ top: L.belowDeckY + (g.dotsY?.[fw.id] ?? 0) }}>{at('below-deck')}</div>}
       </div>
     </div>
   );
