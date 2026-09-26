@@ -683,6 +683,11 @@ export const GUIDE = {
   advanceAfterMs: [2500, 0, 10000, 100],
   /* After Next, a short beat before the new answer's words start (on top of Transcript › startDelayMs). */
   stepDelayMs: [250, 0, 2000, 10],
+  /* The framework info card: distance below the chip (negative moves it up over the chip) and its height. */
+  infoCard: {
+    y: [38, -140, 200, 1],
+    height: [500, 280, 700, 1],
+  },
   colors: {
     accent: '#61A8FD',
     track: '#e4eff2a3',
@@ -1959,6 +1964,8 @@ export function GuideScreen({ rec, fw, frameworks, g, comp, onPick }) {
         '--guide-bar-on': g.colors.accent,
         '--guide-bar-off': g.colors.track,
         '--guide-bar-current': g.colors.current,
+        '--info-y': `${g.infoCard.y}px`,
+        '--info-h': `${g.infoCard.height}px`,
         '--guide-in': `${g.motion.inMs}ms`,
         '--guide-y': `${g.motion.offsetY}px`,
         '--guide-blur': `${g.motion.blur}px`,
