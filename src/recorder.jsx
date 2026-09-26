@@ -946,7 +946,7 @@ export const COMPOSITION = {
     deck: { show: true, depth: 4, offset: 7, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1, shadow: { opacity: 0.07, blur: 12, spread: -10 } },
     chip: { size: 13, y: -4 },
     /* Dots sit centred under the card stack. */
-    progress: { style: 'dots', placement: 'below-deck', size: 8, y: -43 },
+    progress: { style: 'dots', placement: 'below-deck', size: 8, y: -50 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
