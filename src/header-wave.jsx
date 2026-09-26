@@ -14,11 +14,11 @@ const HEADER_WAVE = {
   y: [52, 0, 400, 1],
   animate: true,
   loop: true,
-  drawMs: [2140, 200, 6000, 10],
-  holdMs: [2400, 0, 10000, 50],
-  fadeMs: [600, 0, 3000, 10],
-  softness: [15.5, 0, 30, 0.5],
-  strokePad: [1.5, 1, 3, 0.05],
+  drawMs: [1640, 200, 6000, 10],
+  holdMs: [950, 0, 10000, 50],
+  fadeMs: [1010, 0, 3000, 10],
+  softness: [20.5, 0, 30, 0.5],
+  strokePad: [1.2, 1, 3, 0.05],
 };
 
 const easeOut = (t) => 1 - (1 - t) ** 3;

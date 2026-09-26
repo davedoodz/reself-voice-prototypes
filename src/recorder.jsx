@@ -2334,12 +2334,11 @@ function Transcript({ items, rec, t, rightInset, questionStyle, leaving }) {
   );
 }
 
-/* Per-page backdrop and header-logo defaults; pages not listed use the shared ones. */
+/* Per-page backdrop defaults; pages not listed use the shared one. */
 const PAGE_BACKDROP = {
   freeform: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
   guided: { width: 500, height: 750, radius: 0, fill: 'color', color: '#61a8fd12' },
 };
-const STILL_HEADER = new Set(['freeform', 'guided']);
 
 export function VoiceRecorder({ variant = 'freeform' }) {
   const v = VARIANTS[variant];
@@ -2519,11 +2518,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 />
               )}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
-              {STILL_HEADER.has(variant) ? (
-                <HeaderWave defaults={{ animate: false, loop: false }} id={`header-logo-${variant}`} />
-              ) : (
-                <HeaderWave />
-              )}
+              <HeaderWave />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>
