@@ -623,8 +623,7 @@ export const FRAMEWORKS = [
         label: 'Plan',
         question: 'If that obstacle shows up, what will you do?',
         hint: 'Say it as: if … then I will …',
-        /* Left empty on purpose: this step shows no transcript text. */
-        answer: '',
+        answer: "If I reach for my phone, then I'll leave it charging in the kitchen.",
       },
     ],
   },
