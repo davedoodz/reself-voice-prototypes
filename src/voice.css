@@ -789,6 +789,6 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .guide-prompt[data-done] .guide-front, .guide-prompt[data-done] .guide-below-deck { opacity: 0; transition: opacity 0.3s ease; }
 .guide-info { top: var(--info-y, 38px); }
 /* Guided: the previous answer fades out on Next; its words don't replay. */
-.transcript[data-leaving] { animation: text-leave var(--text-leave-ms, 450ms) ease forwards; pointer-events: none; }
+.transcript[data-leaving] { animation: text-leave var(--text-leave-ms, 450ms) var(--text-leave-ease, ease) forwards; pointer-events: none; }
 .transcript[data-leaving] .word { animation: none; }
-@keyframes text-leave { to { opacity: 0; filter: blur(4px); } }
+@keyframes text-leave { to { opacity: 0; filter: blur(var(--text-leave-blur, 4px)); translate: 0 var(--text-leave-y, 0px); scale: var(--text-leave-scale, 1); } }

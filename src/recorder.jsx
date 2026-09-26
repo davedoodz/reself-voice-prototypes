@@ -678,14 +678,50 @@ export const FRAMEWORKS = [
   },
 ];
 
+/* Deck motion curves. 'spring' swings past the target by the deck's overshoot. */
+const DECK_CURVES = [
+  { value: 'smooth', label: 'Smooth (in-out)' },
+  { value: 'out', label: 'Ease out' },
+  { value: 'in', label: 'Ease in' },
+  { value: 'spring', label: 'Spring' },
+  { value: 'snap', label: 'Snap' },
+  { value: 'linear', label: 'Linear' },
+];
+const deckCurve = (name, overshoot) =>
+  ({
+    smooth: 'cubic-bezier(0.45, 0, 0.2, 1)',
+    out: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    in: 'cubic-bezier(0.55, 0, 1, 0.45)',
+    spring: `cubic-bezier(0.34, ${overshoot}, 0.64, 1)`,
+    snap: 'cubic-bezier(0.8, 0, 0.1, 1)',
+    linear: 'linear',
+  })[name];
+
 export const GUIDE = {
   /* Demo only: move on by itself once the simulated answer ends. */
   autoAdvance: false,
   advanceAfterMs: [2500, 0, 10000, 100],
   /* After Next, a short beat before the new answer's words start (on top of Transcript › startDelayMs). */
   stepDelayMs: [250, 0, 2000, 10],
-  /* On Next, the previous answer's words fade out over this long. */
-  textFadeMs: [450, 0, 2000, 10],
+  /* On Next, how the previous answer leaves. */
+  textOut: {
+    preset: select(
+      [
+        { value: 'fade', label: '1 · Fade' },
+        { value: 'blur', label: '2 · Blur away' },
+        { value: 'rise', label: '3 · Drift up' },
+        { value: 'sink', label: '4 · Sink' },
+        { value: 'shrink', label: '5 · Shrink' },
+      ],
+      'blur',
+    ),
+    durationMs: [450, 0, 2000, 10],
+    curve: select(DECK_CURVES, 'out'),
+    /* How strong the preset's move is: blur px, drift px, or shrink amount. */
+    blur: [4, 0, 24, 0.5],
+    distance: [14, 0, 80, 1],
+    scale: [0.94, 0.6, 1, 0.01],
+  },
   /* The framework info card: distance below the chip (negative moves it up over the chip) and its height. */
   infoCard: {
     y: [10, -140, 200, 1],
@@ -768,25 +804,6 @@ const FONTS = [
 const font = (value = 'current') => select(FONTS, value);
 const fontStyle = (e) =>
   e.font === 'current' ? {} : { fontFamily: TEST_FAMILY, fontStyle: e.font === 'test-family-italic' ? 'italic' : 'normal' };
-
-/* Deck motion curves. 'spring' swings past the target by the deck's overshoot. */
-const DECK_CURVES = [
-  { value: 'smooth', label: 'Smooth (in-out)' },
-  { value: 'out', label: 'Ease out' },
-  { value: 'in', label: 'Ease in' },
-  { value: 'spring', label: 'Spring' },
-  { value: 'snap', label: 'Snap' },
-  { value: 'linear', label: 'Linear' },
-];
-const deckCurve = (name, overshoot) =>
-  ({
-    smooth: 'cubic-bezier(0.45, 0, 0.2, 1)',
-    out: 'cubic-bezier(0.22, 1, 0.36, 1)',
-    in: 'cubic-bezier(0.55, 0, 1, 0.45)',
-    spring: `cubic-bezier(0.34, ${overshoot}, 0.64, 1)`,
-    snap: 'cubic-bezier(0.8, 0, 0.1, 1)',
-    linear: 'linear',
-  })[name];
 
 function compositionConfig(d) {
   const k = d.deck ?? {};
@@ -2350,7 +2367,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
     const prev = lastTake.current;
     if (!g || prev.step === rec.step || !rec.live || prev.visible === 0) return;
     setGhost({ key: prev.step, items: prev.items.slice(0, prev.visible) });
-    const id = setTimeout(() => setGhost(null), g.textFadeMs);
+    const id = setTimeout(() => setGhost(null), g.textOut.durationMs);
     return () => clearTimeout(id);
   }, [rec.step]);
   useEffect(() => {
@@ -2412,7 +2429,8 @@ export function VoiceRecorder({ variant = 'freeform' }) {
           <VoiceBeam
             className="beam-host"
             level={rec.getLevel}
-            active={rec.status !== 'stopped' && rec.status !== 'idle'}
+            // No beam before recording, or on a Guided step with no spoken answer.
+            active={rec.status !== 'stopped' && rec.status !== 'idle' && !(rec.live && guide?.answers[rec.step] === '')}
             {...beamProps(b)}
             processing={rec.thinking}
             processingDuration={c.processing.beam.passSeconds}
@@ -2450,7 +2468,13 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 '--button-color': c.record.buttonColor,
                 '--text-fade-ms': `${rec.status === 'processing' ? c.processing.fadeOutMs : 450}ms`,
                 '--morph-ms': `${c.record.morphMs}ms`,
-                '--text-leave-ms': `${g ? g.textFadeMs : 450}ms`,
+                ...(g && {
+                  '--text-leave-ms': `${g.textOut.durationMs}ms`,
+                  '--text-leave-ease': deckCurve(g.textOut.curve, 1.4),
+                  '--text-leave-blur': `${['blur', 'rise', 'sink'].includes(g.textOut.preset) ? g.textOut.blur : 0}px`,
+                  '--text-leave-y': `${g.textOut.preset === 'rise' ? -g.textOut.distance : g.textOut.preset === 'sink' ? g.textOut.distance : 0}px`,
+                  '--text-leave-scale': g.textOut.preset === 'shrink' ? g.textOut.scale : 1,
+                }),
                 '--exit-ms': `${c.exit.durationMs}ms`,
                 '--exit-stagger': `${c.exit.staggerMs}ms`,
                 '--exit-ease': EXIT_CURVES[c.exit.curve],
