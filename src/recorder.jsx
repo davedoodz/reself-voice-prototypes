@@ -262,7 +262,7 @@ const CONTROLS = {
   processing: {
     fadeOutMs: [500, 0, 2000, 10],
     gapMs: [0, 0, 1500, 10],
-    durationMs: [4000, 300, 8000, 50],
+    durationMs: [3500, 300, 8000, 50],
     label: 'Processing your entry',
     textSize: [17, 11, 28, 0.5],
     textColor: '#8a9aa0',
@@ -927,7 +927,7 @@ export const COMPOSITION = {
     deck: { show: true, depth: 4, offset: 7, fade: 1, shuffleMs: 2000, lift: 160, tilt: 6.5, leaveBlur: 16, settleMs: 1030, overshoot: 1, shadow: { opacity: 0.07, blur: 12, spread: -10 } },
     chip: { size: 13, y: -4 },
     /* Dots sit centred under the card stack. */
-    progress: { style: 'dots', placement: 'below-deck', size: 8.5, y: -26 },
+    progress: { style: 'dots', placement: 'below-deck', size: 7, y: -55 },
     label: { show: false, format: 'name', size: 11, color: ACCENT },
     question: { size: 21, weight: 500, color: INK },
     hint: { size: 14, color: MUTED },
