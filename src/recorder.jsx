@@ -716,7 +716,7 @@ export const GUIDE = {
       'shrink',
     ),
     durationMs: [2000, 0, 2000, 10],
-    curve: select(DECK_CURVES, 'snap'),
+    curve: select(DECK_CURVES, 'spring'),
     /* How strong the preset's move is: blur px, drift px, or shrink amount. */
     blur: [24, 0, 24, 0.5],
     distance: [0, 0, 80, 1],
@@ -980,7 +980,7 @@ const COPY = Object.fromEntries(
       ...Object.fromEntries(
         f.steps.map((st) => [
           camel(st.label),
-          { _collapsed: true, label: text(st.label), question: text(st.question), hint: text(st.hint) },
+          { _collapsed: true, label: text(st.label), question: text(st.question), hint: text(st.hint), answer: text(st.answer) },
         ]),
       ),
     },
