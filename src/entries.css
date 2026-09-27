@@ -203,10 +203,6 @@
   white-space: nowrap;
 }
 .j-mode svg { width: 13px; height: 13px; stroke-width: 2.1; }
-.j-mode .j-png { width: 15px; height: 15px; }
-
-/* The blue PNG icons (stars, play, pause, record dot). */
-.j-png { display: block; flex-shrink: 0; object-fit: contain; pointer-events: none; user-select: none; }
 .j-mode[data-mode='dynamic'] { background: rgba(97, 168, 253, 0.14); color: var(--accent-ink); }
 .j-mode[data-mode='guided'] { background: rgba(91, 111, 209, 0.1); color: var(--guided); }
 .j-mode[data-large] { height: 30px; padding: 0 12px 0 10px; font-size: 13px; }
@@ -249,7 +245,7 @@
   transition: transform 0.15s ease;
 }
 .j-record:active { transform: translateX(-50%) scale(0.97); }
-.j-record-dot { width: var(--rec-dot-size, 18px); height: var(--rec-dot-size, 18px); object-fit: contain; }
+.j-record-dot { width: 0.75em; height: 0.75em; border-radius: 50%; background: var(--rec-dot, #ff453a); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rec-dot, #ff453a) 22%, transparent); }
 
 /* ── Detail ── */
 .j-nav {
@@ -276,27 +272,30 @@
   align-items: center;
   gap: 12px;
   margin: 0 16px;
-  padding: 4px 12px 4px 4px;
+  padding: 8px 12px 8px 8px;
 }
 .j-player[data-card] {
   border-radius: 999px;
-  background: var(--bar-bg, #fff);
+  background: #fff;
   box-shadow: 0 0 0 1px var(--line), 0 6px 18px -12px rgba(0, 40, 60, 0.16);
 }
 .j-wave { flex: 1; min-width: 0; cursor: pointer; touch-action: none; }
 .j-wave:focus-visible { outline: none; }
 .j-wave svg { display: block; overflow: visible; }
-/* The blue play / pause PNG is the whole button: no disc behind it. */
 .j-play {
   display: grid;
   flex-shrink: 0;
   place-items: center;
   width: var(--play-size, 34px);
   height: var(--play-size, 34px);
+  border-radius: 50%;
+  background: #1c1c1e;
+  color: #fff;
   transition: transform 0.15s ease;
 }
-.j-play:active { transform: scale(0.9); }
-.j-play .j-png { width: 100%; height: 100%; }
+.j-play:active { transform: scale(0.92); }
+.j-play svg { width: 42%; height: 42%; fill: currentColor; stroke: none; }
+.j-play .lucide-play { margin-left: 8%; }
 .j-ptime { flex-shrink: 0; color: var(--muted); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .j-speed { flex-shrink: 0; height: 24px; padding: 0 7px; border-radius: 999px; background: #f0f4f5; color: var(--muted); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
@@ -345,7 +344,8 @@
   box-shadow: 0 0 0 1px var(--line);
 }
 .j-prompt-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(97, 168, 253, 0.14); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
-.j-prompt-mark .j-png { width: 18px; height: 18px; }
+.j-prompt-mark svg { width: 13px; height: 13px; fill: currentColor; }
+.j-prompt-mark .j-emoji { font-size: 12px; }
 .j-prompt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .j-prompt-text { color: var(--ink); font-size: 14.5px; font-weight: 500; line-height: 1.35; }
 .j-prompt-go { width: 16px; height: 16px; color: var(--faint); }
@@ -365,7 +365,8 @@
 .j-transcript[data-following] .j-seg[data-active] p { color: var(--ink); }
 .j-seg.prompt, .j-seg.step { margin-top: 10px; }
 .j-seg .j-seg-q { display: flex; gap: 7px; align-items: baseline; color: var(--accent-ink); font-size: 15px; font-weight: 600; line-height: 1.4; }
-.j-seg.prompt .j-seg-q .j-png { width: 16px; height: 16px; align-self: center; }
+.j-seg.prompt .j-seg-q svg { width: 13px; height: 13px; fill: currentColor; transform: translateY(1px); }
+.j-seg.prompt .j-seg-q .j-emoji { font-size: 13px; }
 .j-seg.prompt[data-skipped] .j-seg-q { color: var(--faint); font-weight: 500; }
 .j-seg.prompt em { font-style: normal; font-weight: 400; font-size: 13px; }
 .j-seg.step .j-seg-q { display: block; margin-top: 3px; color: var(--ink); font-family: var(--serif); font-size: 19px; font-weight: 400; font-style: italic; letter-spacing: -0.01em; }
@@ -387,18 +388,14 @@
   width: 62px;
   height: 62px;
   border-radius: 50%;
-  background: var(--ai-bg, #141a1c);
-  box-shadow:
-    0 14px 30px -8px rgba(60, 110, 200, calc(var(--ai-glow, 0.6) * 0.75)),
-    0 0 24px -6px color-mix(in srgb, var(--ai-rim-a, #61A8FD) calc(var(--ai-glow, 0.6) * 100%), transparent);
-  transition: transform 0.15s ease;
-}
-/* The rim: a conic ring through colours A → D, turning when Spin is on. */
-.journal[data-ai-rim] .j-ai {
   background:
-    linear-gradient(var(--ai-bg, #141a1c), var(--ai-bg, #141a1c)) padding-box,
-    conic-gradient(from var(--ai-turn), var(--ai-rim-a), var(--ai-rim-b), var(--ai-rim-c), var(--ai-rim-d), var(--ai-rim-a)) border-box;
-  border: var(--ai-rim-w, 2.5px) solid transparent;
+    linear-gradient(#141a1c, #141a1c) padding-box,
+    conic-gradient(from var(--ai-turn), #61A8FD, #a8b6ff, #f1b6e4, #ffe0b0, #61A8FD) border-box;
+  border: 2.5px solid transparent;
+  color: #bfe9f7;
+  box-shadow: 0 14px 30px -8px rgba(60, 110, 200, 0.45), 0 0 24px -6px rgba(97, 168, 253, 0.6);
+  animation: ai-turn 6s linear infinite;
+  transition: transform 0.15s ease;
 }
 
 /* Button looks from welcome.html (Record button › look, AI insights › button › look).
@@ -419,10 +416,10 @@
   -webkit-backdrop-filter: blur(var(--btn-g-blur));
   backdrop-filter: blur(var(--btn-g-blur));
 }
-.journal[data-ai-spin][data-ai-look]:not([data-ai-look='dark']) .j-ai { animation: none; }
-.journal[data-ai-spin] .j-ai { animation: ai-turn 6s linear infinite; }
+.journal[data-ai-look]:not([data-ai-look='dark']) .j-ai { animation: none; }
 .j-ai:active { transform: scale(0.94); }
-.j-ai .j-png { width: 34px; height: 34px; }
+.j-ai svg { width: 26px; height: 26px; stroke-width: 1.9; }
+.j-ai .j-emoji { font-size: 26px; }
 @keyframes ai-turn { to { --ai-turn: 360deg; } }
 
 /* ── Insights sheet ── */
@@ -455,18 +452,14 @@
   font-size: 24px;
   letter-spacing: -0.015em;
 }
-.j-ai-badge .j-png { width: 26px; height: 26px; }
+.j-ai-badge svg { width: 22px; height: 22px; color: #6f8de0; stroke-width: 1.8; }
+.j-ai-badge .j-emoji { font-size: 20px; }
 .j-insights { display: flex; flex-direction: column; gap: 10px; margin: 0 0 22px; padding: 0; list-style: none; }
 .j-insights li {
   padding: 14px 16px;
   border-radius: 20px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--ai-card-a, #61A8FD) var(--ai-card-o, 15%), transparent),
-    color-mix(in srgb, var(--ai-card-b, #a8b6ff) var(--ai-card-o, 15%), transparent) 60%,
-    color-mix(in srgb, var(--ai-card-c, #f1b6e4) var(--ai-card-o, 15%), transparent)
-  );
-  color: var(--ai-card-text, var(--ink));
+  background: linear-gradient(135deg, rgba(97, 168, 253, 0.16), rgba(168, 182, 255, 0.14) 60%, rgba(241, 182, 228, 0.12));
+  color: var(--ink);
   font-size: 15px;
   line-height: 1.45;
 }
