@@ -1,0 +1,39 @@
+/* Watch: a black OLED screen in the frame's cut-out; the frame sits on top. */
+.watch-screen {
+  position: absolute;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif;
+}
+.watch-frame { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+
+.watch-screen > * { position: absolute; inset: 0; transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
+
+/* Face: time and a quiet vitals line; the line turns amber on the alert. */
+.watch-face { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.watch-time { font-size: 92px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.watch-vitals { display: inline-flex; gap: 8px; align-items: center; color: #8e8e93; font-size: 20px; transition: color 0.4s ease; }
+.watch-pulse { width: 10px; height: 10px; border-radius: 50%; background: #8e8e93; transition: background 0.4s ease; }
+.watch-screen[data-phase='alert'] .watch-vitals { color: #ffb340; }
+.watch-screen[data-phase='alert'] .watch-pulse { background: #ffb340; animation: watch-beat 0.6s ease-in-out infinite; }
+@keyframes watch-beat { 50% { transform: scale(1.5); opacity: 0.5; } }
+.watch-screen:is([data-phase='ask'], [data-phase='declined']) .watch-face { opacity: 0; filter: blur(8px); transform: scale(0.92); }
+
+/* The prompt slides up over the face. */
+.watch-ask { display: flex; flex-direction: column; padding: 34px 26px 26px; opacity: 0; transform: translateY(40px); }
+.watch-screen[data-phase='ask'] .watch-ask { opacity: 1; transform: none; }
+.watch-app { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; color: var(--accent); font-size: 17px; font-weight: 600; }
+.watch-app img { width: 30px; height: auto; }
+.watch-greeting { margin: 0 0 8px; font-size: var(--title, 26px); font-weight: 600; line-height: 1.15; }
+.watch-body { flex: 1; margin: 0; color: #c7c7cc; font-size: var(--body, 21px); line-height: 1.3; }
+.watch-actions { display: flex; flex-direction: column; gap: 10px; }
+.watch-actions button { height: 58px; border: 0; border-radius: 999px; font: inherit; font-size: 21px; font-weight: 600; cursor: pointer; transition: transform 0.15s ease; }
+.watch-actions button:active { transform: scale(0.96); }
+.watch-yes { background: var(--accent, #61a8fd); color: #fff; }
+.watch-no { background: #2c2c2e; color: #fff; }
+
+.watch-declined { display: grid; place-items: center; margin: 0; padding: 40px; color: #c7c7cc; font-size: 22px; text-align: center; opacity: 0; }
+.watch-screen[data-phase='declined'] .watch-declined { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) { .watch-screen > * { transition: none; } .watch-pulse { animation: none !important; } }

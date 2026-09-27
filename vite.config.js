@@ -16,6 +16,7 @@ const PAGES = {
   entries: 'entries.html',
   promptCard: 'prompt-card.html',
   guideCards: 'guide-cards.html',
+  notification: 'notification.html',
 };
 
 /* When an edit can't hot-swap, Vite reloads every open page (path "*").
