@@ -100,12 +100,9 @@ const PULSE = {
     durationMs: [2400, 0, 8000, 50],
     level: [0.85, 0, 1, 0.01],
     /* Syllables per second. */
-    rate: [7, 1, 12, 0.1],
+    rate: [4.5, 1, 10, 0.1],
     /* Chance of a short pause between words (0 = none). */
     pauses: [0.25, 0, 0.8, 0.01],
-    /* Fast flutter on top of each syllable (0 = smooth). */
-    jitter: [0.6, 0, 1, 0.01],
-    jitterHz: [18, 4, 40, 0.5],
   },
   /* When the logo appears relative to the talking ending. */
   wordmarkOffsetMs: [150, -2000, 2000, 10],
@@ -131,7 +128,7 @@ const PULSE = {
    a stronger, wider band. Its own DialKit id keeps the recorder pages untouched. */
 const WELCOME_BEAM = {
   ...BEAM,
-  response: { ...BEAM.response, attack: [0.05, 0, 2, 0.005], release: [0.12, 0, 3, 0.01] },
+  response: { ...BEAM.response, release: [0.4, 0, 3, 0.01] },
   band: { ...BEAM.band, bandStrength: [3.16, 0, 4, 0.01], bandWidth: [0.91, 0, 6, 0.01] },
 };
 
@@ -187,12 +184,7 @@ function talkAt(t, k) {
   const shape = Math.pow(Math.sin(Math.PI * (x - i)), 0.8);
   // Taper in and out at the ends so it starts and stops like speech.
   const edge = Math.min(1, t / 250, (k.durationMs - t) / 250);
-  // Fast, uneven flutter so it reads as a voice rather than a smooth pulse.
-  const f = (t / 1000) * k.jitterHz;
-  const j = Math.floor(f);
-  const noise = hash(j * 3.1) + (hash(j * 3.1 + 1) - hash(j * 3.1)) * (f - j);
-  const flutter = 1 - k.jitter + k.jitter * noise;
-  return k.level * (0.4 + 0.6 * hash(i)) * shape * flutter * Math.max(0, edge);
+  return k.level * (0.45 + 0.55 * hash(i)) * shape * Math.max(0, edge);
 }
 
 function trainAt(t, p) {
