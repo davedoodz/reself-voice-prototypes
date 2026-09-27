@@ -96,9 +96,9 @@ const BREATH = {
 const PULSE = {
   startMs: [360, 0, 3000, 10],
   count: [2, 1, 6, 1],
-  riseMs: [230, 40, 2000, 10],
-  fallMs: [240, 40, 3000, 10],
-  gapMs: [140, 0, 2000, 10],
+  riseMs: [450, 40, 2000, 10],
+  fallMs: [750, 40, 3000, 10],
+  gapMs: [300, 0, 2000, 10],
   peak: [1, 0, 1, 0.01],
   /* When the logo appears relative to the last intro pulse ending. */
   wordmarkOffsetMs: [150, -2000, 2000, 10],
@@ -196,7 +196,8 @@ function useGlow(br, pulse, intro) {
     const ms = now - start.current;
     const end = pulseEndMs(p);
     let base;
-    if (ms < end) base = c.low + (p.peak - c.low) * trainAt(ms - p.startMs, p);
+    // The opening pulses run from nothing to the peak and back to nothing.
+    if (ms < end) base = p.peak * trainAt(ms - p.startMs, p);
     else if (p.afterIntro === 'spread') {
       // Everything is on screen at the buttons' cue; the glow then rises and holds.
       const from = Math.max(0, end + p.wordmarkOffsetMs) + it.ctaAfterMs + p.spread.delayMs;
