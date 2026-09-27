@@ -16,6 +16,14 @@ const HEADER_WAVE = {
     size: [96, 30, 240, 1],
     /* Floating ↔ listening crossfade. */
     blendMs: [500, 0, 2000, 10],
+    /* While recording: grows and moves to the middle, listening. */
+    recording: { size: [210, 30, 320, 1], y: [277, 0, 700, 1] },
+    /* While processing: floating again, at the recording size and place. */
+    processing: { size: [210, 30, 320, 1], y: [277, 0, 700, 1] },
+    /* Moves between the three: how long, and the curve. */
+    moveMs: [900, 0, 3000, 10],
+    curve: { type: 'select', options: ['smooth', 'out', 'spring', 'linear'], default: 'smooth' },
+    overshoot: [1.3, 1, 2.4, 0.01],
   },
   width: [46, 16, 140, 1],
   x: [0, -180, 180, 1],
@@ -31,9 +39,17 @@ const HEADER_WAVE = {
 };
 
 const easeOut = (t) => 1 - (1 - t) ** 3;
+/* Screen state → which Momo settings apply ('idle' uses the top-level size/y). */
+const MOMO_STATE = { recording: 'recording', processing: 'processing' };
+const MOMO_CURVES = (o) => ({
+  smooth: 'cubic-bezier(0.45, 0, 0.2, 1)',
+  out: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  spring: `cubic-bezier(0.34, ${o}, 0.64, 1)`,
+  linear: 'linear',
+});
 
 /* `defaults` overrides starting values for one page; its own `id` keeps them apart. */
-export function HeaderWave({ defaults, id: panelId = 'header-logo', listening = false }) {
+export function HeaderWave({ defaults, id: panelId = 'header-logo', listening = false, state = 'idle' }) {
   const config = defaults ? { ...HEADER_WAVE, ...defaults } : HEADER_WAVE;
   const h = useDialKit('Header logo', config, { id: panelId, defaultCollapsed: true });
   const root = useRef(null);
@@ -77,7 +93,14 @@ export function HeaderWave({ defaults, id: panelId = 'header-logo', listening = 
       <div
         className="header-momo"
         data-listening={listening || undefined}
-        style={{ width: h.momo.size, '--hw-x': `${h.x}px`, '--hw-y': `${h.y}px`, '--momo-blend': `${h.momo.blendMs}ms` }}
+        style={{
+          width: (MOMO_STATE[state] ? h.momo[MOMO_STATE[state]].size : h.momo.size),
+          '--hw-x': `${h.x}px`,
+          '--hw-y': `${MOMO_STATE[state] ? h.momo[MOMO_STATE[state]].y : h.y}px`,
+          '--momo-blend': `${h.momo.blendMs}ms`,
+          '--momo-move': `${h.momo.moveMs}ms`,
+          '--momo-ease': MOMO_CURVES(h.momo.overshoot)[h.momo.curve],
+        }}
         aria-hidden="true"
       >
         <video className="momo-floating" src={momoFloating} autoPlay loop muted playsInline />

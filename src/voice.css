@@ -799,3 +799,4 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .header-momo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity var(--momo-blend, 500ms) ease; }
 .header-momo .momo-listening, .header-momo[data-listening] .momo-floating { opacity: 0; }
 .header-momo[data-listening] .momo-listening { opacity: 1; }
+.header-momo { transition: top var(--momo-move, 900ms) var(--momo-ease, ease), width var(--momo-move, 900ms) var(--momo-ease, ease), translate var(--momo-move, 900ms) var(--momo-ease, ease); }

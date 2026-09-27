@@ -2525,7 +2525,7 @@ export function VoiceRecorder({ variant = 'freeform' }) {
                 />
               )}
               <Processing rec={rec} p={c.processing} bottom={t.type.textY} />
-              <HeaderWave listening={rec.live} />
+              <HeaderWave listening={rec.live} state={rec.live ? 'recording' : rec.status === 'processing' ? 'processing' : 'idle'} />
               <Layout layout={s.layout} rec={rec} s={s} />
             </section>
           </VoiceBeam>
