@@ -142,6 +142,59 @@ const ICON_DIALS = {
   themes: true,
 };
 
+/* Every text on the page can use Inter or Test Family (Klim trial, Regular + Italic).
+   Defaults match the current design. Each key sets --f-<key> and --fs-<key>. */
+const FONT_OPTIONS = ['Inter', 'Test Family', 'Test Family Italic'];
+const FONT_FAMILIES = {
+  Inter: ["Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif", 'normal'],
+  'Test Family': ["'Unwind Family', 'Test Family', Georgia, serif", 'normal'],
+  'Test Family Italic': ["'Unwind Family', 'Test Family', Georgia, serif", 'italic'],
+};
+const font = (value) => ({ type: 'select', options: FONT_OPTIONS, default: value });
+const FONT_DIALS = {
+  list: {
+    eyebrow: font('Inter'),
+    largeTitle: font('Test Family'),
+    stats: font('Inter'),
+    month: font('Inter'),
+    weekday: font('Inter'),
+    dayNumber: font('Test Family'),
+    time: font('Inter'),
+    duration: font('Inter'),
+    cardTitle: font('Test Family'),
+    summary: font('Inter'),
+    quote: font('Test Family Italic'),
+    modeChip: font('Inter'),
+    recordLabel: font('Inter'),
+  },
+  detail: {
+    navTitle: font('Inter'),
+    detailTitle: font('Test Family'),
+    meta: font('Inter'),
+    sectionLabel: font('Inter'),
+    detailSummary: font('Inter'),
+    promptText: font('Inter'),
+    transcript: font('Inter'),
+    stepQuestion: font('Test Family Italic'),
+  },
+  insights: {
+    aiTitle: font('Test Family'),
+    insight: font('Inter'),
+    linkTitle: font('Test Family'),
+  },
+};
+function fontVars(f) {
+  const out = {};
+  for (const group of Object.values(f)) {
+    for (const [k, v] of Object.entries(group)) {
+      const [family, style] = FONT_FAMILIES[v] ?? FONT_FAMILIES.Inter;
+      out[`--f-${k}`] = family;
+      out[`--fs-${k}`] = style;
+    }
+  }
+  return out;
+}
+
 /* The entries header copy. {count} and {time} fill in from the entries. */
 const HEADER = {
   eyebrow: { type: 'text', default: 'Your journal' },
@@ -945,6 +998,7 @@ function Entries() {
   const show = useDialKit('Entry card', CARD, { id: 'entries-card' });
   const bs = useDialKit('Button styles', BUTTON_STYLES, { id: 'entries-button-styles' });
   const rec = useDialKit('Record button', RECORD, { id: 'entries-record' });
+  const fonts = useDialKit('Fonts', FONT_DIALS, { id: 'entries-fonts' });
   const p = useDialKit('Player', PLAYER, { id: 'entries-player' });
   const ai = useDialKit('AI insights', AI, { id: 'entries-ai' });
   const tr = useDialKit('Transition', TRANSITION, { id: 'entries-transition', defaultCollapsed: true });
@@ -1063,6 +1117,7 @@ function Entries() {
                 '--btn-g-fg': bs.glass.text,
                 '--btn-g-border': `rgba(255, 255, 255, ${bs.glass.borderOpacity})`,
                 '--btn-g-blur': `${bs.glass.blur}px`,
+                ...fontVars(fonts),
               }}
             >
               <div

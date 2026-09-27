@@ -484,6 +484,33 @@
 .j-link-title { color: var(--ink); font-family: var(--serif); font-size: 17px; line-height: 1.2; }
 .j-link svg { width: 16px; height: 16px; color: var(--faint); }
 
+/* Fonts panel: each text reads its own family and style (Inter or Test Family). */
+.j-eyebrow { font-family: var(--f-eyebrow); font-style: var(--fs-eyebrow); }
+.j-large-title { font-family: var(--f-largeTitle); font-style: var(--fs-largeTitle); }
+.j-stats { font-family: var(--f-stats); font-style: var(--fs-stats); }
+.j-month-label { font-family: var(--f-month); font-style: var(--fs-month); }
+.j-dow { font-family: var(--f-weekday); font-style: var(--fs-weekday); }
+.j-dnum { font-family: var(--f-dayNumber); font-style: var(--fs-dayNumber); }
+.j-time { font-family: var(--f-time); font-style: var(--fs-time); }
+.j-duration { font-family: var(--f-duration); font-style: var(--fs-duration); }
+.j-title { font-family: var(--f-cardTitle); font-style: var(--fs-cardTitle); }
+.j-summary { font-family: var(--f-summary); font-style: var(--fs-summary); }
+.j-snippet { font-family: var(--f-quote); font-style: var(--fs-quote); }
+.j-mode { font-family: var(--f-modeChip); font-style: var(--fs-modeChip); }
+.j-record { font-family: var(--f-recordLabel); font-style: var(--fs-recordLabel); }
+.j-nav-title { font-family: var(--f-navTitle); font-style: var(--fs-navTitle); }
+.j-detail-title { font-family: var(--f-detailTitle); font-style: var(--fs-detailTitle); }
+.j-meta dd { font-family: var(--f-meta); font-style: var(--fs-meta); }
+.j-section-label { font-family: var(--f-sectionLabel); font-style: var(--fs-sectionLabel); }
+.j-detail-summary { font-family: var(--f-detailSummary); font-style: var(--fs-detailSummary); }
+.j-prompt-text { font-family: var(--f-promptText); font-style: var(--fs-promptText); }
+.j-seg p { font-family: var(--f-transcript); font-style: var(--fs-transcript); }
+.j-seg.step .j-seg-q { font-family: var(--f-stepQuestion); font-style: var(--fs-stepQuestion); }
+.j-ai-badge { font-family: var(--f-aiTitle); font-style: var(--fs-aiTitle); }
+.j-insights li { font-family: var(--f-insight); font-style: var(--fs-insight); }
+.j-link-title { font-family: var(--f-linkTitle); font-style: var(--fs-linkTitle); }
+.j-emoji { font-style: normal; }
+
 @media (prefers-reduced-motion: reduce) {
   .j-card { animation: none; }
   .j-ai { animation: none; }
