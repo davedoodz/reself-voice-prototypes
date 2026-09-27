@@ -95,15 +95,23 @@ const BREATH = {
    shorter than ~250ms read as one soft swell. */
 const PULSE = {
   startMs: [360, 0, 3000, 10],
-  count: [5, 1, 6, 1],
+  count: [2, 1, 6, 1],
   riseMs: [230, 40, 2000, 10],
   fallMs: [240, 40, 3000, 10],
   gapMs: [140, 0, 2000, 10],
   peak: [1, 0, 1, 0.01],
   /* When the logo appears relative to the last intro pulse ending. */
-  wordmarkOffsetMs: [-570, -2000, 2000, 10],
+  wordmarkOffsetMs: [150, -2000, 2000, 10],
   /* After the intro: keep pulsing, or settle into the slow Breath cycle. */
-  afterIntro: { type: 'select', options: ['pulse', 'breathe'], default: 'breathe' },
+  afterIntro: { type: 'select', options: ['spread', 'pulse', 'breathe'], default: 'spread' },
+  /* afterIntro 'spread': once everything is on screen, the glow rises slowly to
+     `height` (1 = the beam's full reach) and stays there. */
+  spread: {
+    height: [0.9, 0, 1, 0.01],
+    /* Wait after the buttons appear before it starts rising. */
+    delayMs: [0, 0, 5000, 10],
+    durationMs: [3500, 200, 12000, 50],
+  },
   /* Stillness between repeated trains; the glow rests at Breath › low. */
   restMs: [1190, 0, 10000, 10],
 };
@@ -176,20 +184,25 @@ function loopAt(t, p) {
    loop or breathing, from the moment it ends. VoiceBeam samples it every frame,
    so none of this re-renders React.
    `swell()` takes one deep breath up to full and resolves at the top of it. */
-function useGlow(br, pulse) {
-  const cfg = useRef({ br, pulse });
-  cfg.current = { br, pulse };
+function useGlow(br, pulse, intro) {
+  const cfg = useRef({ br, pulse, intro });
+  cfg.current = { br, pulse, intro };
   const start = useRef(performance.now());
   const swellFrom = useRef(null);
 
   const getLevel = useCallback(() => {
-    const { br: c, pulse: p } = cfg.current;
+    const { br: c, pulse: p, intro: it } = cfg.current;
     const now = performance.now();
     const ms = now - start.current;
     const end = pulseEndMs(p);
     let base;
     if (ms < end) base = c.low + (p.peak - c.low) * trainAt(ms - p.startMs, p);
-    else if (p.afterIntro === 'pulse') base = c.low + (p.peak - c.low) * loopAt(ms - end, p);
+    else if (p.afterIntro === 'spread') {
+      // Everything is on screen at the buttons' cue; the glow then rises and holds.
+      const from = Math.max(0, end + p.wordmarkOffsetMs) + it.ctaAfterMs + p.spread.delayMs;
+      const k = Math.min(1, Math.max(0, (ms - from) / p.spread.durationMs));
+      base = c.low + (p.spread.height - c.low) * ease(k);
+    } else if (p.afterIntro === 'pulse') base = c.low + (p.peak - c.low) * loopAt(ms - end, p);
     else base = c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
     if (swellFrom.current === null) return base;
     const k = Math.min(1, (now - swellFrom.current) / (c.swellSec * 1000));
@@ -386,7 +399,7 @@ function Welcome() {
   const logo = useDialKit('Logo opening', LOGO_DIALS, { id: 'welcome-logo' });
   const b = useDialKit('Voice beam', WELCOME_BEAM, { id: 'welcome-beam', defaultCollapsed: true });
 
-  const glow = useGlow(br, pulse);
+  const glow = useGlow(br, pulse, intro);
   const markDelay = Math.max(0, pulseEndMs(pulse) + pulse.wordmarkOffsetMs);
   const [run, setRun] = useState(0);
   const [leaving, setLeaving] = useState(false);
