@@ -94,13 +94,13 @@ const BREATH = {
    VoiceBeam smooths the level (Voice beam › attack / release), so pulses much
    shorter than ~250ms read as one soft swell. */
 const PULSE = {
-  startMs: [360, 0, 3000, 10],
+  startMs: [290, 0, 3000, 10],
   /* Opening: the glow moves like someone talking (syllables, short pauses). */
   talk: {
-    durationMs: [2400, 0, 8000, 50],
-    level: [0.85, 0, 1, 0.01],
+    durationMs: [2200, 0, 8000, 50],
+    level: [1, 0, 1, 0.01],
     /* Syllables per second. */
-    rate: [4.5, 1, 10, 0.1],
+    rate: [4.9, 1, 10, 0.1],
     /* Chance of a short pause between words (0 = none). */
     pauses: [0.25, 0, 0.8, 0.01],
   },
@@ -113,15 +113,15 @@ const PULSE = {
     height: [0.9, 0, 1, 0.01],
     /* Wait after the talking ends before climbing. */
     delayMs: [0, 0, 5000, 10],
-    durationMs: [2500, 200, 12000, 50],
+    durationMs: [2750, 200, 12000, 50],
   },
   /* afterIntro 'pulse': pulse shape, and stillness between trains. */
   count: [3, 1, 6, 1],
-  riseMs: [450, 40, 2000, 10],
-  fallMs: [750, 40, 3000, 10],
-  gapMs: [300, 0, 2000, 10],
+  riseMs: [170, 40, 2000, 10],
+  fallMs: [250, 40, 3000, 10],
+  gapMs: [190, 0, 2000, 10],
   peak: [1, 0, 1, 0.01],
-  restMs: [1190, 0, 10000, 10],
+  restMs: [5340, 0, 10000, 10],
 };
 
 /* The recorder's beam, retuned for this screen: a slightly faster release and
@@ -227,7 +227,8 @@ function useGlow(br, pulse, intro) {
     else base = c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
     if (swellFrom.current === null) return base;
     const k = Math.min(1, (now - swellFrom.current) / (c.swellSec * 1000));
-    return base + (1 - base) * ease(k);
+    // Get started: the glow drops fully away.
+    return base * (1 - ease(k));
   }, []);
 
   const swell = useCallback(
