@@ -95,26 +95,32 @@ const BREATH = {
    shorter than ~250ms read as one soft swell. */
 const PULSE = {
   startMs: [360, 0, 3000, 10],
+  /* Opening: the glow moves like someone talking (syllables, short pauses). */
+  talk: {
+    durationMs: [2400, 0, 8000, 50],
+    level: [0.85, 0, 1, 0.01],
+    /* Syllables per second. */
+    rate: [4.5, 1, 10, 0.1],
+    /* Chance of a short pause between words (0 = none). */
+    pauses: [0.25, 0, 0.8, 0.01],
+  },
+  /* When the logo appears relative to the talking ending. */
+  wordmarkOffsetMs: [150, -2000, 2000, 10],
+  /* After the talking: rise to the peak as everything enters, or the old loops. */
+  afterIntro: { type: 'select', options: ['spread', 'pulse', 'breathe'], default: 'spread' },
+  spread: {
+    /* The glow climbs to this (1 = the beam's full reach) and stays. */
+    height: [0.9, 0, 1, 0.01],
+    /* Wait after the talking ends before climbing. */
+    delayMs: [0, 0, 5000, 10],
+    durationMs: [2500, 200, 12000, 50],
+  },
+  /* afterIntro 'pulse': pulse shape, and stillness between trains. */
   count: [3, 1, 6, 1],
   riseMs: [450, 40, 2000, 10],
   fallMs: [750, 40, 3000, 10],
   gapMs: [300, 0, 2000, 10],
   peak: [1, 0, 1, 0.01],
-  /* When the logo appears relative to the last intro pulse ending. */
-  wordmarkOffsetMs: [150, -2000, 2000, 10],
-  /* After the intro: keep pulsing, or settle into the slow Breath cycle. */
-  afterIntro: { type: 'select', options: ['spread', 'pulse', 'breathe'], default: 'spread' },
-  /* afterIntro 'spread': once everything is on screen, the glow rises slowly to
-     `height` (1 = the beam's full reach) and stays there. */
-  spread: {
-    /* The last pulse rises to this and stays, then climbs to `height`. */
-    hold: [0.55, 0, 1, 0.01],
-    height: [0.9, 0, 1, 0.01],
-    /* How long the last pulse holds before it starts climbing. */
-    delayMs: [0, 0, 5000, 10],
-    durationMs: [3500, 200, 12000, 50],
-  },
-  /* Stillness between repeated trains; the glow rests at Breath › low. */
   restMs: [1190, 0, 10000, 10],
 };
 
@@ -165,9 +171,22 @@ function breathAt(sec, br) {
 const trainMs = (p) => p.count * (p.riseMs + p.fallMs) + (p.count - 1) * p.gapMs;
 
 /* Where the last intro pulse lands, in ms from the start of the intro. */
-const pulseEndMs = (p) => p.startMs + trainMs(p);
+const pulseEndMs = (p) => p.startMs + p.talk.durationMs;
 
 /* One pulse train in 0–1, t in ms from its first rise: rise → fall → gap, `count` times. */
+/* A voice-like level: syllable bumps of varying height, with the odd pause.
+   Seeded by syllable index, so it's the same every load. */
+const hash = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+function talkAt(t, k) {
+  const x = (t / 1000) * k.rate;
+  const i = Math.floor(x);
+  if (hash(i + 17) < k.pauses) return 0;
+  const shape = Math.pow(Math.sin(Math.PI * (x - i)), 0.8);
+  // Taper in and out at the ends so it starts and stops like speech.
+  const edge = Math.min(1, t / 250, (k.durationMs - t) / 250);
+  return k.level * (0.45 + 0.55 * hash(i)) * shape * Math.max(0, edge);
+}
+
 function trainAt(t, p) {
   if (t < 0 || t >= trainMs(p)) return 0;
   const x = t % (p.riseMs + p.fallMs + p.gapMs);
@@ -198,17 +217,12 @@ function useGlow(br, pulse, intro) {
     const ms = now - start.current;
     const end = pulseEndMs(p);
     let base;
-    const cycle = p.riseMs + p.fallMs + p.gapMs;
-    const lastStart = p.startMs + (p.count - 1) * cycle;
-    if (p.afterIntro === 'spread' && ms >= lastStart) {
-      // The last pulse rises and stays, then climbs slowly to the spread height.
-      const x = ms - lastStart;
-      const up = p.spread.hold * ease(Math.min(1, x / p.riseMs));
-      const k = Math.min(1, Math.max(0, (x - p.riseMs - p.spread.delayMs) / p.spread.durationMs));
-      base = x < p.riseMs ? up : p.spread.hold + (p.spread.height - p.spread.hold) * ease(k);
+    if (ms < end) base = ms < p.startMs ? 0 : talkAt(ms - p.startMs, p.talk);
+    else if (p.afterIntro === 'spread') {
+      // As everything enters, the glow climbs to the peak and stays.
+      const k = Math.min(1, Math.max(0, (ms - end - p.spread.delayMs) / p.spread.durationMs));
+      base = p.spread.height * ease(k);
     }
-    // The opening pulses run from nothing to the peak and back to nothing.
-    else if (ms < end) base = p.peak * trainAt(ms - p.startMs, p);
     else if (p.afterIntro === 'pulse') base = c.low + (p.peak - c.low) * loopAt(ms - end, p);
     else base = c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
     if (swellFrom.current === null) return base;
