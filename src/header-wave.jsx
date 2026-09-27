@@ -11,7 +11,7 @@ import { WAVE_H, WAVE_PATH, WAVE_W } from './wave-path.js';
 const HEADER_WAVE = {
   show: true,
   /* Which mark: the blue wave, or Momo the cloud (floats; listens while recording). */
-  mark: { type: 'select', options: [{ value: 'wave', label: 'Blue wave' }, { value: 'momo', label: 'Momo' }], default: 'wave' },
+  mark: { type: 'select', options: [{ value: 'wave', label: 'Blue wave' }, { value: 'momo', label: 'Momo' }], default: 'momo' },
   momo: {
     size: [96, 30, 240, 1],
     /* Floating ↔ listening crossfade. */
@@ -20,7 +20,7 @@ const HEADER_WAVE = {
   width: [46, 16, 140, 1],
   x: [0, -180, 180, 1],
   /* From the top of the screen, to the mark's centre. */
-  y: [52, 0, 400, 1],
+  y: [70, 0, 400, 1],
   animate: true,
   loop: true,
   drawMs: [1640, 200, 6000, 10],
