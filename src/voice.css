@@ -793,3 +793,9 @@ img.guide-framework-icon { width: 17px; height: 17px; object-fit: contain; }
 .transcript[data-leaving] .word { animation: none; }
 @keyframes text-leave { to { opacity: 0; filter: blur(var(--text-leave-blur, 4px)); translate: 0 var(--text-leave-y, 0px); scale: var(--text-leave-scale, 1); } }
 .transcript[data-leaving] p { transform-origin: 50% 100%; }
+
+/* Momo: floating by default; crossfades to listening while a take is live. */
+.header-momo { position: absolute; top: calc(var(--hw-y, 52px) + var(--safe-top, 0px)); left: 50%; z-index: 8; aspect-ratio: 1; translate: calc(-50% + var(--hw-x, 0px)) -50%; pointer-events: none; }
+.header-momo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity var(--momo-blend, 500ms) ease; }
+.header-momo .momo-listening, .header-momo[data-listening] .momo-floating { opacity: 0; }
+.header-momo[data-listening] .momo-listening { opacity: 1; }

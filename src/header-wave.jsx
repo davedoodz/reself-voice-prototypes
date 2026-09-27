@@ -1,6 +1,8 @@
 import { useId, useLayoutEffect, useRef } from 'react';
 import { useDialKit } from 'dialkit';
 import waveLogo from './icons/wave.png';
+import momoFloating from '../momo-animations/momo-floating.webm';
+import momoListening from '../momo-animations/momo-listening.webm';
 import { WAVE_H, WAVE_PATH, WAVE_W } from './wave-path.js';
 
 /* The blue wave mark at the top of each app screen, drawn left to right along
@@ -8,6 +10,13 @@ import { WAVE_H, WAVE_PATH, WAVE_W } from './wave-path.js';
    draw → hold → fade → draw again. One shared panel ('Header logo'). */
 const HEADER_WAVE = {
   show: true,
+  /* Which mark: the blue wave, or Momo the cloud (floats; listens while recording). */
+  mark: { type: 'select', options: [{ value: 'wave', label: 'Blue wave' }, { value: 'momo', label: 'Momo' }], default: 'wave' },
+  momo: {
+    size: [96, 30, 240, 1],
+    /* Floating ↔ listening crossfade. */
+    blendMs: [500, 0, 2000, 10],
+  },
   width: [46, 16, 140, 1],
   x: [0, -180, 180, 1],
   /* From the top of the screen, to the mark's centre. */
@@ -24,7 +33,7 @@ const HEADER_WAVE = {
 const easeOut = (t) => 1 - (1 - t) ** 3;
 
 /* `defaults` overrides starting values for one page; its own `id` keeps them apart. */
-export function HeaderWave({ defaults, id: panelId = 'header-logo' }) {
+export function HeaderWave({ defaults, id: panelId = 'header-logo', listening = false }) {
   const config = defaults ? { ...HEADER_WAVE, ...defaults } : HEADER_WAVE;
   const h = useDialKit('Header logo', config, { id: panelId, defaultCollapsed: true });
   const root = useRef(null);
@@ -60,9 +69,22 @@ export function HeaderWave({ defaults, id: panelId = 'header-logo' }) {
     };
     tick(performance.now());
     return () => cancelAnimationFrame(raf);
-  }, [h.show, h.animate, h.loop]);
+  }, [h.show, h.animate, h.loop, h.mark]);
 
   if (!h.show) return null;
+  if (h.mark === 'momo') {
+    return (
+      <div
+        className="header-momo"
+        data-listening={listening || undefined}
+        style={{ width: h.momo.size, '--hw-x': `${h.x}px`, '--hw-y': `${h.y}px`, '--momo-blend': `${h.momo.blendMs}ms` }}
+        aria-hidden="true"
+      >
+        <video className="momo-floating" src={momoFloating} autoPlay loop muted playsInline />
+        <video className="momo-listening" src={momoListening} autoPlay loop muted playsInline />
+      </div>
+    );
+  }
   return (
     <svg
       ref={root}
