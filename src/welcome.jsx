@@ -95,7 +95,7 @@ const BREATH = {
    shorter than ~250ms read as one soft swell. */
 const PULSE = {
   startMs: [360, 0, 3000, 10],
-  count: [2, 1, 6, 1],
+  count: [3, 1, 6, 1],
   riseMs: [450, 40, 2000, 10],
   fallMs: [750, 40, 3000, 10],
   gapMs: [300, 0, 2000, 10],
@@ -107,8 +107,10 @@ const PULSE = {
   /* afterIntro 'spread': once everything is on screen, the glow rises slowly to
      `height` (1 = the beam's full reach) and stays there. */
   spread: {
+    /* The last pulse rises to this and stays, then climbs to `height`. */
+    hold: [0.55, 0, 1, 0.01],
     height: [0.9, 0, 1, 0.01],
-    /* Wait after the buttons appear before it starts rising. */
+    /* How long the last pulse holds before it starts climbing. */
     delayMs: [0, 0, 5000, 10],
     durationMs: [3500, 200, 12000, 50],
   },
@@ -196,14 +198,18 @@ function useGlow(br, pulse, intro) {
     const ms = now - start.current;
     const end = pulseEndMs(p);
     let base;
+    const cycle = p.riseMs + p.fallMs + p.gapMs;
+    const lastStart = p.startMs + (p.count - 1) * cycle;
+    if (p.afterIntro === 'spread' && ms >= lastStart) {
+      // The last pulse rises and stays, then climbs slowly to the spread height.
+      const x = ms - lastStart;
+      const up = p.spread.hold * ease(Math.min(1, x / p.riseMs));
+      const k = Math.min(1, Math.max(0, (x - p.riseMs - p.spread.delayMs) / p.spread.durationMs));
+      base = x < p.riseMs ? up : p.spread.hold + (p.spread.height - p.spread.hold) * ease(k);
+    }
     // The opening pulses run from nothing to the peak and back to nothing.
-    if (ms < end) base = p.peak * trainAt(ms - p.startMs, p);
-    else if (p.afterIntro === 'spread') {
-      // Everything is on screen at the buttons' cue; the glow then rises and holds.
-      const from = Math.max(0, end + p.wordmarkOffsetMs) + it.ctaAfterMs + p.spread.delayMs;
-      const k = Math.min(1, Math.max(0, (ms - from) / p.spread.durationMs));
-      base = c.low + (p.spread.height - c.low) * ease(k);
-    } else if (p.afterIntro === 'pulse') base = c.low + (p.peak - c.low) * loopAt(ms - end, p);
+    else if (ms < end) base = p.peak * trainAt(ms - p.startMs, p);
+    else if (p.afterIntro === 'pulse') base = c.low + (p.peak - c.low) * loopAt(ms - end, p);
     else base = c.low + (c.high - c.low) * breathAt((ms - end) / 1000, c);
     if (swellFrom.current === null) return base;
     const k = Math.min(1, (now - swellFrom.current) / (c.swellSec * 1000));
