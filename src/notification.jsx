@@ -8,7 +8,7 @@ import watchUrl from '../iphone_asset/Apple Watch Series 7 - 45mm - Starlight.pn
 import momoFloating from '../momo-animations/momo-floating.webm';
 import momoListening from '../momo-animations/momo-listening.webm';
 import { Backdrop } from './backdrop.jsx';
-import { Heart, Wind } from 'lucide-react';
+import { Activity, Heart, Mic, Tag, Waves, Wind, Hand } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────
  * Notification: the watch senses a stress spike and Momo offers a voice entry.
@@ -57,6 +57,13 @@ const CONFIG = {
   /* Tall faces and Smart Stack: brand blue, or white with dark circles. */
   faceTint: { type: 'select', options: ['blue', 'white'], default: 'blue' },
   scale: [0.8, 0.4, 1.4, 0.01],
+  /* The story beside the watch: how the system works, step by step. */
+  explain: {
+    show: true,
+    side: { type: 'select', options: ['left', 'right'], default: 'left' },
+    /* After recording, how long the label screen waits before picking for you (demo). */
+    labelMs: [3500, 1000, 15000, 100],
+  },
   screenRadius: [70, 0, 120, 1],
   /* How far the black extends past the screen, under the frame. */
   bleed: [18, 0, 60, 1],
@@ -77,11 +84,11 @@ const CONFIG = {
     listenOnAsk: true,
   },
   copy: {
-    greeting: 'Hey, how’s it going?',
-    body: 'I noticed you seemed a little stressed not long ago. Want to talk about it?',
-    yes: 'Yes',
-    no: 'I’d rather not',
-    declined: 'No problem. I’m here if you need me.',
+    greeting: 'Something changed.',
+    body: 'Your heart rate rose and HRV dropped while you were sitting still. How are you feeling?',
+    yes: 'Talk for 30 seconds',
+    no: 'Not now',
+    declined: 'Okay. Nothing was recorded.',
     vitals: 'HRV 38 ms · 104 bpm',
   },
   look: {
@@ -105,7 +112,7 @@ const CONFIG = {
     },
     /* How long the simulated recording runs before it saves on its own. */
     recordMs: [7000, 2000, 20000, 250],
-    saved: 'Saved to Unwind. Thank you for sharing.',
+    saved: 'Saved with the readings from that moment. I’ll learn what this feels like for you.',
     words: 'Honestly the meeting ran over and I felt like nobody was listening to me.',
   },
   replay: { type: 'action', label: 'Replay' },
@@ -306,8 +313,10 @@ function Face({ face, now, time, vitals }) {
 
 /* After Yes: five ways to take the entry on the watch itself. */
 const FEELINGS = ['Anxious', 'Frustrated', 'Overwhelmed', 'Sad', 'Not sure'];
+/* What the moment turned out to be; these personalise the detector over time. */
+const LABELS = ['Work pressure', 'Argument', 'Excitement', 'Exercise', 'Caffeine', 'Nothing'];
 function AfterYes({ preset, phase, setPhase, a }) {
-  const on = ['yes', 'rec', 'saved'].includes(phase);
+  const on = ['yes', 'rec', 'label', 'saved'].includes(phase);
   const [sec, setSec] = useState(0);
   const [feeling, setFeeling] = useState(null);
   useEffect(() => {
@@ -317,7 +326,7 @@ function AfterYes({ preset, phase, setPhase, a }) {
   }, [phase]);
   const clock = `0:${String(sec).padStart(2, '0')}`;
   const stop = (
-    <button type="button" className="ny-stop" aria-label="Done" onClick={() => setPhase('saved')}>
+    <button type="button" className="ny-stop" aria-label="Done" onClick={() => setPhase('label')}>
       <span />
     </button>
   );
@@ -325,7 +334,19 @@ function AfterYes({ preset, phase, setPhase, a }) {
   const words = a.words.split(' ');
   return (
     <div className="ny" data-preset={preset} data-phase={phase} inert={!on} aria-hidden={!on}>
-      {phase === 'saved' ? (
+      {/* The mic is only on after the tap, and says so. */}
+      {phase === 'rec' && <span className="ny-mic"><Mic /> Mic on</span>}
+      {phase === 'label' ? (
+        <div className="ny-col ny-left">
+          <p className="ny-title">What was it?</p>
+          <p className="ny-sub">Your answer teaches Unwind what this pattern means for you.</p>
+          <span className="ny-chips">
+            {LABELS.map((l) => (
+              <button key={l} type="button" data-auto={l === LABELS[0] || undefined} onClick={() => setPhase('saved')}>{l}</button>
+            ))}
+          </span>
+        </div>
+      ) : phase === 'saved' ? (
         <div className="ny-saved">
           <MiniMomo />
           <p>{a.saved}</p>
@@ -346,7 +367,7 @@ function AfterYes({ preset, phase, setPhase, a }) {
       ) : preset === 'orb' ? (
         <div className="ny-col">
           <p className="ny-title">{phase === 'rec' ? clock : 'Tap to start'}</p>
-          <button type="button" className="ny-orb" data-on={phase === 'rec' || undefined} onClick={() => setPhase(phase === 'rec' ? 'saved' : 'rec')} aria-label={phase === 'rec' ? 'Done' : 'Start recording'}>
+          <button type="button" className="ny-orb" data-on={phase === 'rec' || undefined} onClick={() => setPhase(phase === 'rec' ? 'label' : 'rec')} aria-label={phase === 'rec' ? 'Done' : 'Start recording'}>
             <MiniMomo listening={phase === 'rec'} />
           </button>
           <p className="ny-sub">{phase === 'rec' ? 'Tap Momo when you’re done' : 'Say whatever’s on your mind'}</p>
@@ -392,6 +413,63 @@ const MiniMomo = ({ listening, big }) => (
   </span>
 );
 
+/* ── The story beside the watch ─────────────────────────────
+ * Five steps, lit in turn as the loop plays, so a first-time viewer sees the
+ * architecture: passive physiology → anomaly → gentle ask → chosen voice
+ * reflection → user label that personalises the model. */
+const STEPS = [
+  { key: 'baseline', Icon: Activity, title: 'Learns your normal', body: 'Heart rate, HRV, breathing and movement, quietly, all day. Nothing is recorded.' },
+  { key: 'anomaly', Icon: Waves, title: 'Spots something unusual', body: 'Not “you’re stressed”, just a change from your baseline.' },
+  { key: 'ask', Icon: Hand, title: 'Asks gently', body: 'A light tap on the wrist. You decide whether to answer.' },
+  { key: 'speak', Icon: Mic, title: 'You choose to talk', body: 'The mic turns on only when you tap, with a visible indicator.' },
+  { key: 'label', Icon: Tag, title: 'You say what it was', body: 'Your label teaches Unwind what this pattern means for you.' },
+];
+const STEP_OF = { off: 0, face: 0, sense: 1, ask: 2, declined: 2, yes: 3, rec: 3, label: 4, saved: 4 };
+const SIGNALS = [
+  { name: 'Heart rate', base: '68', now: '104', unit: 'bpm', up: true },
+  { name: 'HRV', base: '62', now: '38', unit: 'ms', up: false },
+  { name: 'Breathing', base: '14', now: '19', unit: '/min', up: true },
+  { name: 'Movement', base: 'still', now: 'still', unit: '' },
+];
+
+function Explainer({ phase, side }) {
+  const at = STEP_OF[phase] ?? 0;
+  return (
+    <aside className="nx" data-side={side} aria-label="How Unwind notices">
+      <p className="nx-kicker">How Unwind notices</p>
+      <ol className="nx-steps">
+        {STEPS.map(({ key, Icon, title, body }, i) => (
+          <li key={key} data-state={i < at ? 'done' : i === at ? 'now' : undefined}>
+            <span className="nx-icon"><Icon /></span>
+            <span className="nx-text">
+              <b>{title}</b>
+              <span>{body}</span>
+              {key === 'anomaly' && i === at && (
+                <span className="nx-signals">
+                  {SIGNALS.map((g) => (
+                    <span key={g.name} className="nx-signal">
+                      <span>{g.name}</span>
+                      <span className="nx-vals">
+                        <i>{g.base}</i>→<b data-up={g.up ?? undefined}>{g.now}</b>{g.unit}
+                        {g.up !== undefined && <em>{g.up ? '↑' : '↓'}</em>}
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              )}
+              {key === 'ask' && phase === 'declined' && <span className="nx-note">Declined. Nothing recorded, nothing kept.</span>}
+              {key === 'label' && i === at && (
+                <span className="nx-loop">Next time, the same pattern is recognised sooner, for you alone.</span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="nx-foot">The watch notices a change in your body. <b>You</b> tell it what it meant.</p>
+    </aside>
+  );
+}
+
 function Notification() {
   const [run, setRun] = useState(0);
   const c = useDialKit('Notification', CONFIG, { id: 'notification', persist: true, onAction: () => setRun((n) => n + 1) });
@@ -412,11 +490,15 @@ function Notification() {
   // Recording: saves on its own after recordMs; saved → the loop starts over.
   useEffect(() => {
     if (phase === 'rec') {
-      const id = setTimeout(() => setPhase('saved'), c.after.recordMs);
+      const id = setTimeout(() => setPhase('label'), c.after.recordMs);
+      return () => clearTimeout(id);
+    }
+    if (phase === 'label') {
+      const id = setTimeout(() => setPhase('saved'), c.explain.labelMs);
       return () => clearTimeout(id);
     }
     if (phase === 'saved') {
-      const id = setTimeout(() => setRun((n) => n + 1), 3000);
+      const id = setTimeout(() => setRun((n) => n + 1), 4000);
       return () => clearTimeout(id);
     }
   }, [phase]);
@@ -436,7 +518,8 @@ function Notification() {
   return (
     <main className="stage" style={{ background: '#f5f5f5' }}>
       <Backdrop id="backdrop-notification" />
-      <div className="device" style={{ width: WATCH.w * k, height: WATCH.h * k }}>
+      <div className="device nx-device" data-haptic={asking || undefined} style={{ width: WATCH.w * k, height: WATCH.h * k }}>
+        {c.explain.show && <Explainer phase={phase} side={c.explain.side} />}
         <div className="device-scaler" style={{ width: WATCH.w, height: WATCH.h, transform: `scale(${k})` }}>
           {/* Black underlay larger than the cut-out, so no light gap shows at the glass edge. */}
           <div

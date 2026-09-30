@@ -213,8 +213,8 @@
 
 /* ── After Yes: the entry is taken on the watch (After › preset). ── */
 .ny { position: absolute; inset: 0; z-index: 4; display: flex; padding: 30px 26px 24px; background: #000; opacity: 0; transform: translateY(24px); pointer-events: none; }
-.watch-screen:is([data-phase='yes'], [data-phase='rec'], [data-phase='saved']) .ny { opacity: 1; transform: none; pointer-events: auto; }
-.watch-screen:is([data-phase='yes'], [data-phase='rec'], [data-phase='saved']) :is(.nm-face, .nm-ask, .nm-momo, .nm-ring, .nm-line) { opacity: 0; }
+.watch-screen:is([data-phase='yes'], [data-phase='rec'], [data-phase='label'], [data-phase='saved']) .ny { opacity: 1; transform: none; pointer-events: auto; }
+.watch-screen:is([data-phase='yes'], [data-phase='rec'], [data-phase='label'], [data-phase='saved']) :is(.nm-face, .nm-ask, .nm-momo, .nm-ring, .nm-line) { opacity: 0; }
 .ny > div { flex: 1; }
 .ny-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
 .ny-left { align-items: flex-start; justify-content: flex-start; text-align: left; }
@@ -248,3 +248,37 @@
 /* Saved */
 .ny-saved { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #c7c7cc; font-size: 21px; text-align: center; }
 .ny-saved p { margin: 0; }
+
+/* Mic indicator while recording (Apple requires a visible one). */
+.ny-mic { position: absolute; top: 22px; left: 50%; z-index: 2; display: inline-flex; gap: 5px; align-items: center; padding: 4px 11px; border-radius: 999px; background: rgba(97, 168, 253, 0.18); color: var(--accent); font-size: 14px; font-weight: 600; translate: -50% 0; }
+.ny-mic svg { width: 14px; height: 14px; }
+.ny-chips button[data-auto] { animation: ny-auto 3.5s steps(1) forwards; }
+@keyframes ny-auto { 80% { background: var(--accent); } }
+
+/* Haptic: a light double-tap shake as the ask arrives. */
+.nx-device[data-haptic] .device-scaler { animation: nx-tap 0.5s ease-in-out 2; }
+@keyframes nx-tap { 25% { translate: -3px 0; } 75% { translate: 3px 0; } }
+
+/* ── Explainer rail ── */
+.nx { position: absolute; top: 50%; width: 330px; translate: 0 -50%; color: #3b484c; font-family: Inter, -apple-system, system-ui, sans-serif; }
+.nx[data-side='left'] { right: calc(100% + 48px); }
+.nx[data-side='right'] { left: calc(100% + 48px); }
+.nx-kicker { margin: 0 0 14px; color: #61a8fd; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.nx-steps { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.nx-steps li { display: flex; gap: 12px; padding: 12px; border-radius: 16px; opacity: 0.42; transition: opacity 0.4s ease, background 0.4s ease; }
+.nx-steps li[data-state='done'] { opacity: 0.7; }
+.nx-steps li[data-state='now'] { background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 50, 90, 0.08); opacity: 1; }
+.nx-icon { display: grid; flex-shrink: 0; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: rgba(97, 168, 253, 0.12); color: #61a8fd; }
+.nx-icon svg { width: 18px; height: 18px; }
+.nx-steps li[data-state='now'] .nx-icon { background: #61a8fd; color: #fff; }
+.nx-text { display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.4; }
+.nx-text b { color: #1f2a2e; font-size: 14.5px; font-weight: 600; }
+.nx-signals { display: grid; gap: 4px; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #f4f8fd; }
+.nx-signal { display: flex; justify-content: space-between; font-size: 12.5px; }
+.nx-vals { font-variant-numeric: tabular-nums; }
+.nx-vals i { color: #8a9aa0; font-style: normal; }
+.nx-vals b { margin-left: 3px; color: #61a8fd; font-size: 12.5px; }
+.nx-vals em { margin-left: 4px; color: #61a8fd; font-style: normal; font-weight: 700; }
+.nx-note, .nx-loop { margin-top: 6px; color: #61a8fd; font-weight: 500; }
+.nx-foot { margin: 16px 0 0 12px; color: #6b7a80; font-size: 13.5px; line-height: 1.45; }
+.nx-foot b { color: #1f2a2e; }
