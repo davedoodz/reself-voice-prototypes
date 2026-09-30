@@ -125,3 +125,85 @@
 .watch-screen[data-phase='off'] > * { opacity: 0 !important; filter: none; transition: none; }
 .watch-screen:not([data-phase='off']) .nm-face { animation: nm-wake 0.6s ease-out; }
 @keyframes nm-wake { from { opacity: 0; filter: brightness(2) blur(6px); transform: scale(1.04); } }
+
+/* ── Tall faces: condensed brand-blue digits, date on top, round complications. ── */
+.nm-face[data-face^='tall'] { justify-content: flex-start; gap: 0; padding-top: 30px; color: var(--accent); }
+.nft-date { font-size: 24px; font-weight: 600; letter-spacing: 0.01em; text-transform: uppercase; color: var(--accent); }
+.nft-time { display: flex; align-items: center; height: 196px; font-size: 104px; font-weight: 200; line-height: 1; letter-spacing: -0.02em; color: var(--accent); font-variant-numeric: tabular-nums; transform: scaleY(1.85); transform-origin: center; }
+.nft-colon { margin: 0 2px; }
+.nft-row { display: flex; gap: 16px; margin-top: 18px; }
+.nfc { position: relative; display: grid; flex-shrink: 0; place-items: center; width: 92px; height: 92px; border-radius: 50%; background: rgba(97, 168, 253, 0.14); color: var(--accent); }
+.nfc svg { width: 42px; height: 42px; }
+.nfc-stack { gap: 0; align-content: center; }
+.nfc-stack svg { width: 22px; height: 22px; }
+.nfc-stack b { font-size: 24px; font-weight: 600; }
+.nfc-rings { width: 70px !important; height: 70px !important; fill: none; stroke-width: 8; stroke-linecap: round; }
+.nfc-rings .nfc-track circle { stroke: rgba(97, 168, 253, 0.22); }
+.nfc-rings .nfc-fill circle { stroke: var(--accent); }
+.nfc-gauge { position: relative; display: grid; place-items: center; width: 78px; height: 78px; }
+.nfc-gauge svg { position: absolute; inset: 0; width: 100% !important; height: 100% !important; fill: none; stroke-width: 7; stroke-linecap: round; }
+.nfc-gauge .nfc-track { stroke: rgba(97, 168, 253, 0.22); }
+.nfc-gauge .nfc-fill { stroke: var(--accent); transition: stroke-dasharray 0.6s ease; }
+.nfc-gauge b { font-size: 26px; font-weight: 600; }
+.nfc-gauge i { position: absolute; bottom: 4px; font-size: 12px; font-style: normal; }
+.nfc-gauge i:first-of-type { left: 10px; }
+.nfc-gauge i:last-of-type { right: 8px; }
+.nfc-momo { overflow: hidden; }
+.nfc-momo video { width: 82px; height: 82px; object-fit: contain; }
+/* On the spike, the live complications glow and beat. */
+.watch-screen[data-phase='sense'] .nfc-live { background: rgba(97, 168, 253, 0.32); animation: nfc-beat 0.8s ease-in-out infinite; }
+@keyframes nfc-beat { 50% { box-shadow: 0 0 0 8px rgba(97, 168, 253, 0.18); } }
+
+/* 8 · split: stacked hours/minutes left, complications right. */
+.nft-split { display: flex; gap: 14px; align-items: center; width: 100%; padding: 0 22px; }
+.nft-col { display: flex; flex: 1; flex-direction: column; align-items: flex-start; }
+.nft-half { height: 150px; font-size: 118px; transform: scaleY(1.3); transform-origin: left center; }
+.nft-side { display: flex; flex-direction: column; gap: 12px; }
+.nft-side .nfc { width: 84px; height: 84px; }
+.nm-face[data-face='tall-split'] { padding-top: 22px; }
+
+/* 9 · calm gauge: a bar from calm to tense; the marker slides right on the spike. */
+.nft-calm { display: flex; flex-direction: column; gap: 8px; width: 290px; margin-top: 24px; color: var(--accent); }
+.nft-calm-bar { position: relative; height: 10px; border-radius: 999px; background: linear-gradient(90deg, rgba(97, 168, 253, 0.25), var(--accent)); }
+.nft-calm-dot { position: absolute; top: 50%; left: 22%; width: 22px !important; height: 22px !important; border: 4px solid #000; background: #fff !important; translate: -50% -50%; transition: left 1.2s cubic-bezier(0.22, 1, 0.36, 1) !important; }
+.watch-screen[data-phase='sense'] .nft-calm-dot { left: 84%; }
+.nft-calm-labels { display: flex; justify-content: space-between; font-size: 16px; font-weight: 500; }
+
+/* 10 · heart graph: rising bars, labelled. */
+.nft-graph { display: flex; flex-direction: column; gap: 8px; width: 300px; margin-top: 18px; color: var(--accent); }
+.nft-bars { display: flex; gap: 5px; align-items: flex-end; height: 64px; }
+.nft-bars i { flex: 1; border-radius: 3px; background: rgba(97, 168, 253, 0.35); transition: background 0.5s ease; }
+.nft-bars i:nth-last-child(-n + 6) { background: var(--accent); }
+.nft-graph-label { display: inline-flex; gap: 6px; align-items: center; font-size: 17px; font-weight: 500; }
+.nft-graph-label svg { width: 18px; height: 18px; }
+.watch-screen[data-phase='sense'] .nft-bars i:nth-last-child(-n + 6) { animation: nfc-bar 0.6s ease-in-out infinite alternate; }
+@keyframes nfc-bar { to { opacity: 0.55; } }
+
+/* The resting Momo would sit on the complications; tall faces hide it until the ask. */
+.watch-screen:has(.nm-face[data-face^='tall']):is([data-phase='face'], [data-phase='sense']) .nm-momo { opacity: 0; }
+.watch-screen:has(.nm-face[data-face^='tall']):is([data-design='breathe'], [data-design='pulse']):is([data-phase='face'], [data-phase='sense']) :is(.nm-ring, .nm-line) { opacity: 0; }
+
+/* White tint: white digits and icons on dark grey circles (as in watchOS). */
+.nm-face[data-tint='white'] { --accent: #fff; }
+.nm-face[data-tint='white'] .nfc { background: #2c2c2e; }
+.nm-face[data-tint='white'] :is(.nfc-rings, .nfc-gauge) .nfc-track, .nm-face[data-tint='white'] .nfc-rings .nfc-track circle { stroke: rgba(255, 255, 255, 0.2); }
+.watch-screen[data-phase='sense'] .nm-face[data-tint='white'] .nfc-live { background: #61a8fd; }
+
+/* 11 · Smart Stack: tall time at rest; on the spike it shrinks and a card slides in. */
+.nm-face[data-face='smart-stack'] { justify-content: flex-start; padding-top: 26px; }
+.nfs { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; color: var(--accent); }
+.nfs-time { position: absolute; top: 0; font-family: 'Unwind Family', 'Test Family', Georgia, serif; font-size: 60px; line-height: 1; opacity: 0; transform: translateY(40px) scale(1.6); transition: opacity 0.5s ease, transform 0.7s var(--ease); }
+.nfs-tall { position: absolute; top: 14px; transition: opacity 0.4s ease, transform 0.7s var(--ease); }
+.nfs-card { position: absolute; top: 82px; right: 22px; left: 22px; display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 22px; background: #1c1c1e; color: #fff; text-align: left; opacity: 0; transform: translateY(30px) scale(0.95); transition: opacity 0.5s ease 0.15s, transform 0.7s var(--ease) 0.15s; }
+.nfs-card-head { display: flex; gap: 8px; align-items: center; color: #61a8fd; font-size: 17px; }
+.nfs-card-head video { width: 34px; height: 34px; object-fit: contain; }
+.nfs-card-body { font-size: 19px; line-height: 1.25; }
+.nfs-card-meta { font-size: 15px; }
+.nfs-row { position: absolute; bottom: 30px; margin: 0; }
+.watch-screen[data-phase='sense'] .nfs-tall { opacity: 0; transform: scaleY(1.85) translateY(-40px) scale(0.5); }
+.watch-screen[data-phase='sense'] .nfs-time { opacity: 1; transform: none; }
+.watch-screen[data-phase='sense'] .nfs-card { opacity: 1; transform: none; }
+.watch-screen:has(.nm-face[data-face='smart-stack']):is([data-phase='face'], [data-phase='sense']) :is(.nm-momo, .nm-ring, .nm-line) { opacity: 0; }
+/* The calm and graph blocks carry .nm-vitals (for the spike colour) but lay out as columns. */
+.nm-vitals.nft-calm, .nm-vitals.nft-graph { display: flex; flex-direction: column; align-items: stretch; }
+.nft-calm-bar, .nft-bars { align-self: stretch; }

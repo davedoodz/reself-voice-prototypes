@@ -8,6 +8,7 @@ import watchUrl from '../iphone_asset/Apple Watch Series 7 - 45mm - Starlight.pn
 import momoFloating from '../momo-animations/momo-floating.webm';
 import momoListening from '../momo-animations/momo-listening.webm';
 import { Backdrop } from './backdrop.jsx';
+import { Heart, Wind } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────
  * Notification: the watch senses a stress spike and Momo offers a voice entry.
@@ -44,9 +45,17 @@ const CONFIG = {
       { value: 'stacked', label: '3 · Stacked' },
       { value: 'minimal', label: '4 · Minimal' },
       { value: 'analog', label: '5 · Analog' },
+      { value: 'tall-trio', label: '6 · Tall · three circles' },
+      { value: 'tall-momo', label: '7 · Tall · Momo circle' },
+      { value: 'tall-split', label: '8 · Tall · split' },
+      { value: 'tall-gauge', label: '9 · Tall · calm gauge' },
+      { value: 'tall-graph', label: '10 · Tall · heart graph' },
+      { value: 'smart-stack', label: '11 · Smart Stack (card on spike)' },
     ],
     default: 'classic',
   },
+  /* Tall faces and Smart Stack: brand blue, or white with dark circles. */
+  faceTint: { type: 'select', options: ['blue', 'white'], default: 'blue' },
   scale: [0.8, 0.4, 1.4, 0.01],
   screenRadius: [70, 0, 120, 1],
   /* How far the black extends past the screen, under the frame. */
@@ -110,6 +119,39 @@ function PulseLine({ spiking }) {
 
 /* Lock screen faces. Each keeps a .nm-vitals line so the spike can light it up. */
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/* Circular complications, in the brand blue on a tinted disc. */
+const Circle = ({ children, className = '' }) => <span className={`nfc ${className}`}>{children}</span>;
+function Rings() {
+  const arc = (r, pct) => {
+    const c = 2 * Math.PI * r;
+    return <circle r={r} strokeDasharray={`${c * pct} ${c}`} transform="rotate(-90)" />;
+  };
+  return (
+    <svg className="nfc-rings" viewBox="-50 -50 100 100" aria-hidden="true">
+      <g className="nfc-track"><circle r="38" /><circle r="27" /><circle r="16" /></g>
+      <g className="nfc-fill">{arc(38, 0.72)}{arc(27, 0.55)}{arc(16, 0.86)}</g>
+    </svg>
+  );
+}
+function Gauge({ value, lo, hi, pct }) {
+  const r = 38, c = 2 * Math.PI * r, span = 0.75;
+  return (
+    <span className="nfc-gauge">
+      <svg viewBox="-50 -50 100 100" aria-hidden="true">
+        <circle className="nfc-track" r={r} strokeDasharray={`${c * span} ${c}`} transform="rotate(135)" />
+        <circle className="nfc-fill" r={r} strokeDasharray={`${c * span * pct} ${c}`} transform="rotate(135)" />
+      </svg>
+      <b>{value}</b>
+      <i>{lo}</i><i>{hi}</i>
+    </span>
+  );
+}
+const TallTime = ({ time, className = '' }) => (
+  <span className={`nft-time ${className}`}>{time.split('').map((ch, i) => <span key={i} className={ch === ':' ? 'nft-colon' : undefined}>{ch}</span>)}</span>
+);
+
 function Face({ face, now, time, vitals }) {
   const date = `${DAYS[now.getDay()]} ${now.getDate()}`;
   const [hh, mm] = time.split(':');
@@ -119,6 +161,71 @@ function Face({ face, now, time, vitals }) {
       {vitals}
     </span>
   );
+  if (face.startsWith('tall')) {
+    const [, hrv = '38', bpm = '104'] = vitals.match(/(\d+)\D+(\d+)/) || [];
+    const bigDate = `${DAYS[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]}`;
+    const date = <span className="nft-date">{bigDate}</span>;
+    const hrvGauge = (
+      <Circle className="nm-vitals nfc-live"><Gauge value={hrv} lo="20" hi="80" pct={(hrv - 20) / 60} /></Circle>
+    );
+    const heart = (
+      <Circle className="nm-vitals nfc-live nfc-stack"><Heart /><b>{bpm}</b></Circle>
+    );
+    if (face === 'tall-trio') return (<>{date}<TallTime time={time} /><span className="nft-row"><Circle><Wind /></Circle><Circle><Rings /></Circle>{hrvGauge}</span></>);
+    if (face === 'tall-momo') return (<>{date}<TallTime time={time} /><span className="nft-row">{hrvGauge}<Circle className="nfc-momo"><video src={momoFloating} autoPlay loop muted playsInline /></Circle>{heart}</span></>);
+    if (face === 'tall-split') {
+      const [hh, mm] = time.split(':');
+      return (
+        <span className="nft-split">
+          <span className="nft-col">{date}<TallTime time={hh} className="nft-half" /><TallTime time={mm} className="nft-half" /></span>
+          <span className="nft-side">{hrvGauge}{heart}<Circle><Rings /></Circle></span>
+        </span>
+      );
+    }
+    if (face === 'tall-gauge') {
+      return (
+        <>{date}<TallTime time={time} />
+          <span className="nft-calm nm-vitals">
+            <span className="nft-calm-bar"><span className="nft-calm-dot nm-dot" /></span>
+            <span className="nft-calm-labels"><span>Calm</span><span>HRV {hrv}</span><span>Tense</span></span>
+          </span>
+        </>
+      );
+    }
+    const bars = [30, 34, 31, 36, 40, 38, 44, 52, 61, 70, 66, 74, 80, 72, 78, 86];
+    return (
+      <>{date}<TallTime time={time} />
+        <span className="nft-graph nm-vitals">
+          <span className="nft-bars">{bars.map((h, i) => <i key={i} style={{ height: `${h}%` }} />)}</span>
+          <span className="nft-graph-label"><Heart /> {bpm} bpm · rising</span>
+        </span>
+      </>
+    );
+  }
+  if (face === 'smart-stack') {
+    // At rest: tall digits. On the spike, the time shrinks to the top and an
+    // Unwind card with Momo and the readings slides in above the circles.
+    const [, hrv = '38', bpm = '104'] = vitals.match(/(\d+)\D+(\d+)/) || [];
+    return (
+      <span className="nfs">
+        <span className="nfs-time">{time}</span>
+        <TallTime time={time} className="nfs-tall" />
+        <span className="nfs-card">
+          <span className="nfs-card-head">
+            <video src={momoFloating} autoPlay loop muted playsInline />
+            <b>Unwind</b>
+          </span>
+          <span className="nfs-card-body">Your heart rate is up and HRV is down.</span>
+          <span className="nfs-card-meta nm-vitals"><span className="nm-dot" />HRV {hrv} ms · {bpm} bpm</span>
+        </span>
+        <span className="nft-row nfs-row">
+          <Circle><Wind /></Circle>
+          <Circle className="nm-vitals nfc-live nfc-stack"><Heart /><b>{bpm}</b></Circle>
+          <Circle><Rings /></Circle>
+        </span>
+      </span>
+    );
+  }
   if (face === 'modular') {
     const [hrv, bpm] = vitals.split('·').map((v) => v.trim());
     return (
@@ -239,7 +346,7 @@ function Notification() {
               '--move': `${c.timing.moveMs}ms`,
             }}
           >
-            <div className="nm-face" data-face={c.face}>
+            <div className="nm-face" data-face={c.face} data-tint={c.faceTint}>
               <Face face={c.face} now={now} time={time} vitals={c.copy.vitals} />
             </div>
 
