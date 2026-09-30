@@ -1,39 +1,89 @@
-/* Watch: a black OLED screen in the frame's cut-out; the frame sits on top. */
+/* Watch: a black OLED screen in the frame's cut-out; the frame sits on top.
+   Brand blue only (--accent, --soft); no warning colours. */
 .watch-screen {
   position: absolute;
   overflow: hidden;
   background: #000;
   color: #fff;
   font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
-.watch-frame { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.watch-frame { position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.watch-screen > * { transition: opacity var(--move) ease, transform var(--move) var(--ease), filter var(--move) ease, top var(--move) var(--ease), width var(--move) var(--ease); }
 
-.watch-screen > * { position: absolute; inset: 0; transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
+/* ── Shared pieces ── */
+.nm-face { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.nm-time { font-size: 88px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.nm-vitals { display: inline-flex; gap: 8px; align-items: center; color: #8e8e93; font-size: 19px; transition: color 0.5s ease; }
+.nm-dot { width: 9px; height: 9px; border-radius: 50%; background: #8e8e93; transition: background 0.5s ease, box-shadow 0.5s ease; }
+.watch-screen[data-phase='sense'] .nm-vitals { color: var(--soft); }
+.watch-screen[data-phase='sense'] .nm-dot { background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: nm-beat 0.7s ease-out infinite; }
+@keyframes nm-beat { to { box-shadow: 0 0 0 10px transparent; } }
 
-/* Face: time and a quiet vitals line; the line turns amber on the alert. */
-.watch-face { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
-.watch-time { font-size: 92px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.watch-vitals { display: inline-flex; gap: 8px; align-items: center; color: #8e8e93; font-size: 20px; transition: color 0.4s ease; }
-.watch-pulse { width: 10px; height: 10px; border-radius: 50%; background: #8e8e93; transition: background 0.4s ease; }
-.watch-screen[data-phase='alert'] .watch-vitals { color: #ffb340; }
-.watch-screen[data-phase='alert'] .watch-pulse { background: #ffb340; animation: watch-beat 0.6s ease-in-out infinite; }
-@keyframes watch-beat { 50% { transform: scale(1.5); opacity: 0.5; } }
-.watch-screen:is([data-phase='ask'], [data-phase='declined']) .watch-face { opacity: 0; filter: blur(8px); transform: scale(0.92); }
+.nm-momo { position: absolute; left: 50%; width: var(--momo); aspect-ratio: 1; translate: -50% 0; opacity: 0; }
+.nm-momo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.5s ease; }
+.nm-momo .nm-listen, .nm-momo[data-listening] .nm-float { opacity: 0; }
+.nm-momo[data-listening] .nm-listen { opacity: 1; }
 
-/* The prompt slides up over the face. */
-.watch-ask { display: flex; flex-direction: column; padding: 34px 26px 26px; opacity: 0; transform: translateY(40px); }
-.watch-screen[data-phase='ask'] .watch-ask { opacity: 1; transform: none; }
-.watch-app { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; color: var(--accent); font-size: 17px; font-weight: 600; }
-.watch-app img { width: 30px; height: auto; }
-.watch-greeting { margin: 0 0 8px; font-size: var(--title, 26px); font-weight: 600; line-height: 1.15; }
-.watch-body { flex: 1; margin: 0; color: #c7c7cc; font-size: var(--body, 21px); line-height: 1.3; }
-.watch-actions { display: flex; flex-direction: column; gap: 10px; }
-.watch-actions button { height: 58px; border: 0; border-radius: 999px; font: inherit; font-size: 21px; font-weight: 600; cursor: pointer; transition: transform 0.15s ease; }
-.watch-actions button:active { transform: scale(0.96); }
-.watch-yes { background: var(--accent, #61a8fd); color: #fff; }
-.watch-no { background: #2c2c2e; color: #fff; }
+.nm-ask { position: absolute; right: 24px; bottom: 22px; left: 24px; display: flex; flex-direction: column; opacity: 0; transform: translateY(30px); }
+.nm-greeting { margin: 0 0 6px; font-size: var(--title); font-weight: 600; line-height: 1.15; }
+.nm-body { margin: 0 0 16px; color: #c7c7cc; font-size: var(--body); line-height: 1.3; }
+.nm-actions { display: flex; flex-direction: column; gap: 9px; }
+.nm-actions button { height: 52px; border: 0; border-radius: 999px; font: inherit; font-size: 19px; font-weight: 600; cursor: pointer; }
+.nm-actions button:active { transform: scale(0.96); }
+.nm-yes { background: var(--accent); color: #fff; }
+.nm-no { background: #1c1c1e; color: #fff; }
+.watch-screen[data-phase='ask'] .nm-ask { opacity: 1; transform: none; }
+.watch-screen:is([data-phase='ask'], [data-phase='declined']) .nm-face { opacity: 0; filter: blur(8px); transform: scale(0.94); }
 
-.watch-declined { display: grid; place-items: center; margin: 0; padding: 40px; color: #c7c7cc; font-size: 22px; text-align: center; opacity: 0; }
-.watch-screen[data-phase='declined'] .watch-declined { opacity: 1; }
+.nm-declined { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 40px; color: #c7c7cc; font-size: 21px; text-align: center; opacity: 0; }
+.watch-screen[data-phase='declined'] .nm-declined { opacity: 1; }
+.watch-screen[data-phase='declined'] .nm-momo { opacity: 0; }
 
-@media (prefers-reduced-motion: reduce) { .watch-screen > * { transition: none; } .watch-pulse { animation: none !important; } }
+/* ── 1 · Glance: Momo rests small under the time, then tops the prompt. ── */
+[data-design='glance'] .nm-momo { top: 330px; width: calc(var(--momo) * 0.6); opacity: 1; }
+[data-design='glance'] .nm-face { justify-content: flex-start; padding-top: 70px; }
+[data-design='glance'][data-phase='sense'] .nm-momo { animation: nm-nudge 0.9s ease-in-out infinite; }
+[data-design='glance'][data-phase='ask'] .nm-momo { top: 8px; width: calc(var(--momo) * 0.55); }
+@keyframes nm-nudge { 50% { translate: -50% -6px; } }
+
+/* ── 2 · Rise: Momo floats up from below, grows to centre, then asks from the top. ── */
+[data-design='rise'] .nm-momo { top: 520px; opacity: 0; }
+[data-design='rise'][data-phase='sense'] .nm-momo { top: 150px; width: calc(var(--momo) * 1.4); opacity: 1; }
+[data-design='rise'][data-phase='sense'] .nm-face { opacity: 0.25; filter: blur(4px); }
+[data-design='rise'][data-phase='ask'] .nm-momo { top: 6px; opacity: 1; }
+
+/* ── 3 · Breathe: a blue ring breathes around Momo; it quickens on the spike. ── */
+.nm-ring { position: absolute; top: 118px; left: 50%; width: 170px; aspect-ratio: 1; border: 3px solid var(--accent); border-radius: 50%; translate: -50% 0; opacity: 0; }
+[data-design='breathe'] .nm-momo { top: 143px; width: 120px; opacity: 1; }
+[data-design='breathe'] .nm-face { justify-content: flex-start; padding-top: 30px; gap: 0; }
+[data-design='breathe'] .nm-time { font-size: 44px; }
+[data-design='breathe'] .nm-vitals { position: absolute; bottom: 60px; }
+[data-design='breathe'][data-phase='face'] .nm-ring { opacity: 0.5; animation: nm-breathe 4s ease-in-out infinite; }
+[data-design='breathe'][data-phase='sense'] .nm-ring { opacity: 0.9; animation: nm-breathe 0.9s ease-in-out infinite; }
+[data-design='breathe'][data-phase='ask'] .nm-ring { top: 2px; width: 104px; opacity: 0.35; animation: nm-breathe 4s ease-in-out infinite; }
+[data-design='breathe'][data-phase='ask'] .nm-momo { top: 14px; width: 80px; }
+@keyframes nm-breathe { 50% { scale: 1.12; } }
+
+/* ── 4 · Pulse line: a heart-rate line turns jagged, then smooths into Momo. ── */
+.nm-line { position: absolute; top: 250px; left: 0; width: 100%; height: 80px; fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; opacity: 0.8; }
+.nm-line polyline { transition: all 0.5s ease; stroke-dasharray: 1400; animation: nm-draw 2.2s linear infinite; }
+@keyframes nm-draw { from { stroke-dashoffset: 1400; } }
+[data-design='pulse'] .nm-face { justify-content: flex-start; padding-top: 60px; }
+[data-design='pulse'][data-phase='sense'] .nm-line polyline { animation-duration: 0.9s; }
+[data-design='pulse'] .nm-momo { top: 240px; width: 60px; opacity: 0; }
+[data-design='pulse'][data-phase='ask'] .nm-line { opacity: 0; transform: scaleY(0); }
+[data-design='pulse'][data-phase='ask'] .nm-momo { top: 8px; width: calc(var(--momo) * 0.6); opacity: 1; }
+
+/* ── 5 · Peek: Momo peeks up from the bottom with a speech bubble. ── */
+[data-design='peek'] .nm-momo { top: 480px; opacity: 1; }
+[data-design='peek'][data-phase='sense'] .nm-momo { top: 380px; animation: nm-nudge 1.2s ease-in-out infinite; }
+[data-design='peek'][data-phase='ask'] .nm-momo { top: 6px; width: calc(var(--momo) * 0.6); }
+[data-design='peek'] .nm-ask { top: 90px; bottom: 22px; padding: 18px 18px 16px; border-radius: 28px; border-top-left-radius: 8px; background: #1c1c1e; transform: translateY(40px) scale(0.9); transform-origin: 20% 0; }
+[data-design='peek'] .nm-body { flex: 1; }
+[data-design='peek'] .nm-no { background: #2c2c2e; }
+
+@media (prefers-reduced-motion: reduce) {
+  .watch-screen > *, .nm-line polyline { transition: none; animation: none !important; }
+  .nm-dot, .nm-ring, .nm-momo { animation: none !important; }
+}
