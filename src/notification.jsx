@@ -90,7 +90,24 @@ const CONFIG = {
     textSize: [24, 16, 36, 0.5],
     bodySize: [19, 14, 30, 0.5],
   },
-  yesPage: { type: 'select', options: ['voice.html', 'voice-guided.html', 'voice-dynamic.html'], default: 'voice.html' },
+  /* What the watch shows after Yes: the entry is recorded right on the watch. */
+  after: {
+    preset: {
+      type: 'select',
+      options: [
+        { value: 'listen', label: '1 · Momo listens' },
+        { value: 'transcript', label: '2 · Live words' },
+        { value: 'orb', label: '3 · Tap the orb' },
+        { value: 'breathe', label: '4 · Breathe first' },
+        { value: 'feeling', label: '5 · Pick a feeling' },
+      ],
+      default: 'listen',
+    },
+    /* How long the simulated recording runs before it saves on its own. */
+    recordMs: [7000, 2000, 20000, 250],
+    saved: 'Saved to Unwind. Thank you for sharing.',
+    words: 'Honestly the meeting ran over and I felt like nobody was listening to me.',
+  },
   replay: { type: 'action', label: 'Replay' },
 };
 
@@ -287,6 +304,94 @@ function Face({ face, now, time, vitals }) {
   );
 }
 
+/* After Yes: five ways to take the entry on the watch itself. */
+const FEELINGS = ['Anxious', 'Frustrated', 'Overwhelmed', 'Sad', 'Not sure'];
+function AfterYes({ preset, phase, setPhase, a }) {
+  const on = ['yes', 'rec', 'saved'].includes(phase);
+  const [sec, setSec] = useState(0);
+  const [feeling, setFeeling] = useState(null);
+  useEffect(() => {
+    if (phase !== 'rec') return setSec(0);
+    const id = setInterval(() => setSec((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [phase]);
+  const clock = `0:${String(sec).padStart(2, '0')}`;
+  const stop = (
+    <button type="button" className="ny-stop" aria-label="Done" onClick={() => setPhase('saved')}>
+      <span />
+    </button>
+  );
+  const bars = <span className="ny-bars" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ animationDelay: `${i * 90}ms` }} />)}</span>;
+  const words = a.words.split(' ');
+  return (
+    <div className="ny" data-preset={preset} data-phase={phase} inert={!on} aria-hidden={!on}>
+      {phase === 'saved' ? (
+        <div className="ny-saved">
+          <MiniMomo />
+          <p>{a.saved}</p>
+        </div>
+      ) : preset === 'listen' ? (
+        <div className="ny-col">
+          <MiniMomo listening big />
+          <p className="ny-title">I’m listening…</p>
+          {bars}
+          <span className="ny-row"><span className="ny-clock">{clock}</span>{stop}</span>
+        </div>
+      ) : preset === 'transcript' ? (
+        <div className="ny-col ny-left">
+          <span className="ny-row ny-top"><MiniMomo listening /><span className="ny-clock">{clock}</span></span>
+          <p className="ny-words">{words.slice(0, Math.min(words.length, sec * 2 + 1)).join(' ')}</p>
+          <span className="ny-row ny-bottom">{bars}{stop}</span>
+        </div>
+      ) : preset === 'orb' ? (
+        <div className="ny-col">
+          <p className="ny-title">{phase === 'rec' ? clock : 'Tap to start'}</p>
+          <button type="button" className="ny-orb" data-on={phase === 'rec' || undefined} onClick={() => setPhase(phase === 'rec' ? 'saved' : 'rec')} aria-label={phase === 'rec' ? 'Done' : 'Start recording'}>
+            <MiniMomo listening={phase === 'rec'} />
+          </button>
+          <p className="ny-sub">{phase === 'rec' ? 'Tap Momo when you’re done' : 'Say whatever’s on your mind'}</p>
+        </div>
+      ) : preset === 'breathe' ? (
+        phase === 'yes' ? (
+          <div className="ny-col">
+            <span className="ny-breath" onAnimationEnd={() => setPhase('rec')}><MiniMomo /></span>
+            <p className="ny-title">Breathe in… and out</p>
+            <p className="ny-sub">Then tell me what happened</p>
+          </div>
+        ) : (
+          <div className="ny-col">
+            <MiniMomo listening big />
+            <p className="ny-title">Go ahead</p>
+            {bars}
+            <span className="ny-row"><span className="ny-clock">{clock}</span>{stop}</span>
+          </div>
+        )
+      ) : phase === 'yes' ? (
+        <div className="ny-col ny-left">
+          <p className="ny-title">What are you feeling?</p>
+          <span className="ny-chips">
+            {FEELINGS.map((f) => (
+              <button key={f} type="button" onClick={() => (setFeeling(f), setPhase('rec'))}>{f}</button>
+            ))}
+          </span>
+        </div>
+      ) : (
+        <div className="ny-col">
+          <span className="ny-tag">{feeling}</span>
+          <MiniMomo listening big />
+          <p className="ny-title">Tell me more</p>
+          <span className="ny-row"><span className="ny-clock">{clock}</span>{stop}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+const MiniMomo = ({ listening, big }) => (
+  <span className="ny-momo" data-big={big || undefined}>
+    <video src={listening ? momoListening : momoFloating} autoPlay loop muted playsInline />
+  </span>
+);
+
 function Notification() {
   const [run, setRun] = useState(0);
   const c = useDialKit('Notification', CONFIG, { id: 'notification', persist: true, onAction: () => setRun((n) => n + 1) });
@@ -299,10 +404,22 @@ function Notification() {
       off > 0 && setTimeout(() => setPhase('face'), off),
       setTimeout(() => setPhase('sense'), off + c.timing.senseMs),
       setTimeout(() => setPhase('ask'), off + c.timing.askMs),
-      c.timing.loop && setTimeout(() => setRun((n) => n + 1), off + c.timing.askMs + c.timing.holdMs),
+      c.timing.loop && setTimeout(() => setPhase((p) => { if (p === 'ask') setRun((n) => n + 1); return p; }), off + c.timing.askMs + c.timing.holdMs),
     ];
     return () => ids.forEach((id) => id && clearTimeout(id));
   }, [run, c.design, c.timing.offMs, c.timing.senseMs, c.timing.askMs, c.timing.holdMs, c.timing.loop]);
+
+  // Recording: saves on its own after recordMs; saved → the loop starts over.
+  useEffect(() => {
+    if (phase === 'rec') {
+      const id = setTimeout(() => setPhase('saved'), c.after.recordMs);
+      return () => clearTimeout(id);
+    }
+    if (phase === 'saved') {
+      const id = setTimeout(() => setRun((n) => n + 1), 3000);
+      return () => clearTimeout(id);
+    }
+  }, [phase]);
 
   // After "I'd rather not", a kind note, then the loop starts over.
   useEffect(() => {
@@ -358,7 +475,7 @@ function Notification() {
               <p className="nm-greeting">{c.copy.greeting}</p>
               <p className="nm-body">{c.copy.body}</p>
               <div className="nm-actions">
-                <button type="button" className="nm-yes" onClick={() => (window.location.href = `/${c.yesPage}`)}>
+                <button type="button" className="nm-yes" onClick={() => setPhase(c.after.preset === 'listen' || c.after.preset === 'transcript' ? 'rec' : 'yes')}>
                   {c.copy.yes}
                 </button>
                 <button type="button" className="nm-no" onClick={() => setPhase('declined')}>
@@ -367,6 +484,7 @@ function Notification() {
               </div>
             </div>
 
+            <AfterYes preset={c.after.preset} phase={phase} setPhase={setPhase} a={c.after} />
             <p className="nm-declined" aria-live="polite">{phase === 'declined' ? c.copy.declined : ''}</p>
           </section>
           <img className="watch-frame" src={watchUrl} alt="" draggable={false} />
