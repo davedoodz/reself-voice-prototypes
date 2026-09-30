@@ -409,17 +409,17 @@ function Wordmark({ lg, ...markProps }) {
 
 /* ── Screen ────────────────────────────────────────────── */
 function Welcome() {
-  const s = useDialKit('Screen', SCREEN, { id: 'welcome-screen' });
-  const brand = useDialKit('Brand', BRAND, { id: 'welcome-brand' });
-  const br = useDialKit('Breath', BREATH, { id: 'welcome-breath' });
-  const pulse = useDialKit('Beam pulse', PULSE, { id: 'welcome-pulse' });
+  const s = useDialKit('Screen', SCREEN, { persist: true, id: 'welcome-screen' });
+  const brand = useDialKit('Brand', BRAND, { persist: true, id: 'welcome-brand' });
+  const br = useDialKit('Breath', BREATH, { persist: true, id: 'welcome-breath' });
+  const pulse = useDialKit('Beam pulse', PULSE, { persist: true, id: 'welcome-pulse' });
   const intro = useDialKit(
     'Intro',
     { ...INTRO, replay: { type: 'action', label: 'Replay intro' } },
-    { id: 'welcome-intro', onAction: () => replayIntro() },
+    { persist: true, id: 'welcome-intro', onAction: () => replayIntro() },
   );
-  const logo = useDialKit('Logo opening', LOGO_DIALS, { id: 'welcome-logo' });
-  const b = useDialKit('Voice beam', WELCOME_BEAM, { id: 'welcome-beam', defaultCollapsed: true });
+  const logo = useDialKit('Logo opening', LOGO_DIALS, { persist: true, id: 'welcome-logo' });
+  const b = useDialKit('Voice beam', WELCOME_BEAM, { persist: true, id: 'welcome-beam', defaultCollapsed: true });
 
   const glow = useGlow(br, pulse, intro);
   const markDelay = Math.max(0, pulseEndMs(pulse) + pulse.wordmarkOffsetMs);

@@ -40,11 +40,12 @@ const SCREEN_H = 780;
 function GuideCardsPreview() {
   const [step, setStep] = useState(0);
   const v = useDialKit('Preview', PREVIEW, {
+    persist: true,
     id: 'guide-cards-preview',
     onAction: (a) => (a === 'next' ? advance() : setStep(0)),
   });
-  const g = useDialKit('Guide', GUIDE, { id: 'voice-guide' });
-  const gc = useDialKit('Composition', COMPOSITION, { id: 'voice-composition' });
+  const g = useDialKit('Guide', GUIDE, { persist: true, id: 'voice-guide' });
+  const gc = useDialKit('Composition', COMPOSITION, { persist: true, id: 'voice-composition' });
   const comp = gc[gc.active];
   const fw = FRAMEWORKS.find((f) => f.id === v.framework);
   const n = fw.steps.length;

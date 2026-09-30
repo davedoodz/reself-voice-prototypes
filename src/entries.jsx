@@ -992,16 +992,16 @@ function Detail({ e, pb, p, onBack, onOpenEntry, scrollRef, aiTitle }) {
 
 /* ── Screen ────────────────────────────────────────────── */
 function Entries() {
-  const s = useDialKit('Screen', SCREEN, { id: 'entries-screen' });
-  const icons = useDialKit('Icons', ICON_DIALS, { id: 'entries-icons' });
-  const head = useDialKit('Header', HEADER, { id: 'entries-header' });
-  const show = useDialKit('Entry card', CARD, { id: 'entries-card' });
-  const bs = useDialKit('Button styles', BUTTON_STYLES, { id: 'entries-button-styles' });
-  const rec = useDialKit('Record button', RECORD, { id: 'entries-record' });
-  const fonts = useDialKit('Fonts', FONT_DIALS, { id: 'entries-fonts' });
-  const p = useDialKit('Player', PLAYER, { id: 'entries-player' });
-  const ai = useDialKit('AI insights', AI, { id: 'entries-ai' });
-  const tr = useDialKit('Transition', TRANSITION, { id: 'entries-transition', defaultCollapsed: true });
+  const s = useDialKit('Screen', SCREEN, { persist: true, id: 'entries-screen' });
+  const icons = useDialKit('Icons', ICON_DIALS, { persist: true, id: 'entries-icons' });
+  const head = useDialKit('Header', HEADER, { persist: true, id: 'entries-header' });
+  const show = useDialKit('Entry card', CARD, { persist: true, id: 'entries-card' });
+  const bs = useDialKit('Button styles', BUTTON_STYLES, { persist: true, id: 'entries-button-styles' });
+  const rec = useDialKit('Record button', RECORD, { persist: true, id: 'entries-record' });
+  const fonts = useDialKit('Fonts', FONT_DIALS, { persist: true, id: 'entries-fonts' });
+  const p = useDialKit('Player', PLAYER, { persist: true, id: 'entries-player' });
+  const ai = useDialKit('AI insights', AI, { persist: true, id: 'entries-ai' });
+  const tr = useDialKit('Transition', TRANSITION, { persist: true, id: 'entries-transition', defaultCollapsed: true });
 
   const months = useMemo(() => group(ENTRIES), []);
   const total = ENTRIES.reduce((a, e) => a + e.duration, 0);

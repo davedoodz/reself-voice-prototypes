@@ -29,7 +29,7 @@ export function Backdrop({ defaults, id = 'backdrop' }) {
         color: defaults.color,
       }
     : BACKDROP;
-  const b = useDialKit('Backdrop', config, { id, defaultCollapsed: true });
+  const b = useDialKit('Backdrop', config, { persist: true, id, defaultCollapsed: true });
   if (!b.show) return null;
   const image = b.fill !== 'color' && IMAGES[b.fill];
   return (

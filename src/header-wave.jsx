@@ -51,7 +51,7 @@ const MOMO_CURVES = (o) => ({
 /* `defaults` overrides starting values for one page; its own `id` keeps them apart. */
 export function HeaderWave({ defaults, id: panelId = 'header-logo', listening = false, state = 'idle' }) {
   const config = defaults ? { ...HEADER_WAVE, ...defaults } : HEADER_WAVE;
-  const h = useDialKit('Header logo', config, { id: panelId, defaultCollapsed: true });
+  const h = useDialKit('Header logo', config, { persist: true, id: panelId, defaultCollapsed: true });
   const root = useRef(null);
   const stroke = useRef(null);
   const cfg = useRef(h);

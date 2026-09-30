@@ -2349,16 +2349,16 @@ const PAGE_BACKDROP = {
 
 export function VoiceRecorder({ variant = 'freeform' }) {
   const v = VARIANTS[variant];
-  const s = useDialKit('Screen', v.screen, { id: 'voice-screen' });
-  const c = useDialKit('Controls', CONTROLS, { id: 'voice-controls' });
-  const t = useDialKit('Transcript', v.transcript, { id: 'voice-transcript' });
+  const s = useDialKit('Screen', v.screen, { persist: true, id: 'voice-screen' });
+  const c = useDialKit('Controls', CONTROLS, { persist: true, id: 'voice-controls' });
+  const t = useDialKit('Transcript', v.transcript, { persist: true, id: 'voice-transcript' });
   // `variant` is fixed for a page's lifetime, so this hook's call order never changes.
-  const pr = v.prompts ? useDialKit('Prompts', PROMPTS, { id: 'voice-prompts' }) : NO_PROMPTS;
-  const g = v.guided ? useDialKit('Guide', GUIDE, { id: 'voice-guide' }) : null;
-  const gc = v.guided ? useDialKit('Composition', COMPOSITION, { id: 'voice-composition' }) : null;
-  const copy = v.guided ? useDialKit('Copy', COPY, { id: 'voice-copy', defaultCollapsed: true }) : null;
+  const pr = v.prompts ? useDialKit('Prompts', PROMPTS, { persist: true, id: 'voice-prompts' }) : NO_PROMPTS;
+  const g = v.guided ? useDialKit('Guide', GUIDE, { persist: true, id: 'voice-guide' }) : null;
+  const gc = v.guided ? useDialKit('Composition', COMPOSITION, { persist: true, id: 'voice-composition' }) : null;
+  const copy = v.guided ? useDialKit('Copy', COPY, { persist: true, id: 'voice-copy', defaultCollapsed: true }) : null;
   const comp = gc && gc[gc.active];
-  const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
+  const b = useDialKit('Voice beam', BEAM, { persist: true, id: 'voice-beam', defaultCollapsed: true });
   const [frameworkId, setFrameworkId] = useState(FRAMEWORKS[0].id);
   const frameworks = copy ? withCopy(copy) : FRAMEWORKS;
   const fw = frameworks.find((f) => f.id === frameworkId);

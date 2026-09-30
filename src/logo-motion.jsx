@@ -211,8 +211,8 @@ function Lockup({ children, showWord }) {
 function LogoMotion() {
   const [runs, setRuns] = useState(() => Object.fromEntries(OPTIONS.map((o) => [o.key, 0])));
   const replay = (keys) => setRuns((r) => ({ ...r, ...Object.fromEntries(keys.map((k) => [k, r[k] + 1])) }));
-  const s = useDialKit('Stage', STAGE, { id: 'lm-stage', onAction: () => replay(OPTIONS.map((o) => o.key)) });
-  const c = useDialKit('Openings', PANEL, { id: 'lm-openings', onAction: (path) => replay([path.split('.')[0]]) });
+  const s = useDialKit('Stage', STAGE, { persist: true, id: 'lm-stage', onAction: () => replay(OPTIONS.map((o) => o.key)) });
+  const c = useDialKit('Openings', PANEL, { persist: true, id: 'lm-openings', onAction: (path) => replay([path.split('.')[0]]) });
 
   return (
     <main className="lm-page" style={{ '--word-size': `${s.size}px` }}>

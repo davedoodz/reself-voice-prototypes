@@ -49,14 +49,15 @@ function PromptCardPreview() {
     setRun((n) => n + 1);
   };
   const v = useDialKit('Preview', PREVIEW, {
+    persist: true,
     id: 'card-preview',
     onAction: (path) => {
       if (path === 'replay') replay();
       else setPhase(path === 'tap' ? 'taken' : 'faded');
     },
   });
-  const p = useDialKit('Prompts', PROMPTS, { id: 'voice-prompts' });
-  const b = useDialKit('Voice beam', BEAM, { id: 'voice-beam', defaultCollapsed: true });
+  const p = useDialKit('Prompts', PROMPTS, { persist: true, id: 'voice-prompts' });
+  const b = useDialKit('Voice beam', BEAM, { persist: true, id: 'voice-beam', defaultCollapsed: true });
 
   // After an exit plays, the card comes back so tuning can carry on.
   useEffect(() => {
