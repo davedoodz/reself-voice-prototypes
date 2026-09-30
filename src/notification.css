@@ -87,3 +87,4 @@
   .watch-screen > *, .nm-line polyline { transition: none; animation: none !important; }
   .nm-dot, .nm-ring, .nm-momo { animation: none !important; }
 }
+.watch-bleed { position: absolute; background: #000; }

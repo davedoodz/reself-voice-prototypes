@@ -37,6 +37,8 @@ const CONFIG = {
   design: { type: 'select', options: DESIGNS, default: 'glance' },
   scale: [0.8, 0.4, 1.4, 0.01],
   screenRadius: [70, 0, 120, 1],
+  /* How far the black extends past the screen, under the frame. */
+  bleed: [18, 0, 60, 1],
   timing: {
     senseMs: [1400, 0, 8000, 50],
     askMs: [3000, 0, 10000, 50],
@@ -123,6 +125,11 @@ function Notification() {
       <Backdrop id="backdrop-notification" />
       <div className="device" style={{ width: WATCH.w * k, height: WATCH.h * k }}>
         <div className="device-scaler" style={{ width: WATCH.w, height: WATCH.h, transform: `scale(${k})` }}>
+          {/* Black underlay larger than the cut-out, so no light gap shows at the glass edge. */}
+          <div
+            className="watch-bleed"
+            style={{ left: WATCH.x - c.bleed, top: WATCH.y - c.bleed, width: WATCH.screenW + 2 * c.bleed, height: WATCH.screenH + 2 * c.bleed, borderRadius: c.screenRadius + c.bleed }}
+          />
           <section
             key={run}
             className="watch-screen"
