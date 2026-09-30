@@ -88,3 +88,40 @@
   .nm-dot, .nm-ring, .nm-momo { animation: none !important; }
 }
 .watch-bleed { position: absolute; background: #000; }
+
+/* ── Lock screen faces (Design › face). Brand blue accents only. ── */
+.nf-date { color: var(--accent); font-size: 22px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+
+/* 2 · Modular: date, left-aligned time, reading chips. */
+.nm-face[data-face='modular'] { align-items: flex-start; padding-left: 34px; gap: 6px; }
+.nm-face[data-face='modular'] .nm-time { font-size: 76px; }
+.nf-chips { gap: 8px; margin-top: 10px; }
+.nf-chip { padding: 6px 12px; border-radius: 999px; background: #1c1c1e; color: inherit; font-size: 17px; }
+
+/* 3 · Stacked: big hours over blue minutes. */
+.nf-stack { display: flex; flex-direction: column; align-items: center; font-size: 104px; font-weight: 700; line-height: 0.92; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.nf-min { color: var(--accent); }
+.nm-face[data-face='stacked'] { gap: 16px; }
+
+/* 4 · Minimal: small time in the corner, the rest left to Momo. */
+.nf-corner { position: absolute; top: 34px; right: 36px; display: flex; flex-direction: column; align-items: flex-end; }
+.nm-face[data-face='minimal'] .nm-time { font-size: 40px; }
+.nm-face[data-face='minimal'] .nf-date { font-size: 16px; }
+.nm-face[data-face='minimal'] .nm-vitals { position: absolute; bottom: 40px; }
+
+/* 5 · Analog: ticks and hands, minute hand in blue. */
+.nf-analog { width: 230px; height: 230px; stroke: #636366; stroke-width: 3; stroke-linecap: round; }
+.nf-analog .nf-hour { stroke: #fff; stroke-width: 7; }
+.nf-analog .nf-minute { stroke: var(--accent); stroke-width: 5; }
+.nf-analog circle { fill: #fff; stroke: none; }
+.nm-face[data-face='analog'] { gap: 8px; }
+
+/* Designs that pin the face to the top keep the clock compact. */
+[data-design='breathe'] .nm-face[data-face='stacked'] .nf-stack { font-size: 46px; flex-direction: row; gap: 4px; }
+[data-design='breathe'] .nm-face[data-face='analog'] .nf-analog { width: 80px; height: 80px; }
+[data-design='breathe'] .nm-face[data-face='modular'] .nm-time { font-size: 44px; }
+
+/* Screen off: everything hidden until the notification wakes the watch. */
+.watch-screen[data-phase='off'] > * { opacity: 0 !important; filter: none; transition: none; }
+.watch-screen:not([data-phase='off']) .nm-face { animation: nm-wake 0.6s ease-out; }
+@keyframes nm-wake { from { opacity: 0; filter: brightness(2) blur(6px); transform: scale(1.04); } }

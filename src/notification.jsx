@@ -35,11 +35,26 @@ const DESIGNS = [
 
 const CONFIG = {
   design: { type: 'select', options: DESIGNS, default: 'glance' },
+  /* The watch lock screen shown before the spike (works with every design). */
+  face: {
+    type: 'select',
+    options: [
+      { value: 'classic', label: '1 · Classic' },
+      { value: 'modular', label: '2 · Modular' },
+      { value: 'stacked', label: '3 · Stacked' },
+      { value: 'minimal', label: '4 · Minimal' },
+      { value: 'analog', label: '5 · Analog' },
+    ],
+    default: 'classic',
+  },
   scale: [0.8, 0.4, 1.4, 0.01],
   screenRadius: [70, 0, 120, 1],
   /* How far the black extends past the screen, under the frame. */
   bleed: [18, 0, 60, 1],
   timing: {
+    /* Screen off (black) before the notification wakes it; 0 skips it. */
+    offMs: [1500, 0, 8000, 50],
+    /* The rest are measured from the moment the screen wakes. */
     senseMs: [1400, 0, 8000, 50],
     askMs: [3000, 0, 10000, 50],
     /* How long the ask stays before the loop starts over. */
@@ -93,20 +108,94 @@ function PulseLine({ spiking }) {
   );
 }
 
+/* Lock screen faces. Each keeps a .nm-vitals line so the spike can light it up. */
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function Face({ face, now, time, vitals }) {
+  const date = `${DAYS[now.getDay()]} ${now.getDate()}`;
+  const [hh, mm] = time.split(':');
+  const line = (
+    <span className="nm-vitals">
+      <span className="nm-dot" aria-hidden="true" />
+      {vitals}
+    </span>
+  );
+  if (face === 'modular') {
+    const [hrv, bpm] = vitals.split('·').map((v) => v.trim());
+    return (
+      <>
+        <span className="nf-date">{date}</span>
+        <span className="nm-time">{time}</span>
+        <span className="nm-vitals nf-chips">
+          <span className="nm-dot" aria-hidden="true" />
+          <span className="nf-chip">{hrv}</span>
+          <span className="nf-chip">{bpm}</span>
+        </span>
+      </>
+    );
+  }
+  if (face === 'stacked') {
+    return (
+      <>
+        <span className="nf-stack">
+          <span>{hh.padStart(2, '0')}</span>
+          <span className="nf-min">{mm}</span>
+        </span>
+        {line}
+      </>
+    );
+  }
+  if (face === 'minimal') {
+    return (
+      <>
+        <span className="nf-corner">
+          <span className="nm-time">{time}</span>
+          <span className="nf-date">{date}</span>
+        </span>
+        {line}
+      </>
+    );
+  }
+  if (face === 'analog') {
+    const m = now.getMinutes();
+    const h = (now.getHours() % 12) + m / 60;
+    return (
+      <>
+        <svg className="nf-analog" viewBox="-100 -100 200 200" aria-hidden="true">
+          {Array.from({ length: 12 }, (_, i) => (
+            <line key={i} x1="0" y1="-88" x2="0" y2={i % 3 ? -80 : -74} transform={`rotate(${i * 30})`} />
+          ))}
+          <line className="nf-hour" x1="0" y1="8" x2="0" y2="-46" transform={`rotate(${h * 30})`} />
+          <line className="nf-minute" x1="0" y1="10" x2="0" y2="-72" transform={`rotate(${m * 6})`} />
+          <circle r="4" />
+        </svg>
+        {line}
+      </>
+    );
+  }
+  return (
+    <>
+      <span className="nm-time">{time}</span>
+      {line}
+    </>
+  );
+}
+
 function Notification() {
   const [run, setRun] = useState(0);
   const c = useDialKit('Notification', CONFIG, { id: 'notification', onAction: () => setRun((n) => n + 1) });
   const [phase, setPhase] = useState('face');
 
   useEffect(() => {
-    setPhase('face');
+    const off = c.timing.offMs;
+    setPhase(off > 0 ? 'off' : 'face');
     const ids = [
-      setTimeout(() => setPhase('sense'), c.timing.senseMs),
-      setTimeout(() => setPhase('ask'), c.timing.askMs),
-      c.timing.loop && setTimeout(() => setRun((n) => n + 1), c.timing.askMs + c.timing.holdMs),
+      off > 0 && setTimeout(() => setPhase('face'), off),
+      setTimeout(() => setPhase('sense'), off + c.timing.senseMs),
+      setTimeout(() => setPhase('ask'), off + c.timing.askMs),
+      c.timing.loop && setTimeout(() => setRun((n) => n + 1), off + c.timing.askMs + c.timing.holdMs),
     ];
     return () => ids.forEach((id) => id && clearTimeout(id));
-  }, [run, c.design, c.timing.senseMs, c.timing.askMs, c.timing.holdMs, c.timing.loop]);
+  }, [run, c.design, c.timing.offMs, c.timing.senseMs, c.timing.askMs, c.timing.holdMs, c.timing.loop]);
 
   // After "I'd rather not", a kind note, then the loop starts over.
   useEffect(() => {
@@ -150,12 +239,8 @@ function Notification() {
               '--move': `${c.timing.moveMs}ms`,
             }}
           >
-            <div className="nm-face">
-              <span className="nm-time">{time}</span>
-              <span className="nm-vitals">
-                <span className="nm-dot" aria-hidden="true" />
-                {c.copy.vitals}
-              </span>
+            <div className="nm-face" data-face={c.face}>
+              <Face face={c.face} now={now} time={time} vitals={c.copy.vitals} />
             </div>
 
             {c.design === 'breathe' && <span className="nm-ring" aria-hidden="true" />}
