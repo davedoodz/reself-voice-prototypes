@@ -207,3 +207,6 @@
 /* The calm and graph blocks carry .nm-vitals (for the spike colour) but lay out as columns. */
 .nm-vitals.nft-calm, .nm-vitals.nft-graph { display: flex; flex-direction: column; align-items: stretch; }
 .nft-calm-bar, .nft-bars { align-self: stretch; }
+/* Only the prompt takes taps; the full-screen layers above it let them through. */
+.nm-face, .nm-declined, .nm-momo, .nm-ring, .nm-line { pointer-events: none; }
+.nm-ask { z-index: 3; }

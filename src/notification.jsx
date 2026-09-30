@@ -289,7 +289,7 @@ function Face({ face, now, time, vitals }) {
 
 function Notification() {
   const [run, setRun] = useState(0);
-  const c = useDialKit('Notification', CONFIG, { id: 'notification', onAction: () => setRun((n) => n + 1) });
+  const c = useDialKit('Notification', CONFIG, { id: 'notification', persist: true, onAction: () => setRun((n) => n + 1) });
   const [phase, setPhase] = useState('face');
 
   useEffect(() => {
