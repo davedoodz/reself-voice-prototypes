@@ -282,3 +282,15 @@
 .nx-note, .nx-loop { margin-top: 6px; color: #61a8fd; font-weight: 500; }
 .nx-foot { margin: 16px 0 0 12px; color: #6b7a80; font-size: 13.5px; line-height: 1.45; }
 .nx-foot b { color: #1f2a2e; }
+
+/* Record screen after Yes. */
+.ny-record { display: grid; place-items: center; width: 88px; height: 88px; border: 0; border-radius: 50%; background: #1c1c1e; cursor: pointer; }
+.ny-record span { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); }
+.watch-screen:is([data-phase='ready']) .ny { opacity: 1; transform: none; pointer-events: auto; }
+.watch-screen[data-phase='ready'] :is(.nm-face, .nm-ask, .nm-momo, .nm-ring, .nm-line) { opacity: 0; }
+
+/* Ghost cursor: a translucent disc that glides to each button and presses it. */
+.nx-cursor { position: absolute; top: -34px; left: -34px; z-index: 10; width: 68px; height: 68px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 50%; background: rgba(210, 214, 222, 0.42); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: translate var(--cursor-ms, 750ms) cubic-bezier(0.45, 0, 0.2, 1), opacity 0.35s ease, scale 0.18s ease; }
+.nx-cursor[data-on] { opacity: 1; }
+.nx-cursor[data-down] { scale: 0.82; background: rgba(210, 214, 222, 0.6); }
+.watch-screen:not([data-phase='ask']) .nm-ask { transition-duration: 0.15s; }

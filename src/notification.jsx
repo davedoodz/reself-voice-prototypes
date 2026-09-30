@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { DialRoot, useDialKit } from 'dialkit';
 import 'dialkit/styles.css';
@@ -7,7 +7,6 @@ import './notification.css';
 import watchUrl from '../iphone_asset/Apple Watch Series 7 - 45mm - Starlight.png';
 import momoFloating from '../momo-animations/momo-floating.webm';
 import momoListening from '../momo-animations/momo-listening.webm';
-import { Backdrop } from './backdrop.jsx';
 import { Activity, Heart, Mic, Tag, Waves, Wind, Hand } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────
@@ -63,6 +62,11 @@ const CONFIG = {
     side: { type: 'select', options: ['left', 'right'], default: 'left' },
     /* After recording, how long the label screen waits before picking for you (demo). */
     labelMs: [3500, 1000, 15000, 100],
+    /* A see-through cursor taps through the flow on its own. */
+    autoplay: true,
+    cursorMs: [750, 200, 2000, 10],
+    /* Pause on each screen before the cursor heads for the next button. */
+    readMs: [1400, 200, 6000, 50],
   },
   screenRadius: [70, 0, 120, 1],
   /* How far the black extends past the screen, under the frame. */
@@ -316,7 +320,8 @@ const FEELINGS = ['Anxious', 'Frustrated', 'Overwhelmed', 'Sad', 'Not sure'];
 /* What the moment turned out to be; these personalise the detector over time. */
 const LABELS = ['Work pressure', 'Argument', 'Excitement', 'Exercise', 'Caffeine', 'Nothing'];
 function AfterYes({ preset, phase, setPhase, a }) {
-  const on = ['yes', 'rec', 'label', 'saved'].includes(phase);
+  const on = ['ready', 'yes', 'rec', 'label', 'saved'].includes(phase);
+  const start = () => setPhase(preset === 'breathe' || preset === 'feeling' ? 'yes' : 'rec');
   const [sec, setSec] = useState(0);
   const [feeling, setFeeling] = useState(null);
   useEffect(() => {
@@ -336,7 +341,14 @@ function AfterYes({ preset, phase, setPhase, a }) {
     <div className="ny" data-preset={preset} data-phase={phase} inert={!on} aria-hidden={!on}>
       {/* The mic is only on after the tap, and says so. */}
       {phase === 'rec' && <span className="ny-mic"><Mic /> Mic on</span>}
-      {phase === 'label' ? (
+      {phase === 'ready' ? (
+        <div className="ny-col">
+          <MiniMomo big />
+          <p className="ny-title">Ready when you are</p>
+          <button type="button" className="ny-record" aria-label="Start recording" onClick={start}><span /></button>
+          <p className="ny-sub">Tap to record</p>
+        </div>
+      ) : phase === 'label' ? (
         <div className="ny-col ny-left">
           <p className="ny-title">What was it?</p>
           <p className="ny-sub">Your answer teaches Unwind what this pattern means for you.</p>
@@ -424,7 +436,7 @@ const STEPS = [
   { key: 'speak', Icon: Mic, title: 'You choose to talk', body: 'The mic turns on only when you tap, with a visible indicator.' },
   { key: 'label', Icon: Tag, title: 'You say what it was', body: 'Your label teaches Unwind what this pattern means for you.' },
 ];
-const STEP_OF = { off: 0, face: 0, sense: 1, ask: 2, declined: 2, yes: 3, rec: 3, label: 4, saved: 4 };
+const STEP_OF = { off: 0, face: 0, sense: 1, ask: 2, declined: 2, ready: 3, yes: 3, rec: 3, label: 4, saved: 4 };
 const SIGNALS = [
   { name: 'Heart rate', base: '68', now: '104', unit: 'bpm', up: true },
   { name: 'HRV', base: '62', now: '38', unit: 'ms', up: false },
@@ -489,6 +501,7 @@ function Notification() {
 
   // Recording: saves on its own after recordMs; saved → the loop starts over.
   useEffect(() => {
+    if (c.explain.autoplay) return;
     if (phase === 'rec') {
       const id = setTimeout(() => setPhase('label'), c.after.recordMs);
       return () => clearTimeout(id);
@@ -497,6 +510,9 @@ function Notification() {
       const id = setTimeout(() => setPhase('saved'), c.explain.labelMs);
       return () => clearTimeout(id);
     }
+  }, [phase]);
+
+  useEffect(() => {
     if (phase === 'saved') {
       const id = setTimeout(() => setRun((n) => n + 1), 4000);
       return () => clearTimeout(id);
@@ -511,16 +527,52 @@ function Notification() {
   }, [phase]);
 
   const k = c.scale;
+
+  /* Autoplay: a see-through cursor glides to each button and taps it. */
+  const scaler = useRef(null);
+  const [cursor, setCursor] = useState({ x: 470, y: 700, on: false, down: false });
+  useEffect(() => {
+    if (!c.explain.autoplay) return;
+    const plan = {
+      ask: ['.nm-yes', c.explain.readMs],
+      ready: ['.ny-record', c.explain.readMs],
+      yes: [c.after.preset === 'feeling' ? '.ny-chips button' : null, c.explain.readMs],
+      rec: ['.ny-stop, .ny-orb', c.after.recordMs],
+      label: ['.ny-chips button', c.explain.readMs],
+    }[phase];
+    if (!plan || !plan[0]) {
+      if (!['ask', 'ready', 'yes', 'rec', 'label'].includes(phase)) setCursor((p) => ({ ...p, on: false, down: false }));
+      return;
+    }
+    const [sel, wait] = plan;
+    const ids = [];
+    ids.push(setTimeout(() => {
+      const el = scaler.current?.querySelector(`.watch-screen ${sel.split(', ').join(', .watch-screen ')}`);
+      const box = scaler.current?.getBoundingClientRect();
+      if (!el || !box) return;
+      const r = el.getBoundingClientRect();
+      setCursor({ x: (r.left + r.width / 2 - box.left) / k, y: (r.top + r.height / 2 - box.top) / k, on: true, down: false });
+      ids.push(setTimeout(() => setCursor((p) => ({ ...p, down: true })), c.explain.cursorMs + 80));
+      ids.push(setTimeout(() => { setCursor((p) => ({ ...p, down: false })); el.click(); }, c.explain.cursorMs + 280));
+    }, wait));
+    return () => ids.forEach(clearTimeout);
+  }, [phase, run, c.explain.autoplay]);
   const now = new Date();
   const time = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')}`;
   const asking = phase === 'ask';
 
   return (
     <main className="stage" style={{ background: '#f5f5f5' }}>
-      <Backdrop id="backdrop-notification" />
       <div className="device nx-device" data-haptic={asking || undefined} style={{ width: WATCH.w * k, height: WATCH.h * k }}>
         {c.explain.show && <Explainer phase={phase} side={c.explain.side} />}
-        <div className="device-scaler" style={{ width: WATCH.w, height: WATCH.h, transform: `scale(${k})` }}>
+        <div ref={scaler} className="device-scaler" style={{ width: WATCH.w, height: WATCH.h, transform: `scale(${k})` }}>
+          <span
+            className="nx-cursor"
+            data-on={cursor.on || undefined}
+            data-down={cursor.down || undefined}
+            style={{ translate: `${cursor.x}px ${cursor.y}px`, '--cursor-ms': `${c.explain.cursorMs}ms` }}
+            aria-hidden="true"
+          />
           {/* Black underlay larger than the cut-out, so no light gap shows at the glass edge. */}
           <div
             className="watch-bleed"
@@ -558,7 +610,7 @@ function Notification() {
               <p className="nm-greeting">{c.copy.greeting}</p>
               <p className="nm-body">{c.copy.body}</p>
               <div className="nm-actions">
-                <button type="button" className="nm-yes" onClick={() => setPhase(c.after.preset === 'listen' || c.after.preset === 'transcript' ? 'rec' : 'yes')}>
+                <button type="button" className="nm-yes" onClick={() => setPhase('ready')}>
                   {c.copy.yes}
                 </button>
                 <button type="button" className="nm-no" onClick={() => setPhase('declined')}>
