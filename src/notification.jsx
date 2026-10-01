@@ -24,6 +24,7 @@ import { Activity, Heart, Mic, Tag, Waves, Wind, Hand } from 'lucide-react';
 /* iphone_asset/Apple Watch … Starlight.png: 540×860, screen cut-out at
    x 72–467, y 193–671 (396×479). */
 const WATCH = { w: 540, h: 860, x: 72, y: 193, screenW: 396, screenH: 479 };
+const EMBED_WATCH = new URLSearchParams(window.location.search).get('embed') === 'watch';
 
 const DESIGNS = [
   { value: 'glance', label: '1 · Glance' },
@@ -485,9 +486,17 @@ function Explainer({ phase, side }) {
 function Notification() {
   const [run, setRun] = useState(0);
   const c = useDialKit('Notification', CONFIG, { id: 'notification', persist: true, onAction: () => setRun((n) => n + 1) });
-  const [phase, setPhase] = useState('face');
+  const [phase, setPhase] = useState(EMBED_WATCH ? 'ask' : 'face');
+  const [embedScale, setEmbedScale] = useState(() => Math.min(innerWidth / WATCH.screenW, innerHeight / WATCH.screenH));
+  useEffect(() => {
+    if (!EMBED_WATCH) return;
+    const resize = () => setEmbedScale(Math.min(innerWidth / WATCH.screenW, innerHeight / WATCH.screenH));
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
 
   useEffect(() => {
+    if (EMBED_WATCH) { setPhase('ask'); return; }
     const off = c.timing.offMs;
     setPhase(off > 0 ? 'off' : 'face');
     const ids = [
@@ -501,7 +510,7 @@ function Notification() {
 
   // Recording: saves on its own after recordMs; saved → the loop starts over.
   useEffect(() => {
-    if (c.explain.autoplay) return;
+    if (!EMBED_WATCH && c.explain.autoplay) return;
     if (phase === 'rec') {
       const id = setTimeout(() => setPhase('label'), c.after.recordMs);
       return () => clearTimeout(id);
@@ -526,13 +535,13 @@ function Notification() {
     return () => clearTimeout(id);
   }, [phase]);
 
-  const k = c.scale;
+  const k = EMBED_WATCH ? embedScale : c.scale;
 
   /* Autoplay: a see-through cursor glides to each button and taps it. */
   const scaler = useRef(null);
   const [cursor, setCursor] = useState({ x: 470, y: 700, on: false, down: false });
   useEffect(() => {
-    if (!c.explain.autoplay) return;
+    if (EMBED_WATCH || !c.explain.autoplay) return;
     const plan = {
       ask: ['.nm-yes', c.explain.readMs],
       ready: ['.ny-record', c.explain.readMs],
@@ -562,10 +571,10 @@ function Notification() {
   const asking = phase === 'ask';
 
   return (
-    <main className="stage" style={{ background: '#f5f5f5' }}>
-      <div className="device nx-device" data-haptic={asking || undefined} style={{ width: WATCH.w * k, height: WATCH.h * k }}>
-        {c.explain.show && <Explainer phase={phase} side={c.explain.side} />}
-        <div ref={scaler} className="device-scaler" style={{ width: WATCH.w, height: WATCH.h, transform: `scale(${k})` }}>
+    <main className={`stage${EMBED_WATCH ? ' watch-embed' : ''}`} style={{ background: EMBED_WATCH ? 'transparent' : '#f5f5f5' }}>
+      <div className="device nx-device" data-haptic={!EMBED_WATCH && asking || undefined} style={{ width: (EMBED_WATCH ? WATCH.screenW : WATCH.w) * k, height: (EMBED_WATCH ? WATCH.screenH : WATCH.h) * k }}>
+        {!EMBED_WATCH && c.explain.show && <Explainer phase={phase} side={c.explain.side} />}
+        <div ref={scaler} className="device-scaler" style={{ width: EMBED_WATCH ? WATCH.screenW : WATCH.w, height: EMBED_WATCH ? WATCH.screenH : WATCH.h, transform: `scale(${k})` }}>
           <span
             className="nx-cursor"
             data-on={cursor.on || undefined}
@@ -585,8 +594,8 @@ function Notification() {
             data-phase={phase}
             aria-label="Watch notification"
             style={{
-              left: WATCH.x,
-              top: WATCH.y,
+              left: EMBED_WATCH ? 0 : WATCH.x,
+              top: EMBED_WATCH ? 0 : WATCH.y,
               width: WATCH.screenW,
               height: WATCH.screenH,
               borderRadius: c.screenRadius,
@@ -622,10 +631,10 @@ function Notification() {
             <AfterYes preset={c.after.preset} phase={phase} setPhase={setPhase} a={c.after} />
             <p className="nm-declined" aria-live="polite">{phase === 'declined' ? c.copy.declined : ''}</p>
           </section>
-          <img className="watch-frame" src={watchUrl} alt="" draggable={false} />
+          {!EMBED_WATCH && <img className="watch-frame" src={watchUrl} alt="" draggable={false} />}
         </div>
       </div>
-      <DialRoot position="top-right" productionEnabled theme="light" />
+      {!EMBED_WATCH && <DialRoot position="top-right" productionEnabled theme="light" />}
     </main>
   );
 }
