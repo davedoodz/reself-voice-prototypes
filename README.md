@@ -1,16 +1,5 @@
 # ReSelf Voice Prototypes
 
-```
-        .    *   .  ~  .    *   .
-           )))                         ◝◡◜  momo
-      )))  )))  )))     ~
-    )))))))))))))))))       "how was
-      )))  )))  )))         your day?"
-           )))
-        ·    .   *    .   ~    .
-              [ ●───rec ]
-```
-
 A set of interactive React prototypes for a voice-journaling app — recording flows, a mascot-led notification, and the screens around them.
 
 ## What it is
